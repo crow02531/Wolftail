@@ -1,15 +1,19 @@
 package com.example.examplemod;
 
+import java.awt.Toolkit;
+import java.util.Date;
+
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.init.Blocks;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.network.INetHandler;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
@@ -22,6 +26,7 @@ import net.wolftail.api.ServerEntryPoint;
 import net.wolftail.api.ServerPlayContext;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.api.UniversalPlayerTypeRegistry;
+import net.wolftail.util.client.CmdUnit;
 
 @Mod(modid = ExampleMod.MODID, name = ExampleMod.NAME, version = ExampleMod.VERSION)
 public class ExampleMod {
@@ -38,50 +43,35 @@ public class ExampleMod {
 		UniversalPlayerTypeRegistry.INSTANCE.register(new ResourceLocation("examplemod", "fishes"), type_fishes);
 	}
 	
-	private static class SNetHandler implements INetHandler, ITickable {
+	public static class SNetHandler implements INetHandler, ITickable {
 		
-		private final ServerPlayContext context;
-		private final World overworld;
+		private ServerPlayContext context;
 		
-		private BlockPos position;
+		public EntityPig pig;
 		
-		private SNetHandler(ServerPlayContext arg) {
-			this.overworld = (this.context = arg).manager().rootManager().server().worlds[0];
+		private SNetHandler(ServerPlayContext c) {
+			this.context = c;
+			World w = c.manager().rootManager().server().worlds[0];
 			
-			this.position = BlockPos.ORIGIN;
-		}
-		
-		@Override
-		public void update() {
-			this.overworld.setBlockState(this.position, Blocks.LIT_PUMPKIN.getDefaultState());
+			this.pig = new EntityPig(w);
+			this.pig.setLocationAndAngles(-12, 71, 2, 0, 0);
+			this.pig.setCustomNameTag(c.playName());
+			this.pig.setAlwaysRenderNameTag(true);
+			w.spawnEntity(pig);
 		}
 		
 		@Override
 		public void onDisconnect(ITextComponent reason) {
-			
-		}
-	}
-	
-	private static class CNetHandler implements INetHandler, ITickable {
-		
-		private final ClientPlayContext context;
-		
-		private CNetHandler(ClientPlayContext arg) {
-			this.context = arg;
+			this.pig.onKillCommand();
 		}
 		
 		@Override
 		public void update() {
-			while(Keyboard.next()) {
-				if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-					this.context.disconnect();
-				}
+			if(this.pig.isDead) {
+				this.context.disconnect();
+			} else {
+				this.pig.fallDistance = 0;
 			}
-		}
-		
-		@Override
-		public void onDisconnect(ITextComponent reason) {
-			
 		}
 	}
 	
@@ -93,12 +83,83 @@ public class ExampleMod {
 		}
 	}
 	
+	private static class CNetHandler implements INetHandler, ITickable {
+		
+		private final ClientPlayContext context;
+		
+		private boolean shift_pressed;
+		private boolean ctrl_pressed;
+		
+		private CNetHandler(ClientPlayContext arg) {
+			this.context = arg;
+		}
+		
+		@Override
+		public void update() {
+			while(Keyboard.next()) {
+				boolean state = Keyboard.getEventKeyState();
+				
+				switch(Keyboard.getEventKey()) {
+				case Keyboard.KEY_ESCAPE:
+					if(state) {
+						this.context.disconnect();
+						
+						return;
+					}
+					
+					break;
+				case Keyboard.KEY_LSHIFT:
+				case Keyboard.KEY_RSHIFT:
+					this.shift_pressed = state;
+					
+					break;
+				case Keyboard.KEY_LCONTROL:
+				case Keyboard.KEY_RCONTROL:
+					this.ctrl_pressed = state;
+					
+					break;
+				case Keyboard.KEY_W:
+					this.context.sendPacket(new C2SForward());
+					
+					break;
+				default:
+					if(state)
+						; //FishC.println(Keyboard.getKeyName(Keyboard.getEventKey()));
+				}
+			}
+			
+			while(Mouse.next()) {
+				int i = Mouse.getEventDWheel();
+				
+				if(i > 1) i = 1;
+				else if(i < -1) i = -1;
+				
+				if(!this.shift_pressed) i *= 7;
+				if(this.ctrl_pressed) i *= 7;
+				
+				//FishC.scroll += i;
+			}
+		}
+		
+		@Override
+		public void onDisconnect(ITextComponent reason) {
+			FishC.ui.release();
+		}
+	}
+	
 	private static class FishC implements ClientEntryPoint, ClientFrameCallback {
+		
+		private static CmdUnit ui;
 		
 		@Override
 		public void onFrame(ClientPlayContext context) {
-			Minecraft mc = Minecraft.getMinecraft();
-			ScaledResolution scaledresolution = new ScaledResolution(mc);
+			CmdUnit cmd = ui;
+			
+			if(Display.wasResized()) {
+				Minecraft mc = Minecraft.getMinecraft();
+				
+				cmd.resize(mc.displayWidth, mc.displayHeight);
+			}
 			
 			GL11.glClearColor(0, 0, 0, 1);
 			GL11.glClearDepth(1);
@@ -106,17 +167,34 @@ public class ExampleMod {
 			
 			GL11.glMatrixMode(GL11.GL_PROJECTION);
 			GL11.glLoadIdentity();
-			GL11.glOrtho(0.0D, scaledresolution.getScaledWidth_double(), scaledresolution.getScaledHeight_double(), 0.0D, 1000.0D, 3000.0D);
+			GL11.glOrtho(0, 1, 1, 0, -1, 1);
 			GL11.glMatrixMode(GL11.GL_MODELVIEW);
 			GL11.glLoadIdentity();
-			GL11.glTranslatef(0.0F, 0.0F, -2000.0F);
 			
-			Minecraft.getMinecraft().fontRenderer.drawStringWithShadow("Playing...", 1, 1, -1);
+			cmd.flush();
+			cmd.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
+			//cmd.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0.2f, 0), new Vector3f(0, 0.5f, 0));
 		}
 		
 		@Override
 		public void onEnter(ClientPlayContext context) {
 			context.setNetHandler(new CNetHandler(context));
+			
+			ui = new CmdUnit(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, 18);
+			
+			ui.appendSegment("Playing...");
+			ui.lf();
+			ui.appendSegment(new Object() {
+				
+				@Override
+				public String toString() {
+					return new Date().toString();
+				}
+			});
+		}
+		
+		private static final int calcPPF() {
+			return Toolkit.getDefaultToolkit().getScreenResolution();
 		}
 	}
 }

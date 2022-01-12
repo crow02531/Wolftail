@@ -22,6 +22,7 @@ import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.profiler.Profiler;
@@ -120,7 +121,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	private ImplPCClient play_context;
 	
 	@Inject(method = "init", at = @At("RETURN"))
-	private void onInit(CallbackInfo info) {
+	private void onInit(CallbackInfo info) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		SharedImpls.Holder1.finish_loading(true);
 	}
 	
@@ -184,7 +185,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 		//do tick
 		profiler.startSection("tick");
 		
-		//notice that the code below dosen't always run every game loop
+		//ticking part, notice that the code below dosen't always run every game loop
 		for(int i = 0, l = Math.min(10, this.timer.elapsedTicks); i < l; ++i) {
 			NetworkManager connection = context.getConnection();
 			
@@ -214,9 +215,9 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 		if(!lostContext)
 			type.callClientFrame(context);
 		else {
-			GL11.glClearColor(0, 0, 0, 1);
-			GL11.glClearDepth(1);
-			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+			GlStateManager.clearColor(0, 0, 0, 0);
+			GlStateManager.clearDepth(1);
+			GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		}
 		
 		//do post frame

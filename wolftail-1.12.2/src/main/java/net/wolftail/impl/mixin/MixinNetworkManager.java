@@ -93,7 +93,7 @@ public abstract class MixinNetworkManager implements ExtensionsNetworkManager {
 				
 				if(t == 0) {
 					context.keepAlive_timer = System.currentTimeMillis();
-				} else if(System.currentTimeMillis() - t > 15000L) {
+				} else if(System.currentTimeMillis() - t > 10000L) {
 					this.sendPacket(context.keepAlive_receivedPkt);
 					
 					context.keepAlive_receivedPkt = null;

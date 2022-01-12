@@ -113,6 +113,10 @@ public final class ImplMPCRoot implements RootPlayContextManager {
 	}
 	
 	private UniversalPlayerType determine_type(UUID id, String name) {
+		//TODO type determine method missing
+		if(name.equals("Steve"))
+			return UniversalPlayerType.TYPE_PLAYERS;
+		
 		return UniversalPlayerTypeRegistry.INSTANCE.registeredAt(new ResourceLocation("examplemod", "fishes"));
 	}
 }
