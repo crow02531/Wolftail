@@ -1,6 +1,5 @@
 package com.example.examplemod;
 
-import java.awt.Toolkit;
 import java.util.Date;
 
 import org.lwjgl.input.Keyboard;
@@ -137,7 +136,7 @@ public class ExampleMod {
 				if(!this.shift_pressed) i *= 7;
 				if(this.ctrl_pressed) i *= 7;
 				
-				//FishC.scroll += i;
+				FishC.ui.setScrollVertical(FishC.ui.getScrollVertical() - i);
 			}
 		}
 		
@@ -171,6 +170,17 @@ public class ExampleMod {
 			GL11.glMatrixMode(GL11.GL_MODELVIEW);
 			GL11.glLoadIdentity();
 			
+			StringBuilder s = new StringBuilder();
+			
+			s.append("Playing...\n");
+			s.append(new Date());
+			
+			for(int i = 0; i < 100; ++i) {
+				s.append(i).append('\n');
+			}
+			
+			cmd.useDoc(s.toString());
+			
 			cmd.flush();
 			cmd.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
 			//cmd.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0.2f, 0), new Vector3f(0, 0.5f, 0));
@@ -180,21 +190,11 @@ public class ExampleMod {
 		public void onEnter(ClientPlayContext context) {
 			context.setNetHandler(new CNetHandler(context));
 			
-			ui = new CmdUnit(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, 18);
-			
-			ui.appendSegment("Playing...");
-			ui.lf();
-			ui.appendSegment(new Object() {
-				
-				@Override
-				public String toString() {
-					return new Date().toString();
-				}
-			});
+			ui = new CmdUnit(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, calcPPU());
 		}
 		
-		private static final int calcPPF() {
-			return Toolkit.getDefaultToolkit().getScreenResolution();
+		private static final int calcPPU() {
+			return 18; //Toolkit.getDefaultToolkit().getScreenResolution();
 		}
 	}
 }

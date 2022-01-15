@@ -1,53 +1,81 @@
 package net.wolftail.util.client;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.base.Preconditions;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.math.MathHelper;
 
+//TODO horizontal scroll bar
 public final class CmdUnit extends UIUnit {
 	
-	private int arg_ppf;
+	private String arg_doc;
+	private int arg_ppu;
 	
-	private List<Queue<Object>> arg_lines;
+	private int arg_scrollV;
 	
-	public CmdUnit(int width, int height, int ppf) {
+	private int tmp_realH;
+	
+	public CmdUnit(int width, int height, int ppu) {
 		super(width, height, true, false);
 		
-		this.usePPF(ppf);
+		this.usePPU(ppu);
 		
-		this.arg_lines = new ArrayList<>();
-		this.lf();
+		this.tmp_realH = -1;
 	}
 	
-	public void usePPF(int ppf) {
-		Preconditions.checkArgument(ppf > 0);
+	public void usePPU(int ppu) {
+		Preconditions.checkArgument(ppu > 0);
 		
-		this.arg_ppf = ppf;
+		int old = this.arg_ppu;
+		this.arg_ppu = ppu;
+		
+		if(this.tmp_realH > 0)
+			this.tmp_realH = (this.tmp_realH / old) * ppu; //divisible
+		
+		this.setScrollVertical(this.arg_scrollV);
 	}
 	
-	public int ppfInUse() {
-		return this.arg_ppf;
+	public int ppuInUse() {
+		return this.arg_ppu;
 	}
 	
-	public void appendSegment(Object segment) {
-		this.arg_lines.get(this.arg_lines.size() - 1).add(segment);
+	public void useDoc(String doc) {
+		this.arg_doc = doc;
+		
+		this.tmp_realH = -1;
+		this.setScrollVertical(this.arg_scrollV);
 	}
 	
-	public void lf() {
-		this.arg_lines.add(new LinkedList<>());
+	public String docInUse() {
+		return this.arg_doc;
 	}
 	
-	public void cls() {
-		this.arg_lines.clear();
+	public void setScrollVertical(int sv) {
+		if(sv <= 0) {
+			this.arg_scrollV = 0;
+			
+			return;
+		}
+		
+		if(this.tmp_realH < 0)
+			this.tmp_realH = countLF(this.arg_doc) * this.arg_ppu;
+		
+		this.arg_scrollV = MathHelper.clamp(sv, 0, this.tmp_realH - this.param_height);
+	}
+	
+	public int getScrollVertical() {
+		return this.arg_scrollV;
+	}
+	
+	void resize0() {
+		this.setScrollVertical(this.arg_scrollV);
 	}
 	
 	@Override
@@ -56,40 +84,63 @@ public final class CmdUnit extends UIUnit {
 		GL11.glClearDepth(1);
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		
+		String doc = this.arg_doc;
+		
+		if(doc == null || doc.isEmpty()) return;
+		
+		String[] lines = doc.split("\n");
+		FontRenderer renderer = Minecraft.getMinecraft().fontRenderer;
+		
+		int ppu = this.arg_ppu, fh = renderer.FONT_HEIGHT;
+		float scale = (float) ppu / (float) fh;
+		float vw = this.param_width, vh = this.param_height;
+		float rh = this.tmp_realH = lines.length * ppu;
+		float sv = this.arg_scrollV;
+		
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
-		GL11.glOrtho(0, this.param_width, this.param_height, 0, -1, 1);
+		GL11.glOrtho(0, vw, vh, 0, -1, 1);
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glLoadIdentity();
 		
-		FontRenderer renderer = Minecraft.getMinecraft().fontRenderer;
-		Iterator<Queue<Object>> iter = this.arg_lines.iterator();
-		
-		int ppf = this.arg_ppf, h = renderer.FONT_HEIGHT, y = 0;
-		
-		GL11.glTranslatef(0, 0, 0);
-		glScalef((float) ppf / (float) renderer.FONT_HEIGHT);
-		
-		StringBuilder buf = new StringBuilder();
-		
-		while(iter.hasNext()) {
-			renderer.drawString(bakeLine(buf, iter.next()), 0, y, -1);
-			
-			y += h;
+		//vertical scroll bar
+		if(rh > vh) {
+			drawRect(vw - ppu, 0, vw, vh, 0xD8FFFFFF); //background
+			drawRect(vw - ppu, (vh * sv) / rh, vw, vh * (vh + sv) / rh, 0x35000000); //button
 		}
+		
+		GL11.glTranslatef(0, -sv, 0);
+		GL11.glScalef(scale, scale, scale);
+		
+		for(int i = 0; i < lines.length; ++i)
+			renderer.drawString(lines[i], 0, i * fh, 0xFFFFFFFF);
 	}
 	
-	private static final void glScalef(float s) {
-		GL11.glScaled(s, s, s);
+	private static int countLF(String text) {
+		int num = 0;
+		
+		for(int i = 0, l = text.length(); i < l; ++i) {
+			if(text.charAt(i) == '\n')
+				num++;
+		}
+		
+		return num;
 	}
 	
-	private static final String bakeLine(StringBuilder buf, Queue<Object> raw) {
-		buf.setLength(0);
+	private static void drawRect(float left, float top, float right, float bottom, int color) {
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder bufferbuilder = tessellator.getBuffer();
 		
-		for(Object elem : raw)
-			buf.append(elem);
-		
-		return buf.toString();
+		GlStateManager.enableBlend();
+		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		GlStateManager.color((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F, (float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
+		bufferbuilder.begin(7, DefaultVertexFormats.POSITION);
+		bufferbuilder.pos(left, bottom, 0).endVertex();
+		bufferbuilder.pos(right, bottom, 0).endVertex();
+		bufferbuilder.pos(right, top, 0).endVertex();
+		bufferbuilder.pos(left, top, 0).endVertex();
+		tessellator.draw();
+		GlStateManager.disableBlend();
 	}
 	
 	@Override

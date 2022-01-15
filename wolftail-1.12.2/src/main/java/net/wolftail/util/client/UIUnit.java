@@ -29,12 +29,14 @@ public abstract class UIUnit {
 	boolean param_depth;
 	boolean param_stencil;
 	
+	boolean state_dirty;
+	
 	private int object_fb;
 	private int object_cb;
 	
 	private int object_rb;
 	
-	final void create() {
+	private void create() {
 		int width = this.param_width, height = this.param_height;
 		
 		int fbo = this.object_fb = OpenGlHelper.glGenFramebuffers();
@@ -81,7 +83,7 @@ public abstract class UIUnit {
 		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, old_fb);
 	}
 	
-	final void delete() {
+	private void delete() {
 		if(this.object_rb != 0)
 			OpenGlHelper.glDeleteRenderbuffers(this.object_rb);
 		
@@ -103,6 +105,13 @@ public abstract class UIUnit {
 	
 	public void flush() {
 		Preconditions.checkState(this.available());
+		
+		if(this.state_dirty) {
+			this.delete();
+			this.create();
+			
+			this.state_dirty = false;
+		}
 		
 		int old_binding = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
 		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, this.object_fb);
@@ -156,9 +165,12 @@ public abstract class UIUnit {
 		this.param_width = width;
 		this.param_height = height;
 		
-		this.delete();
-		this.create();
+		this.state_dirty = true;
+		
+		this.resize0();
 	}
+	
+	void resize0() {}
 	
 	public void release() {
 		Preconditions.checkState(this.available(), "Already released!");
