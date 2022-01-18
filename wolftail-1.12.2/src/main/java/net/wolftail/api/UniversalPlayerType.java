@@ -16,11 +16,11 @@ public interface UniversalPlayerType {
 		return UniversalPlayerTypeRegistry.INSTANCE.idFor(this);
 	}
 	
-	static UniversalPlayerType create(ServerEntryPoint entry_point_server) {
+	static UniversalPlayerType create(IServerEntryPoint entry_point_server) {
 		return new ImplUPT(entry_point_server, null, null);
 	}
 	
-	static UniversalPlayerType create(ServerEntryPoint entry_point_server, ClientEntryPoint entry_point_client, ClientFrameCallback callback_frame) {
+	static UniversalPlayerType create(IServerEntryPoint entry_point_server, IClientEntryPoint entry_point_client, IClientFrameCallback callback_frame) {
 		return new ImplUPT(entry_point_server, entry_point_client, callback_frame);
 	}
 }

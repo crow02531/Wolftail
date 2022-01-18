@@ -104,7 +104,7 @@ public abstract class UIUnit {
 	}
 	
 	public void flush() {
-		Preconditions.checkState(this.available());
+		this.check();
 		
 		if(this.state_dirty) {
 			this.delete();
@@ -141,7 +141,7 @@ public abstract class UIUnit {
 	abstract void flush0();
 	
 	public void render(Vector3f p0, Vector3f p1, Vector3f p2, Vector3f p3) {
-		Preconditions.checkState(this.available());
+		this.check();
 		
 		GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
 		GlStateManager.bindTexture(this.object_cb);
@@ -160,7 +160,7 @@ public abstract class UIUnit {
 	}
 	
 	public void resize(int width, int height) {
-		Preconditions.checkState(this.available());
+		this.check();
 		
 		this.param_width = width;
 		this.param_height = height;
@@ -173,23 +173,30 @@ public abstract class UIUnit {
 	void resize0() {}
 	
 	public void release() {
-		Preconditions.checkState(this.available(), "Already released!");
+		this.check();
 		
 		this.delete();
+		this.release0();
 	}
+	
+	void release0() {}
 	
 	public boolean available() {
 		return this.object_fb != 0;
 	}
 	
-	public int width() {
+	public void check() {
 		Preconditions.checkState(this.available());
+	}
+	
+	public int width() {
+		this.check();
 		
 		return this.param_width;
 	}
 	
 	public int height() {
-		Preconditions.checkState(this.available());
+		this.check();
 		
 		return this.param_height;
 	}

@@ -117,6 +117,6 @@ public final class ImplMPCRoot implements RootPlayContextManager {
 		if(name.equals("Steve"))
 			return UniversalPlayerType.TYPE_PLAYERS;
 		
-		return UniversalPlayerTypeRegistry.INSTANCE.registeredAt(new ResourceLocation("examplemod", "fishes"));
+		return UniversalPlayerTypeRegistry.INSTANCE.registeredAt(new ResourceLocation("examplemod", "pigs"));
 	}
 }

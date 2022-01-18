@@ -8,6 +8,7 @@ import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.login.INetHandlerLoginClient;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.WorldServer;
 import net.wolftail.api.lifecycle.BuiltInSection;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.api.lifecycle.SectionToken;
@@ -33,6 +34,10 @@ public final class SharedImpls {
 	}
 	
 	public static ExtensionsNetHandlerLoginClient as(INetHandlerLoginClient arg) {
+		return as((Object) arg);
+	}
+	
+	public static ExtensionsWorldServer as(WorldServer arg) {
 		return as((Object) arg);
 	}
 	

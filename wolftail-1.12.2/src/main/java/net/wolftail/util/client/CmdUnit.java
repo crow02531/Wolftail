@@ -31,10 +31,14 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	public void usePPU(int ppu) {
+		this.check();
 		Preconditions.checkArgument(ppu > 0);
 		
 		int old = this.arg_ppu;
 		this.arg_ppu = ppu;
+		
+		if(old == ppu)
+			return;
 		
 		if(this.tmp_realH > 0)
 			this.tmp_realH = (this.tmp_realH / old) * ppu; //divisible
@@ -43,10 +47,17 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	public int ppuInUse() {
+		this.check();
+		
 		return this.arg_ppu;
 	}
 	
 	public void useDoc(String doc) {
+		this.check();
+		
+		if(this.arg_doc == doc)
+			return;
+		
 		this.arg_doc = doc;
 		
 		this.tmp_realH = -1;
@@ -54,10 +65,14 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	public String docInUse() {
+		this.check();
+		
 		return this.arg_doc;
 	}
 	
 	public void setScrollVertical(int sv) {
+		this.check();
+		
 		if(sv <= 0) {
 			this.arg_scrollV = 0;
 			
@@ -71,7 +86,13 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	public int getScrollVertical() {
+		this.check();
+		
 		return this.arg_scrollV;
+	}
+	
+	void release0() {
+		this.arg_doc = null; //help GC
 	}
 	
 	void resize0() {
@@ -117,6 +138,9 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	private static int countLF(String text) {
+		if(text == null || text.isEmpty())
+			return 0;
+		
 		int num = 0;
 		
 		for(int i = 0, l = text.length(); i < l; ++i) {

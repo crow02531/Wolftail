@@ -27,7 +27,7 @@ public interface RootPlayContextManager {
 	
 	Set<ServerPlayContext> asContextSet();
 	
-	static RootPlayContextManager managerFor(MinecraftServer server) {
+	static RootPlayContextManager instanceFor(MinecraftServer server) {
 		return SharedImpls.as(server).wolftail_getRootManager();
 	}
 }
