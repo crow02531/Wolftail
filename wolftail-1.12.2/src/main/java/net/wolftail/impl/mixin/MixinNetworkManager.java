@@ -69,7 +69,7 @@ public abstract class MixinNetworkManager implements ExtensionsNetworkManager {
 			if(context == null) return;
 			
 			if(context.playType() != UniversalPlayerType.TYPE_PLAYER) {
-				SharedImpls.shared_func_disconnect(context);
+				SharedImpls.H2.shared_func_disconnect(context);
 				
 				if(this.isLocalChannel()) {
 					LOGGER.info("Stopping singleplayer server as player logged out");
@@ -77,7 +77,7 @@ public abstract class MixinNetworkManager implements ExtensionsNetworkManager {
 					context.manager().rootManager().server().initiateShutdown();
 				}
 			} else if(!(this.packetListener instanceof INetHandlerPlayServer))
-				SharedImpls.shared_func_disconnect(context); //sometimes you will found connection close without a NetHandlerPlayServer, i.e. in NetHandlerLoginServer
+				SharedImpls.H2.shared_func_disconnect(context); //sometimes you will found connection close without a NetHandlerPlayServer, i.e. in NetHandlerLoginServer
 		}
 	}
 	

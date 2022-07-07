@@ -71,8 +71,8 @@ public abstract class MixinNettyPacketEncoder {
 			 * 	The byte 0 indicates there will be no following-up packet, while 1 means the contrary.
 			 * */
 			
-			final int id = SharedImpls.custom_payload_pid(this.direction);
-			final int maxload = SharedImpls.custom_payload_maxload(this.direction);
+			final int id = SharedImpls.H2.custom_payload_pid(this.direction);
+			final int maxload = SharedImpls.H2.custom_payload_maxload(this.direction);
 			final String channel = "WOLFTAIL|WPS";
 			
 			PacketBuffer wrapper = new PacketBuffer(buf);

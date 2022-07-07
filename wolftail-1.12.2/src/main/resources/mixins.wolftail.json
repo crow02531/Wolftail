@@ -9,7 +9,10 @@
     "MixinMinecraftServer",
     "MixinNetHandlerLoginServer",
     "MixinNetHandlerPlayServer",
-    "MixinPlayerList"
+    "MixinPlayerList",
+    "MixinChunkProviderServer",
+    "MixinChunk",
+    "MixinWorldServer"
   ],
   "client": [
     "client.MixinMain",

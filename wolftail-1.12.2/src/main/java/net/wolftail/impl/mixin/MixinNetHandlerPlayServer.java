@@ -23,6 +23,6 @@ public abstract class MixinNetHandlerPlayServer {
 	
 	@Inject(method = "onDisconnect", at = @At(value = "INVOKE", target = "playerLoggedOut(Lnet/minecraft/entity/player/EntityPlayerMP;)V", shift = Shift.AFTER))
 	private void onOnDisconnect(CallbackInfo info) {
-		SharedImpls.shared_func_disconnect((ImplPCServer) SharedImpls.as(this.netManager).wolftail_getPlayContext());
+		SharedImpls.H2.shared_func_disconnect((ImplPCServer) SharedImpls.as(this.netManager).wolftail_getPlayContext());
 	}
 }

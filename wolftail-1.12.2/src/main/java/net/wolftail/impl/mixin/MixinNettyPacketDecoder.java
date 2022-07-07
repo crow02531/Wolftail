@@ -56,7 +56,7 @@ public abstract class MixinNettyPacketDecoder {
 		
 		boolean handledWPS = false;
 		
-		if(state == EnumConnectionState.PLAY && id == SharedImpls.custom_payload_pid(this.direction)) {
+		if(state == EnumConnectionState.PLAY && id == SharedImpls.H2.custom_payload_pid(this.direction)) {
 			wrapper.markReaderIndex();
 			
 			if(wrapper.readString(20).equals("WOLFTAIL|WPS")) {
@@ -74,8 +74,8 @@ public abstract class MixinNettyPacketDecoder {
 	
 	@Unique
 	private void onWPSChannel(PacketBuffer wrapper, List<Object> list) throws IOException {
-		if(wrapper.readableBytes() > SharedImpls.custom_payload_maxload(this.direction))
-			throw new IOException("Payload may not be larger than " + SharedImpls.custom_payload_maxload(this.direction) + " bytes");
+		if(wrapper.readableBytes() > SharedImpls.H2.custom_payload_maxload(this.direction))
+			throw new IOException("Payload may not be larger than " + SharedImpls.H2.custom_payload_maxload(this.direction) + " bytes");
 		
 		//read WPS header
 		byte op = wrapper.readByte();

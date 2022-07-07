@@ -2,5 +2,6 @@ package net.wolftail.impl;
 
 public interface ExtensionsWorldServer {
 	
-	ImplWS wolftail_getWorldSubscriber();
+	ExtensionsChunk wolftail_getHead();
+	void wolftail_setHead(ExtensionsChunk h);
 }
