@@ -82,7 +82,7 @@ public final class ImplMPCRoot implements RootPlayContextManager {
 	public ImplPCServer join(NetworkManager connection, UUID id, String name) {
 		ImplMPCSub manager = this.subs.get(this.determine_type(id, name));
 		ImplPCServer context = new ImplPCServer(manager, id, name, connection);
-		//TODO check max load
+		
 		if(this.contexts.putIfAbsent(id, context) != null)
 			throw new IllegalStateException("Duplicated join with ID " + id);
 		

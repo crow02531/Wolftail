@@ -8,7 +8,8 @@
     "MixinNettyPacketDecoder",
     "MixinMinecraftServer",
     "MixinNetHandlerLoginServer",
-    "MixinNetHandlerPlayServer"
+    "MixinNetHandlerPlayServer",
+    "MixinPlayerList"
   ],
   "client": [
     "client.MixinMain",
