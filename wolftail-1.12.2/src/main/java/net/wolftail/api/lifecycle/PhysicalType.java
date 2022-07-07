@@ -1,7 +1,13 @@
 package net.wolftail.api.lifecycle;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.launchwrapper.Launch;
 
+/**
+ * Minecraft has two kind of programs, {@link #INTEGRATED_CLIENT} and
+ * {@link #DEDICATED_SERVER}.
+ */
 public enum PhysicalType {
 	
 	INTEGRATED_CLIENT,
@@ -16,6 +22,7 @@ public enum PhysicalType {
 			throw new IllegalStateException("Not in " + this);
 	}
 	
+	@Nonnull
 	public static PhysicalType currentType() {
 		return CURRENT_TYPE;
 	}
@@ -23,7 +30,7 @@ public enum PhysicalType {
 	private static final PhysicalType CURRENT_TYPE;
 	
 	static {
-		String force = System.getenv("wolftail.forced_physical_type");
+		String force = System.getenv("wolftail.forced_physical_type"); //TODO better determination
 		PhysicalType result;
 		
 		if(force != null) {

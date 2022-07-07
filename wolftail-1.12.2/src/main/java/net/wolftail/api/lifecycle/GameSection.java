@@ -1,39 +1,33 @@
 package net.wolftail.api.lifecycle;
 
-import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
-public abstract class GameSection {
+import javax.annotation.Nonnull;
+
+import net.wolftail.impl.SharedImpls;
+
+public enum GameSection {
 	
-	protected final SectionToken token;
+	GAME_PREPARING, 
+	GAME_PREPARED, 
+	GAME_LOADING, 
+	GAME_LOADED, 
+	GAME_WANDERING, 
+	GAME_PLAYING;
 	
-	final ReentrantReadWriteLock lock;
+	private final ReentrantReadWriteLock lock;
 	
-	SectionState state;
+	private SectionState state;
 	
-	protected GameSection() {
-		this(SectionState.BEFORE);
-	}
-	
-	protected GameSection(SectionState initial) {
-		this.token = new SectionToken(this);
-		
+	private GameSection() {
 		this.lock = new ReentrantReadWriteLock();
 		
-		this.state = Objects.requireNonNull(initial);
+		this.state = SectionState.BEFORE;
 	}
 	
-	public final void verify(SectionToken token) {
-		if(this.token != Objects.requireNonNull(token))
-			throw new SecurityException();
-	}
-	
-	public final void ensure(SectionState intended, Runnable action) {
-		Objects.requireNonNull(intended, "intended");
-		Objects.requireNonNull(action, "action");
-		
+	public final void ensure(@Nonnull SectionState intended, @Nonnull Runnable action) {
 		this.block((current) -> {
 			if(intended != current)
 				throw new IllegalStateException("Not in " + intended + " state but " + current);
@@ -42,7 +36,7 @@ public abstract class GameSection {
 		});
 	}
 	
-	public final void block(Consumer<SectionState> action) {
+	public final void block(@Nonnull Consumer<SectionState> action) {
 		Lock rlock = this.lock.readLock();
 		
 		rlock.lock();
@@ -51,6 +45,44 @@ public abstract class GameSection {
 			action.accept(this.state);
 		} finally {
 			rlock.unlock();
+		}
+	}
+	
+	static {
+		SharedImpls.H1.token_preparing = new Token(GAME_PREPARING);
+		SharedImpls.H1.token_prepared = new Token(GAME_PREPARED);
+		SharedImpls.H1.token_loading = new Token(GAME_LOADING);
+		SharedImpls.H1.token_loaded = new Token(GAME_LOADED);
+		SharedImpls.H1.token_wandering = new Token(GAME_WANDERING);
+		SharedImpls.H1.token_playing = new Token(GAME_PLAYING);
+	}
+	
+	private static final class Token extends SharedImpls.H1 {
+		
+		private final GameSection target;
+		
+		private Token(GameSection target) {
+			this.target = target;
+		}
+		
+		@Override
+		public void doLock() {
+			this.target.lock.writeLock().lock();
+		}
+		
+		@Override
+		public void doAdvance() {
+			this.target.state = this.target.state.advance();
+		}
+		
+		@Override
+		public void doUnlock() {
+			this.target.lock.writeLock().unlock();
+		}
+		
+		@Override
+		public SectionState currentState() {
+			return this.target.state;
 		}
 	}
 }

@@ -2,34 +2,30 @@ package net.wolftail.api;
 
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.Packet;
+import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.api.lifecycle.LogicType;
+import net.wolftail.api.lifecycle.SideWith;
 
+@SideWith(section = GameSection.GAME_PLAYING, thread = { LogicType.LOGIC_CLIENT, LogicType.LOGIC_SERVER })
 public interface PlayContext {
 	
-	UniversalPlayerType playType();
+	@Nonnull UniversalPlayerType playType();
 	
-	UUID playId();
+	@Nonnull UUID playId();
 	
-	String playName();
+	@Nonnull String playName();
 	
-	default ClientPlayContext asClient() {
-		return (ClientPlayContext) this;
-	}
+	void sendPacket(@Nonnull Packet<?> packetIn);
 	
-	default ServerPlayContext asServer() {
-		return (ServerPlayContext) this;
-	}
-	
-	void sendPacket(Packet<?> packetIn);
-	
-	void sendPacket(Packet<?> packetIn, GenericFutureListener<? extends Future<? super Void>> listener);
+	void sendPacket(@Nonnull Packet<?> packetIn, GenericFutureListener<? extends Future<? super Void>> listener);
 	
 	void disconnect();
 	
 	void setNetHandler(INetHandler handler);
-	
-	boolean abandoned();
 }

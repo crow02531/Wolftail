@@ -8,10 +8,8 @@ import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.login.INetHandlerLoginClient;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.WorldServer;
-import net.wolftail.api.lifecycle.BuiltInSection;
+import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SectionState;
-import net.wolftail.api.lifecycle.SectionToken;
 
 public final class SharedImpls {
 	
@@ -37,10 +35,6 @@ public final class SharedImpls {
 		return as((Object) arg);
 	}
 	
-	public static ExtensionsWorldServer as(WorldServer arg) {
-		return as((Object) arg);
-	}
-	
 	@SuppressWarnings("unchecked")
 	public static <T> T as(Object arg) {
 		return (T) arg;
@@ -48,14 +42,6 @@ public final class SharedImpls {
 	
 	public static ExtensionsMinecraft get_mc_as() {
 		return as(Minecraft.getMinecraft());
-	}
-	
-	public static void clinit(Class<?> klass) {
-		try {
-			Class.forName(klass.getName(), true, klass.getClassLoader());
-		} catch(ClassNotFoundException e) {
-			//never happen
-		}
 	}
 	
 	public static int custom_payload_pid(EnumPacketDirection direction) {
@@ -72,28 +58,36 @@ public final class SharedImpls {
 		LOGGER_USER.info("{}({}) the universal player logged out", context.identifier, context.name);
 	}
 	
-	public static class Holder0 {
+	public static final class H0 {
+		
+		private H0() {}
 		
 		public static Thread regular_dedicated_server_host; //dedicatedServer has two host thread, the second one is called regular by us
 	}
 	
-	public static class Holder1 {
+	public static abstract class H1 {
+		
+		public abstract void doLock();
+		public abstract void doAdvance();
+		public abstract void doUnlock();
+		
+		public abstract SectionState currentState();
 		
 		static {
-			clinit(BuiltInSection.class);
+			GameSection.values(); //clinit GameSection
 		}
 		
-		public static SectionToken token_preparing;
-		public static SectionToken token_prepared;
-		public static SectionToken token_loading;
-		public static SectionToken token_loaded;
-		public static SectionToken token_wandering;
-		public static SectionToken token_playing;
+		public static H1 token_preparing;
+		public static H1 token_prepared;
+		public static H1 token_loading;
+		public static H1 token_loaded;
+		public static H1 token_wandering;
+		public static H1 token_playing;
 		
 		public static void finish_preparing() {
-			SectionToken preparing = token_preparing;
-			SectionToken prepared = token_prepared;
-			SectionToken loading = token_loading;
+			H1 preparing = token_preparing;
+			H1 prepared = token_prepared;
+			H1 loading = token_loading;
 			
 			preparing.doLock();
 			prepared.doLock();
@@ -110,43 +104,44 @@ public final class SharedImpls {
 			loading.doUnlock();
 		}
 		
-		public static void finish_loading(boolean isClient) {
-			SectionToken loading = token_loading;
-			SectionToken loaded = token_loaded;
+		public static void finish_loading(boolean isServer) {
+			H1 loading = token_loading;
+			H1 loaded = token_loaded;
+			H1 wandering = token_wandering;
 			
-			if(isClient) {
-				SectionToken wandering = token_wandering;
+			loading.doLock();
+			loaded.doLock();
+			wandering.doLock();
+			
+			loading.doAdvance();
+			loaded.doAdvance();
+			wandering.doAdvance();
+			
+			LOGGER_LIFECYCLE.info("Section LOADING end and LOADED, WANDERING start");
+			
+			loading.doUnlock();
+			loaded.doUnlock();
+			wandering.doUnlock();
+			
+			if(isServer) {
+				H1 playing = token_playing;
 				
-				loading.doLock();
-				loaded.doLock();
 				wandering.doLock();
+				playing.doLock();
 				
-				loading.doAdvance();
-				loaded.doAdvance();
 				wandering.doAdvance();
+				playing.doAdvance();
 				
-				LOGGER_LIFECYCLE.info("Section LOADING end and LOADED, WANDERING start");
+				LOGGER_LIFECYCLE.info("Section WANDERING end and PLAYING start");
 				
-				loading.doUnlock();
-				loaded.doUnlock();
 				wandering.doUnlock();
-			} else {
-				loading.doLock();
-				loaded.doLock();
-				
-				loading.doAdvance();
-				loaded.doAdvance();
-				
-				LOGGER_LIFECYCLE.info("Section LOADING end and LOADED start");
-				
-				loading.doUnlock();
-				loaded.doUnlock();
+				playing.doUnlock();
 			}
 		}
 		
 		public static void on_client_playing_change() {
-			SectionToken wandering = token_wandering;
-			SectionToken playing = token_playing;
+			H1 wandering = token_wandering;
+			H1 playing = token_playing;
 			
 			wandering.doLock();
 			playing.doLock();

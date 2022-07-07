@@ -19,11 +19,11 @@ public abstract class MixinMinecraftServer {
 	private void onStartServerThread(CallbackInfo info) {
 		//invoked by the 'zero' thread, transfer the host to the now unstarted serverThread
 		
-		SharedImpls.Holder0.regular_dedicated_server_host = this.serverThread;
+		SharedImpls.H0.regular_dedicated_server_host = this.serverThread;
 	}
 	
 	@Inject(method = "main", at = @At("HEAD"))
 	private static void onMain(CallbackInfo info) {
-		SharedImpls.Holder1.finish_preparing();
+		SharedImpls.H1.finish_preparing();
 	}
 }

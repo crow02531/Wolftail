@@ -14,7 +14,7 @@ public abstract class MixinDedicatedServer extends net.wolftail.impl.mixin.Mixin
 	
 	@Inject(method = "init", at = @At("RETURN"))
 	private void onInit(CallbackInfoReturnable<Boolean> info) {
-		SharedImpls.Holder1.finish_loading(false);
+		SharedImpls.H1.finish_loading(true);
 		
 		this.root = new ImplMPCRoot(SharedImpls.as(this));
 	}

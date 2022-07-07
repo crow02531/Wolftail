@@ -1,20 +1,24 @@
 package net.wolftail.api;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
+import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.api.lifecycle.LogicType;
+import net.wolftail.api.lifecycle.SideWith;
+
+@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
 public interface SubPlayContextManager {
 	
-	RootPlayContextManager rootManager();
+	@Nonnull RootPlayContextManager rootManager();
 	
-	UniversalPlayerType type();
+	@Nonnull UniversalPlayerType type();
 	
 	ServerPlayContext contextFor(UUID playId);
 	
 	int currentLoad();
 	
-	Map<UUID, ServerPlayContext> asMap();
-	
-	Set<ServerPlayContext> asSet();
+	@Nonnull Set<ServerPlayContext> asSet();
 }

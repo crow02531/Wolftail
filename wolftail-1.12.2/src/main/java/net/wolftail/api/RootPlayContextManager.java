@@ -1,15 +1,20 @@
 package net.wolftail.api;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.server.MinecraftServer;
+import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.api.lifecycle.LogicType;
+import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.SharedImpls;
 
+@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
 public interface RootPlayContextManager {
 	
-	MinecraftServer server();
+	@Nonnull MinecraftServer server();
 	
 	ServerPlayContext contextFor(UUID playId);
 	
@@ -19,15 +24,12 @@ public interface RootPlayContextManager {
 	
 	SubPlayContextManager subManager(UniversalPlayerType type);
 	
-	Map<UniversalPlayerType, SubPlayContextManager> asManagerMap();
+	@Nonnull Set<SubPlayContextManager> asManagerSet();
 	
-	Set<SubPlayContextManager> asManagerSet();
+	@Nonnull Set<ServerPlayContext> asContextSet();
 	
-	Map<UUID, ServerPlayContext> asContextMap();
-	
-	Set<ServerPlayContext> asContextSet();
-	
-	static RootPlayContextManager instanceFor(MinecraftServer server) {
+	@Nonnull
+	static RootPlayContextManager instanceFor(@Nonnull MinecraftServer server) {
 		return SharedImpls.as(server).wolftail_getRootManager();
 	}
 }

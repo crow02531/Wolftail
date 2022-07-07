@@ -18,7 +18,7 @@ import net.wolftail.impl.ImplPCServer;
 import net.wolftail.impl.ImplUPT;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.network.DefaultNetHandler;
-import net.wolftail.impl.network.SPacketTypeNotify;
+import net.wolftail.impl.network.S2CPacketTypeNotify;
 
 //accept universal player
 @Mixin(NetHandlerLoginServer.class)
@@ -41,7 +41,7 @@ public abstract class MixinNetHandlerLoginServer {
 		NetworkManager connect = this.networkManager;
 		
 		//now it was EnumConnectionState.LOGIN state and vanilla connection has just set up
-		//we should in LOGIC_SERVER's main thread
+		//we should in LOGIC_SERVER thread
 		
 		ImplPCServer context = SharedImpls.as(this.server).wolftail_getRootManager().join(connect, profile.getId(), profile.getName());
 		ImplUPT type = context.playType();
@@ -49,14 +49,14 @@ public abstract class MixinNetHandlerLoginServer {
 		SharedImpls.as(connect).wolftail_setPlayContext(context);
 		
 		//the connection state setting action will be executed in netty's event loop thread, it will be set to PLAY
-		connect.sendPacket(new SPacketTypeNotify(type));
+		connect.sendPacket(new S2CPacketTypeNotify(type));
 		
 		//wolftail connection set up
 		
 		SharedImpls.LOGGER_NETWORK.info("Server side Wolftail connection set up, with remote address {}", connect.getRemoteAddress());
 		SharedImpls.LOGGER_USER.info("{}({}) the universal player logged in with type {} and address {}", profile.getId(), profile.getName(), type.registeringId(), connect.getRemoteAddress());
 		
-		if(type != UniversalPlayerType.TYPE_PLAYERS) {
+		if(type != UniversalPlayerType.TYPE_PLAYER) {
 			info.cancel();
 			
 			connect.setNetHandler(new DefaultNetHandler());

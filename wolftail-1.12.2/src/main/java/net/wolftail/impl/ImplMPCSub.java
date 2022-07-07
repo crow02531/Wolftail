@@ -1,10 +1,8 @@
 package net.wolftail.impl;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import net.wolftail.api.RootPlayContextManager;
@@ -19,8 +17,7 @@ public final class ImplMPCSub implements SubPlayContextManager {
 	
 	int current_load;
 	
-	private Map<UUID, ServerPlayContext>	view_map;
-	private Set<ServerPlayContext>			view_set;
+	private Set<ServerPlayContext> view_set;
 	
 	public ImplMPCSub(ImplUPT arg0, ImplMPCRoot arg1) {
 		this.type = arg0;
@@ -47,13 +44,6 @@ public final class ImplMPCSub implements SubPlayContextManager {
 	@Override
 	public int currentLoad() {
 		return this.current_load;
-	}
-	
-	@Override
-	public Map<UUID, ServerPlayContext> asMap() {
-		Map<UUID, ServerPlayContext> ret = this.view_map;
-		
-		return ret != null ? ret : (this.view_map = Maps.filterValues(this.root.asContextMap(), val -> val.manager() == this));
 	}
 	
 	@Override

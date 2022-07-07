@@ -23,11 +23,6 @@ public final class ImplPCClient extends ImplPC implements ClientPlayContext {
 		return this.type;
 	}
 	
-	@Override
-	public boolean abandoned() {
-		return !this.connection.isChannelOpen();
-	}
-	
 	public NetworkManager getConnection() {
 		return this.connection;
 	}

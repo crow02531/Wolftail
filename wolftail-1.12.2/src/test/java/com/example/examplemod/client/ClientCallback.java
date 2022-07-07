@@ -7,8 +7,8 @@ import org.lwjgl.util.vector.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.wolftail.api.IClientEntryPoint;
 import net.wolftail.api.IClientFrameCallback;
+import net.wolftail.util.client.renderer.CmdUnit;
 import net.wolftail.api.ClientPlayContext;
-import net.wolftail.util.client.CmdUnit;
 
 public class ClientCallback implements IClientEntryPoint, IClientFrameCallback {
 	
@@ -49,6 +49,7 @@ public class ClientCallback implements IClientEntryPoint, IClientFrameCallback {
 		context.setNetHandler(new ClientNetHandler(context));
 		
 		//TODO get the actual PPI of screen. Toolkit's is fault.
-		ui = new CmdUnit(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, 21);
+		ui = new CmdUnit(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+		ui.usePPU(21);
 	}
 }

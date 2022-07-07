@@ -122,7 +122,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	
 	@Inject(method = "init", at = @At("RETURN"))
 	private void onInit(CallbackInfo info) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-		SharedImpls.Holder1.finish_loading(true);
+		SharedImpls.H1.finish_loading(false);
 	}
 	
 	@Inject(method = "runTick", at = @At(value = "INVOKE_STRING", target = "endStartSection(Ljava/lang/String;)V", args = { "ldc=textures" }))
@@ -138,7 +138,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 		ImplPCClient context = this.play_context;
 		ImplUPT type;
 		
-		if(context != null && (type = (ImplUPT) context.playType()) != UniversalPlayerType.TYPE_PLAYERS) {
+		if(context != null && (type = (ImplUPT) context.playType()) != UniversalPlayerType.TYPE_PLAYER) {
 			info.cancel();
 			
 			try {
@@ -272,14 +272,14 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	public ImplPCClient wolftail_setupPlayContext(ImplUPT type, UUID id, NetworkManager connect) {
 		ImplPCClient ret = this.play_context = new ImplPCClient(type, id, this.session.getUsername(), connect);
 		
-		SharedImpls.Holder1.on_client_playing_change();
+		SharedImpls.H1.on_client_playing_change();
 		
 		return ret;
 	}
 	
 	@Override
 	public void wolftail_unloadPlayContext() {
-		SharedImpls.Holder1.on_client_playing_change();
+		SharedImpls.H1.on_client_playing_change();
 		
 		this.play_context = null;
 	}

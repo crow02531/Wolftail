@@ -11,13 +11,17 @@ import net.wolftail.api.lifecycle.PhysicalType;
 import net.wolftail.impl.ExtensionsMinecraftServer;
 import net.wolftail.impl.ImplMPCRoot;
 import net.wolftail.impl.SharedImpls;
+import net.wolftail.util.tracker.ContentTracker;
 
-//rootPlayContextManager addition
+//rootPlayContextManager, content tracker addition
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer {
 	
 	@Unique
 	protected ImplMPCRoot root;
+	
+	@Unique
+	private ContentTracker tracker;
 	
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void onConstruct(CallbackInfo info) {
@@ -28,5 +32,15 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	@Override
 	public ImplMPCRoot wolftail_getRootManager() {
 		return this.root;
+	}
+	
+	@Override
+	public ContentTracker wolftail_getContentTracker() {
+		return this.tracker;
+	}
+	
+	@Override
+	public void wolftail_setContentTracker(ContentTracker obj) {
+		this.tracker = obj;
 	}
 }

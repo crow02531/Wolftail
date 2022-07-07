@@ -1,5 +1,7 @@
 package net.wolftail.api.lifecycle;
 
+import javax.annotation.Nonnull;
+
 public enum SectionState {
 	
 	BEFORE {
@@ -26,5 +28,6 @@ public enum SectionState {
 		}
 	};
 	
+	@Nonnull
 	public abstract SectionState advance();
 }

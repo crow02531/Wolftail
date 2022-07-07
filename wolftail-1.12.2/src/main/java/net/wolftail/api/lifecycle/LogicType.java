@@ -9,7 +9,7 @@ public enum LogicType {
 	LOGIC_CLIENT {
 		
 		@Override
-		public boolean inMain() {
+		public boolean in() {
 			return PhysicalType.INTEGRATED_CLIENT.is() ? Thread.currentThread().getId() == 1 : false;
 		}
 	},
@@ -17,16 +17,16 @@ public enum LogicType {
 	LOGIC_SERVER {
 		
 		@Override
-		public boolean inMain() {
+		public boolean in() {
 			if(PhysicalType.INTEGRATED_CLIENT.is()) {
-				if(BuiltInSection.GAME_PREPARED.state != SectionState.ACTIVE)
+				if(SharedImpls.H1.token_prepared.currentState() != SectionState.ACTIVE)
 					return false;
 				
 				IntegratedServer server = Minecraft.getMinecraft().getIntegratedServer();
 				
 				return server == null ? false : server.isCallingFromMinecraftThread();
 			} else {
-				Thread regular_host = SharedImpls.Holder0.regular_dedicated_server_host;
+				Thread regular_host = SharedImpls.H0.regular_dedicated_server_host;
 				Thread current = Thread.currentThread();
 				
 				if(current == regular_host) return true;
@@ -37,15 +37,15 @@ public enum LogicType {
 		}
 	};
 	
-	public abstract boolean inMain();
+	public abstract boolean in();
 	
-	public void ensureMain() {
-		if(!this.inMain())
-			throw new IllegalStateException("Not in " + this + "'s main thread");
+	public void ensure() {
+		if(!this.in())
+			throw new IllegalStateException("Not in " + this);
 	}
 	
 	public static boolean inHost() {
-		return PhysicalType.INTEGRATED_CLIENT.is() ? LOGIC_CLIENT.inMain() : LOGIC_SERVER.inMain();
+		return PhysicalType.INTEGRATED_CLIENT.is() ? LOGIC_CLIENT.in() : LOGIC_SERVER.in();
 	}
 	
 	public static void ensureHost() {

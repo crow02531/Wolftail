@@ -25,7 +25,7 @@ import net.wolftail.impl.ExtensionsNetworkManager;
 import net.wolftail.impl.ImplPC;
 import net.wolftail.impl.ImplPCServer;
 import net.wolftail.impl.SharedImpls;
-import net.wolftail.impl.network.BPacketNPTKeepAlive;
+import net.wolftail.impl.network.BiDPacketNPTKeepAlive;
 
 //WPS supporter, check (S) connection disconnect, keep alive supporter
 @Mixin(NetworkManager.class)
@@ -68,7 +68,7 @@ public abstract class MixinNetworkManager implements ExtensionsNetworkManager {
 			ImplPCServer context = (ImplPCServer) this.play_context;
 			if(context == null) return;
 			
-			if(context.playType() != UniversalPlayerType.TYPE_PLAYERS) {
+			if(context.playType() != UniversalPlayerType.TYPE_PLAYER) {
 				SharedImpls.shared_func_disconnect(context);
 				
 				if(this.isLocalChannel()) {
@@ -87,7 +87,7 @@ public abstract class MixinNetworkManager implements ExtensionsNetworkManager {
 		
 		ImplPC context = this.play_context;
 		
-		if(context != null && context.playType() != UniversalPlayerType.TYPE_PLAYERS) {
+		if(context != null && context.playType() != UniversalPlayerType.TYPE_PLAYER) {
 			if(context.keepAlive_receivedPkt != null) {
 				long t = context.keepAlive_timer;
 				
@@ -107,12 +107,12 @@ public abstract class MixinNetworkManager implements ExtensionsNetworkManager {
 	private void onChannelRead0(ChannelHandlerContext ctx, Packet<?> pkt, CallbackInfo info) throws IOException {
 		//we are in the netty's thread
 		
-		if(pkt instanceof BPacketNPTKeepAlive) {
+		if(pkt instanceof BiDPacketNPTKeepAlive) {
 			info.cancel();
 			
 			ImplPC context = this.play_context;
 			
-			if(context.keepAlive_receivedPkt == null && context.playType() != UniversalPlayerType.TYPE_PLAYERS) {
+			if(context.keepAlive_receivedPkt == null && context.playType() != UniversalPlayerType.TYPE_PLAYER) {
 				context.keepAlive_receivedPkt = pkt;
 			} else throw new IOException("Unexpected keep alive packet");
 		}
