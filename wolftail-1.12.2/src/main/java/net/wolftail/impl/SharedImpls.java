@@ -1,6 +1,6 @@
 package net.wolftail.impl;
 
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +15,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
-import net.wolftail.util.tracker.SubscribeOrder;
 
 public final class SharedImpls {
 	
@@ -82,7 +81,7 @@ public final class SharedImpls {
 		public abstract SectionState currentState();
 		
 		static {
-			clinit(GameSection.class);
+			clinit(GameSection.class);//TODO 把GameSection里的所有变量转移到这里保管，省的翻来覆去的
 		}
 		
 		public static H1 token_preparing;
@@ -171,12 +170,6 @@ public final class SharedImpls {
 		
 		private H2() {}
 		
-		static {
-			clinit(ContentDiff.class);
-		}
-		
-		public static Function<SubscribeOrder, ContentDiff> content_diff_factory;
-		
 		public static int custom_payload_pid(EnumPacketDirection direction) {
 			return direction == EnumPacketDirection.CLIENTBOUND ? 24 : 9; //we don't need to get it dynamically since it was written in protocol
 		}
@@ -189,6 +182,29 @@ public final class SharedImpls {
 			context.manager.root.onLeft(context);
 			
 			LOGGER_USER.info("{}({}) the universal player logged out", context.identifier, context.name);
+		}
+	}
+	
+	public static final class H3 {
+		
+		public Consumer<ContentDiff> subscriber;
+		
+		public boolean initial;
+		
+		public H3(Consumer<ContentDiff> arg) {
+			this.subscriber = arg;
+			
+			this.initial = true;
+		}
+		
+		@Override
+		public int hashCode() {
+			return System.identityHashCode(this.subscriber);
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			return this.subscriber == ((H3) obj).subscriber;
 		}
 	}
 }

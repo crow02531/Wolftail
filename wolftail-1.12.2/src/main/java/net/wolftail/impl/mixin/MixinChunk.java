@@ -14,8 +14,9 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.wolftail.impl.ExtensionsChunk;
 import net.wolftail.impl.ExtensionsWorldServer;
-import net.wolftail.impl.SEntry;
+import net.wolftail.impl.ImplCD;
 import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.SubscribeOrder;
 
@@ -24,7 +25,7 @@ import net.wolftail.util.tracker.SubscribeOrder;
 public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Unique
-	private Set<SEntry> subscribers;
+	private Set<H3> subscribers;
 	
 	@Unique
 	private ExtensionsChunk prev, next;
@@ -64,7 +65,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 			this.next = prevHead;
 		}
 		
-		if(!this.subscribers.add(new SEntry(subscriber))) {
+		if(!this.subscribers.add(new H3(subscriber))) {
 			throw new IllegalArgumentException();
 		}
 	}
@@ -73,9 +74,9 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	public void wolftail_tick() {
 		SubscribeOrder order = new SubscribeOrder(this.world.provider.getDimensionType(), this.x, this.z);
 		
-		for(SEntry e : this.subscribers) {
+		for(H3 e : this.subscribers) {
 			if(e.initial) {
-				ContentDiff sent = SharedImpls.H2.content_diff_factory.apply(order);
+				ImplCD sent = new ImplCD(order);
 				
 				//TODO make initial data
 				
@@ -89,7 +90,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Override
 	public void wolftail_unregister(Consumer<ContentDiff> subscriber) {
-		this.subscribers.remove(new SEntry(subscriber));
+		this.subscribers.remove(new H3(subscriber));
 		
 		if(this.subscribers.isEmpty()) {
 			((ChunkProviderServer) this.world.getChunkProvider()).queueUnload(SharedImpls.as(this));

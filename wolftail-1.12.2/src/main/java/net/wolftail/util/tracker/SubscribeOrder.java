@@ -35,4 +35,19 @@ public final class SubscribeOrder {
 	public int chunkZ() {
 		return this.chunkZ;
 	}
+	
+	@Override
+	public int hashCode() {
+		return (this.dim.hashCode() + this.chunkX * 31) * 31 + this.chunkZ;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(this == obj) return true;
+		if(obj == null || obj.getClass() != SubscribeOrder.class) return false;
+		
+		SubscribeOrder obj0 = (SubscribeOrder) obj;
+		
+		return this.dim == obj0.dim && this.chunkX == obj0.chunkX && this.chunkZ == obj0.chunkZ;
+	}
 }
