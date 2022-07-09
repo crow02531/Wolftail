@@ -69,14 +69,14 @@ public final class ImplMPCRoot implements RootPlayContextManager {
 	public Set<SubPlayContextManager> asManagerSet() {
 		Set<SubPlayContextManager> ret = this.view_set_m;
 		
-		return ret != null ? ret : (this.view_set_m = SharedImpls.as(this.subs.values()));
+		return ret != null ? ret : (this.view_set_m = SharedImpls.as(SharedImpls.wrap(this.subs.values())));
 	}
 	
 	@Override
 	public Set<ServerPlayContext> asContextSet() {
 		Set<ServerPlayContext> ret = this.view_set_c;
 		
-		return ret != null ? ret : (this.view_set_c = Collections.unmodifiableSet(SharedImpls.as(this.contexts.values())));
+		return ret != null ? ret : (this.view_set_c = Collections.unmodifiableSet(SharedImpls.wrap(this.contexts.values())));
 	}
 	
 	public ImplPCServer join(NetworkManager connection, UUID id, String name) {

@@ -1,5 +1,8 @@
 package net.wolftail.impl;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
@@ -15,6 +18,7 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.login.INetHandlerLoginClient;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -61,6 +65,25 @@ public final class SharedImpls {
 	
 	public static ExtensionsMinecraft get_mc_as() {
 		return as(Minecraft.getMinecraft());
+	}
+	
+	public static <E> Set<E> wrap(Collection<E> wrapped) {
+		return new Set<E>() {
+			
+			@Override public int size() { return wrapped.size(); }
+			@Override public boolean isEmpty() { return wrapped.isEmpty(); }
+			@Override public boolean contains(Object o) { return wrapped.contains(o); }
+			@Override public Iterator<E> iterator() { return wrapped.iterator(); }
+			@Override public Object[] toArray() { return wrapped.toArray(); }
+			@Override public <T> T[] toArray(T[] a) { return wrapped.toArray(a); }
+			@Override public boolean add(E e) { return wrapped.add(e); }
+			@Override public boolean remove(Object o) { return wrapped.remove(o); }
+			@Override public boolean containsAll(Collection<?> c) { return wrapped.containsAll(c); }
+			@Override public boolean addAll(Collection<? extends E> c) { return wrapped.addAll(c); }
+			@Override public boolean retainAll(Collection<?> c) { return wrapped.retainAll(c); }
+			@Override public boolean removeAll(Collection<?> c) { return wrapped.removeAll(c); }
+			@Override public void clear() { wrapped.clear(); }
+		};
 	}
 	
 	public static final class H0 {
@@ -231,6 +254,10 @@ public final class SharedImpls {
 			dst.writeInt(order.target().getId());
 			dst.writeInt(order.chunkX());
 			dst.writeInt(order.chunkZ());
+		}
+		
+		public static SubscribeOrder readOrder(ByteBuf buf) {
+			return new SubscribeOrder(DimensionType.getById(buf.readInt()), buf.readInt(), buf.readInt());
 		}
 	}
 	

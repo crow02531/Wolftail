@@ -73,7 +73,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	public void wolftail_register(Consumer<ContentDiff> subscriber) {
 		if(this.subscribers == null) {
 			this.subscribers = new HashSet<>(8);
-			this.changedBlocks = new ShortArraySet(32);
+			this.changedBlocks = new ShortArraySet(32); //how do a short set has its size larger than 65536?
 			
 			ExtensionsWorldServer ews = ((ExtensionsWorldServer) SharedImpls.as(this.world));
 			ExtensionsChunk prevHead = ews.wolftail_getHead();
@@ -97,13 +97,13 @@ public abstract class MixinChunk implements ExtensionsChunk {
 		for(H3 e : this.subscribers) {
 			if(e.initial) {
 				if(init == null)
-					init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)));
+					init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)).asReadOnly());
 				
 				e.subscriber.accept(init);
 				e.initial = false;
 			} else {
 				if(diff == null) {
-					diff = new ImplCD(order, SharedImpls.H2.makeDiffCD(order, SharedImpls.as(this)));
+					diff = new ImplCD(order, SharedImpls.H2.makeDiffCD(order, SharedImpls.as(this)).asReadOnly());
 					
 					this.changedBlocks.clear();
 				}
