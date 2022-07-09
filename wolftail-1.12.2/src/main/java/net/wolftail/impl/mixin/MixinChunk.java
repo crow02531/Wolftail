@@ -40,7 +40,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Override
 	public boolean wolftail_hasSubscriber() {
-		return this.subscribers != null && !this.subscribers.isEmpty();
+		return this.subscribers != null;
 	}
 	
 	@Override
@@ -100,6 +100,8 @@ public abstract class MixinChunk implements ExtensionsChunk {
 			} else {
 				this.prev.wolftail_setNext(this.next);
 			}
+			
+			this.subscribers = null;
 		}
 	}
 }

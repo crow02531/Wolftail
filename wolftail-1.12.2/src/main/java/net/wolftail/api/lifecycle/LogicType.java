@@ -19,7 +19,7 @@ public enum LogicType {
 		@Override
 		public boolean in() {
 			if(PhysicalType.INTEGRATED_CLIENT.is()) {
-				if(SharedImpls.H1.token_prepared.currentState() != SectionState.ACTIVE)
+				if(SharedImpls.H1.TOKEN_PREPARED.state != SectionState.ACTIVE)
 					return false;
 				
 				IntegratedServer server = Minecraft.getMinecraft().getIntegratedServer();

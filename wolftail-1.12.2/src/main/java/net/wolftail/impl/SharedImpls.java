@@ -1,5 +1,6 @@
 package net.wolftail.impl;
 
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
@@ -12,7 +13,6 @@ import net.minecraft.network.login.INetHandlerLoginClient;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
 
@@ -57,14 +57,6 @@ public final class SharedImpls {
 		return as(Minecraft.getMinecraft());
 	}
 	
-	public static void clinit(Class<?> klass) {
-		try {
-			Class.forName(klass.getName(), true, klass.getClassLoader());
-		} catch(ClassNotFoundException e) {
-			//never happen
-		}
-	}
-	
 	public static final class H0 {
 		
 		private H0() {}
@@ -72,29 +64,45 @@ public final class SharedImpls {
 		public static Thread regular_dedicated_server_host; //dedicatedServer has two host thread, the second one is called regular by us
 	}
 	
-	public static abstract class H1 {
+	public static final class H1 {
 		
-		public abstract void doLock();
-		public abstract void doAdvance();
-		public abstract void doUnlock();
+		public final ReentrantReadWriteLock lock;
 		
-		public abstract SectionState currentState();
+		public SectionState state;
 		
-		static {
-			clinit(GameSection.class);//TODO 把GameSection里的所有变量转移到这里保管，省的翻来覆去的
+		public H1() {
+			this(SectionState.BEFORE);
 		}
 		
-		public static H1 token_preparing;
-		public static H1 token_prepared;
-		public static H1 token_loading;
-		public static H1 token_loaded;
-		public static H1 token_wandering;
-		public static H1 token_playing;
+		public H1(SectionState init) {
+			this.lock = new ReentrantReadWriteLock();
+			
+			this.state = init;
+		}
+		
+		public void doLock() {
+			this.lock.writeLock().lock();
+		}
+		
+		public void doAdvance() {
+			this.state = this.state.advance();
+		}
+		
+		public void doUnlock() {
+			this.lock.writeLock().unlock();
+		}
+		
+		public static final H1 TOKEN_PREPARING = new H1(SectionState.ACTIVE);
+		public static final H1 TOKEN_PREPARED = new H1();
+		public static final H1 TOKEN_LOADING = new H1();
+		public static final H1 TOKEN_LOADED = new H1();
+		public static final H1 TOKEN_WANDERING = new H1();
+		public static final H1 TOKEN_PLAYING = new H1();
 		
 		public static void finish_preparing() {
-			H1 preparing = token_preparing;
-			H1 prepared = token_prepared;
-			H1 loading = token_loading;
+			H1 preparing = TOKEN_PREPARING;
+			H1 prepared = TOKEN_PREPARED;
+			H1 loading = TOKEN_LOADING;
 			
 			preparing.doLock();
 			prepared.doLock();
@@ -112,9 +120,9 @@ public final class SharedImpls {
 		}
 		
 		public static void finish_loading(boolean isServer) {
-			H1 loading = token_loading;
-			H1 loaded = token_loaded;
-			H1 wandering = token_wandering;
+			H1 loading = TOKEN_LOADING;
+			H1 loaded = TOKEN_LOADED;
+			H1 wandering = TOKEN_WANDERING;
 			
 			loading.doLock();
 			loaded.doLock();
@@ -131,7 +139,7 @@ public final class SharedImpls {
 			wandering.doUnlock();
 			
 			if(isServer) {
-				H1 playing = token_playing;
+				H1 playing = TOKEN_PLAYING;
 				
 				wandering.doLock();
 				playing.doLock();
@@ -147,8 +155,8 @@ public final class SharedImpls {
 		}
 		
 		public static void on_client_playing_change() {
-			H1 wandering = token_wandering;
-			H1 playing = token_playing;
+			H1 wandering = TOKEN_WANDERING;
+			H1 playing = TOKEN_PLAYING;
 			
 			wandering.doLock();
 			playing.doLock();
@@ -156,7 +164,7 @@ public final class SharedImpls {
 			wandering.doAdvance();
 			playing.doAdvance();
 			
-			if(wandering.currentState() == SectionState.ACTIVE)
+			if(wandering.state == SectionState.ACTIVE)
 				LOGGER_LIFECYCLE.info("Section PLAYING end and WANDERING start");
 			else
 				LOGGER_LIFECYCLE.info("Section WANDERING end and PLAYING start");
