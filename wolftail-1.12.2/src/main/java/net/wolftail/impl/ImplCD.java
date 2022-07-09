@@ -1,22 +1,28 @@
 package net.wolftail.impl;
 
-import net.minecraft.network.PacketBuffer;
+import io.netty.buffer.ByteBuf;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.SubscribeOrder;
 
 public final class ImplCD implements ContentDiff {
 	
-	public ImplCD(SubscribeOrder order) {
+	private final SubscribeOrder order;
+	
+	private final ByteBuf data;
+	
+	public ImplCD(SubscribeOrder order, ByteBuf data) {
+		this.order = order;
 		
+		this.data = data.asReadOnly();
 	}
 	
 	@Override
 	public SubscribeOrder order() {
-		return null;
+		return this.order;
 	}
 	
 	@Override
-	public void writeTo(PacketBuffer buf) {
-		
+	public ByteBuf asByteBuf() {
+		return this.data;
 	}
 }

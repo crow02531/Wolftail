@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
+import it.unimi.dsi.fastutil.shorts.ShortArraySet;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
@@ -30,6 +32,9 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	@Unique
 	private ExtensionsChunk prev, next;
 	
+	@Unique
+	private ShortSet changedBlocks;
+	
 	@Final
 	@Shadow
 	private World world;
@@ -37,6 +42,17 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	@Final
 	@Shadow
 	public int x, z;
+	
+	@Override
+	public void wolftail_blockChanged(int x, int y, int z) {
+		if(this.subscribers != null)
+			this.changedBlocks.add((short) (x << 12 | z << 8 | y));
+	}
+	
+	@Override
+	public ShortSet wolftail_changedBlocks() {
+		return this.changedBlocks;
+	}
 	
 	@Override
 	public boolean wolftail_hasSubscriber() {
@@ -57,6 +73,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	public void wolftail_register(Consumer<ContentDiff> subscriber) {
 		if(this.subscribers == null) {
 			this.subscribers = new HashSet<>(8);
+			this.changedBlocks = new ShortArraySet(32);
 			
 			ExtensionsWorldServer ews = ((ExtensionsWorldServer) SharedImpls.as(this.world));
 			ExtensionsChunk prevHead = ews.wolftail_getHead();
@@ -74,16 +91,24 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	public void wolftail_tick() {
 		SubscribeOrder order = new SubscribeOrder(this.world.provider.getDimensionType(), this.x, this.z);
 		
+		ImplCD init = null;
+		ImplCD diff = null;
+		
 		for(H3 e : this.subscribers) {
 			if(e.initial) {
-				ImplCD sent = new ImplCD(order);
+				if(init == null)
+					init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)));
 				
-				//TODO make initial data
-				
-				e.subscriber.accept(sent);
+				e.subscriber.accept(init);
 				e.initial = false;
 			} else {
-				//TODO send diff
+				if(diff == null) {
+					diff = new ImplCD(order, SharedImpls.H2.makeDiffCD(order, SharedImpls.as(this)));
+					
+					this.changedBlocks.clear();
+				}
+				
+				e.subscriber.accept(diff);
 			}
 		}
 	}
@@ -102,6 +127,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 			}
 			
 			this.subscribers = null;
+			this.changedBlocks = null;
 		}
 	}
 }

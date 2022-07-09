@@ -6,15 +6,21 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.login.INetHandlerLoginClient;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
+import net.wolftail.util.tracker.SubscribeOrder;
 
 public final class SharedImpls {
 	
@@ -190,6 +196,41 @@ public final class SharedImpls {
 			context.manager.root.onLeft(context);
 			
 			LOGGER_USER.info("{}({}) the universal player logged out", context.identifier, context.name);
+		}
+		
+		public static ByteBuf makeInitCD(SubscribeOrder order, Chunk src) {
+			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+			ExtendedBlockStorage[] ebs = src.getBlockStorageArray();
+			
+			data.writeByte(0);
+			writeOrder(order, data);
+			
+			for(int i = 0; i < 16; i++)
+				ebs[i].getData().write(data);
+			
+			return data.unwrap();
+		}
+		
+		@SuppressWarnings("deprecation")
+		public static ByteBuf makeDiffCD(SubscribeOrder order, Chunk src) {
+			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+			ExtensionsChunk ec = as(src);
+			
+			data.writeByte(1);
+			writeOrder(order, data);
+			
+			for(short s : ec.wolftail_changedBlocks()) {
+				data.writeShort(s);
+				data.writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)));
+			}
+			
+			return data.unwrap();
+		}
+		
+		private static void writeOrder(SubscribeOrder order, ByteBuf dst) {
+			dst.writeInt(order.target().getId());
+			dst.writeInt(order.chunkX());
+			dst.writeInt(order.chunkZ());
 		}
 	}
 	

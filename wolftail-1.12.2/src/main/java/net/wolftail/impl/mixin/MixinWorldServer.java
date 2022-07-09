@@ -6,12 +6,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.wolftail.impl.ExtensionsChunk;
 import net.wolftail.impl.ExtensionsWorldServer;
+import net.wolftail.impl.ServerWorldListener;
+import net.wolftail.impl.SharedImpls;
 
-//ContentTracker Supporter, ticking subscribed chunks
+//ContentTracker Supporter, ticking subscribed chunks and adding an IWorldEventListener
 @Mixin(WorldServer.class)
 public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	
@@ -27,6 +31,11 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 			
 			c = c.wolftail_getNext();
 		}
+	}
+	
+	@Inject(method = "init", at = @At("RETURN"))
+	private void onInit(CallbackInfoReturnable<World> info) {
+		((WorldServer) SharedImpls.as(this)).addEventListener(new ServerWorldListener());
 	}
 	
 	@Override
