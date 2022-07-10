@@ -11,7 +11,7 @@ import net.minecraft.world.DimensionType;
 
 public final class PartialWorld {
 	
-	private final PartialUniverse universe;
+	private PartialUniverse universe;
 	
 	private final DimensionType dimension;
 	
@@ -27,21 +27,45 @@ public final class PartialWorld {
 	
 	@Nonnull
 	public PartialUniverse universe() {
-		return this.universe;
+		return this.check().universe;
 	}
 	
 	@Nonnull
 	public DimensionType dimension() {
-		return this.dimension;
+		return this.check().dimension;
+	}
+	
+	public void free() {
+		this.check().universe.worlds.remove(this.dimension);
+		
+		this.universe = null;
+	}
+	
+	public boolean valid() {
+		return this.universe != null;
+	}
+	
+	private PartialWorld check() {
+		if(!this.valid())
+			throw new IllegalStateException();
+		
+		return this;
 	}
 	
 	public SlaveChunk chunk(int chunkX, int chunkZ) {
-		return this.chunks.get(ChunkPos.asLong(chunkX, chunkZ));
+		return this.check().chunks.get(ChunkPos.asLong(chunkX, chunkZ));
 	}
 	
 	public IBlockState blockState(@Nonnull BlockPos pos) {
-		SlaveChunk c = this.chunk(pos.getX() >> 4, pos.getZ() >> 4);
+		int x = pos.getX();
+		int y = pos.getY();
+		int z = pos.getZ();
 		
-		return c == null ? null : c.blockState(pos.getX() & 15, pos.getY(), pos.getZ() & 15);
+		if((y & 255) != y)
+			throw new IllegalArgumentException();
+		
+		SlaveChunk c = this.check().chunk(x >> 4, z >> 4);
+		
+		return c == null ? null : c.get(x & 15, y, z & 15);
 	}
 }

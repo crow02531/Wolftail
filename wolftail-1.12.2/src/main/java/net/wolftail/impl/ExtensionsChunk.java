@@ -18,5 +18,5 @@ public interface ExtensionsChunk {
 	void wolftail_tick();
 	
 	ShortSet wolftail_changedBlocks();
-	void wolftail_blockChanged(int x, int y, int z);
+	void wolftail_blockChanged(int localX, int localY, int localZ);
 }

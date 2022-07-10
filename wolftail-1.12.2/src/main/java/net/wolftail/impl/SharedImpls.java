@@ -228,10 +228,21 @@ public final class SharedImpls {
 			data.writeByte(0);
 			writeOrder(order, data);
 			
-			for(int i = 0; i < 16; i++)
-				ebs[i].getData().write(data);
+			int availableSections = 0;
 			
-			return data.unwrap();
+			for(int i = 0; i < 16; i++) {
+				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
+					availableSections |= 1 << i;
+			}
+			
+			data.writeShort(availableSections);
+			
+			for(int i = 0; i < 16; i++) {
+				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
+					ebs[i].getData().write(data);
+			}
+			
+			return data.asReadOnly();
 		}
 		
 		@SuppressWarnings("deprecation")
@@ -247,7 +258,7 @@ public final class SharedImpls {
 				data.writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)));
 			}
 			
-			return data.unwrap();
+			return data.asReadOnly();
 		}
 		
 		private static void writeOrder(SubscribeOrder order, ByteBuf dst) {

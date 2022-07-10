@@ -44,9 +44,9 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	public int x, z;
 	
 	@Override
-	public void wolftail_blockChanged(int x, int y, int z) {
+	public void wolftail_blockChanged(int localX, int localY, int localZ) {
 		if(this.subscribers != null)
-			this.changedBlocks.add((short) (x << 12 | z << 8 | y));
+			this.changedBlocks.add((short) (localX << 12 | localZ << 8 | localY));
 	}
 	
 	@Override
@@ -94,16 +94,22 @@ public abstract class MixinChunk implements ExtensionsChunk {
 		ImplCD init = null;
 		ImplCD diff = null;
 		
+		int changes = this.changedBlocks.size();
+		
 		for(H3 e : this.subscribers) {
 			if(e.initial) {
 				if(init == null)
-					init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)).asReadOnly());
+					init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)));
 				
 				e.subscriber.accept(init);
 				e.initial = false;
-			} else {
+			} else if(changes > 0) {
 				if(diff == null) {
-					diff = new ImplCD(order, SharedImpls.H2.makeDiffCD(order, SharedImpls.as(this)).asReadOnly());
+					if(changes >= 64) {
+						if((diff = init) == null) {
+							diff = init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)));
+						}
+					} else diff = new ImplCD(order, SharedImpls.H2.makeDiffCD(order, SharedImpls.as(this)));
 					
 					this.changedBlocks.clear();
 				}

@@ -31,4 +31,19 @@ public final class ImplCD implements ContentDiff {
 	public void apply(PartialUniverse dst) {
 		ContentDiff.apply(this.asByteBuf(), dst);
 	}
+	
+	@Override
+	public int hashCode() {
+		return this.order.hashCode() ^ this.data.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(o == null || o.getClass() != ImplCD.class) return false;
+		
+		ImplCD obj = (ImplCD) o;
+		
+		return obj.order.equals(this.order) && obj.data.equals(this.data);
+	}
 }

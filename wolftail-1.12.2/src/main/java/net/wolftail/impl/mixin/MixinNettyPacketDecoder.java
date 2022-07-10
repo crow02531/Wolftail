@@ -48,7 +48,7 @@ public abstract class MixinNettyPacketDecoder {
 	private Packet<?> wild_packet;
 	
 	@Unique
-	private CompositeByteBuf wild_payload;
+	private CompositeByteBuf cumulation;
 	
 	@Inject(method = "decode", at = @At(value = "INVOKE", target = "getPacket(Lnet/minecraft/network/EnumPacketDirection;I)Lnet/minecraft/network/Packet;"), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
 	private void onDecode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> list, CallbackInfo info, PacketBuffer wrapper, int id) throws IOException {
@@ -92,15 +92,17 @@ public abstract class MixinNettyPacketDecoder {
 				throw new IOException("Bad wild packet ".concat(packet_name), e);
 			}
 			
-			if(op != 0) this.wild_payload = Unpooled.compositeBuffer();
+			if(op != 0) this.cumulation = Unpooled.compositeBuffer(Integer.MAX_VALUE);
 			
 			//we now have started, with a newly created wild_packet, and a wild_payload if we have following-up packet
 		}
 		
-		CompositeByteBuf payload = this.wild_payload; //maybe null
+		CompositeByteBuf cumulation = this.cumulation; //maybe null
 		Packet<?> packet = this.wild_packet; //never be null
 		
-		if(payload == null) {
+		//'wrapper' was obtained by readBytes(I), see NettyVarint21FrameDecoder
+		
+		if(cumulation == null) {
 			//a null wild_payload here means we are in a new-start and have no following packets
 			
 			try {
@@ -117,25 +119,27 @@ public abstract class MixinNettyPacketDecoder {
 		} else {
 			//this means we may in a new-start with followings, or just handling a following packet
 			
-			//accumulate payload data
-			payload.addComponent(true, wrapper.retainedSlice());
+			//cumulate payload data
+			cumulation.addComponent(true, wrapper.retainedSlice());
 			wrapper.readerIndex(wrapper.writerIndex());
 			
-			//op = 0 means accumulating ending up
+			//op = 0 means cumulating ends up
 			if(op == 0) {
 				try {
-					packet.readPacketData(new PacketBuffer(payload));
-					checkRemaining(payload, packet.getClass().getName());
+					int num = cumulation.numComponents();
+					
+					packet.readPacketData(new PacketBuffer(cumulation));
+					checkRemaining(cumulation, packet.getClass().getName());
 					
 					list.add(packet);
 					
 					if(SharedImpls.LOGGER_NETWORK.isDebugEnabled())
-						SharedImpls.LOGGER_NETWORK.debug("=IN-POST	: with {} segment packets", payload.numComponents());
+						SharedImpls.LOGGER_NETWORK.debug("=IN-POST	: with {} segment packets", num);
 				} finally {
-					payload.release();
+					cumulation.release();
 					
 					this.wild_packet = null;
-					this.wild_payload = null;
+					this.cumulation = null;
 				}
 			}
 		}
@@ -143,7 +147,7 @@ public abstract class MixinNettyPacketDecoder {
 	
 	@Unique
 	private static void checkRemaining(ByteBuf buf, String pkt_name) throws IOException {
-		if(buf.readableBytes() > 0)
+		if(buf.isReadable())
 			throw new IOException("Wild packet " + pkt_name + " was larger than I expected, found " + buf.readableBytes() + " bytes extra");
 	}
 	

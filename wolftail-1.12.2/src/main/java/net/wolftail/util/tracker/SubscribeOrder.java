@@ -42,12 +42,17 @@ public final class SubscribeOrder {
 	}
 	
 	@Override
-	public boolean equals(Object obj) {
-		if(this == obj) return true;
-		if(obj == null || obj.getClass() != SubscribeOrder.class) return false;
+	public boolean equals(Object o) {
+		if(this == o) return true;
+		if(o == null || o.getClass() != SubscribeOrder.class) return false;
 		
-		SubscribeOrder obj0 = (SubscribeOrder) obj;
+		SubscribeOrder other = (SubscribeOrder) o;
 		
-		return this.dim == obj0.dim && this.chunkX == obj0.chunkX && this.chunkZ == obj0.chunkZ;
+		return this.dim == other.dim && this.chunkX == other.chunkX && this.chunkZ == other.chunkZ;
+	}
+	
+	@Override
+	public String toString() {
+		return this.dim + "[" + this.chunkX + ", " + this.chunkZ + "]";
 	}
 }

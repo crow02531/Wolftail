@@ -12,9 +12,7 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.chunk.BlockStateContainer;
 import net.wolftail.impl.SharedImpls;
 
-//TODO getBlockState outbound check
-//TODO remove method missing
-//TODO optimize
+//TODO clean and optimize
 public final class PartialUniverse {
 	
 	final Map<DimensionType, PartialWorld> worlds;
@@ -36,19 +34,21 @@ public final class PartialUniverse {
 		SlaveChunk c;
 		
 		if(type == 0) {
+			int availableSections = buf.readShort() & 0xFFFF;
+			
 			c = new SlaveChunk(w, order.chunkX(), order.chunkZ());
-			
 			BlockStateContainer[] b = c.blocks;
-			for(int i = 0; i < 16; ++i)
-				b[i].read(buf);
 			
-			long index = ChunkPos.asLong(order.chunkX(), order.chunkZ());
+			for(int i = 0; i < 16; ++i) {
+				if((availableSections & (1 << i)) != 0)
+					(b[i] = new BlockStateContainer()).read(buf);
+				else
+					b[i] = null;
+			}
 			
-			if(w.chunks.get(index) != null)
-				throw new IllegalArgumentException("dst");
-			w.chunks.put(index, c);
+			w.chunks.put(ChunkPos.asLong(order.chunkX(), order.chunkZ()), c);
 			
-			if(buf.readableBytes() != 0)
+			if(buf.isReadable())
 				throw new IllegalArgumentException("buf");
 		} else {
 			c = w.chunk(order.chunkX(), order.chunkZ());
@@ -58,10 +58,10 @@ public final class PartialUniverse {
 			
 			int t = 0;
 			
-			while(buf.readableBytes() != 0) {
+			while(buf.isReadable()) {
 				c.set(buf.readShort(), Block.BLOCK_STATE_IDS.getByValue(buf.readVarInt()));
 				
-				if(++t > 65536)
+				if(++t > 64)
 					throw new IllegalArgumentException("buf");
 			}
 		}

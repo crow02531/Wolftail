@@ -18,6 +18,10 @@ public interface ContentDiff {
 	
 	void apply(@Nonnull PartialUniverse dst);
 	
+	int hashCode();
+	
+	boolean equals(Object o);
+	
 	@Nonnull
 	public static ContentDiff asContentDiff(@Nonnull ByteBuf buf) {
 		buf = buf.copy();

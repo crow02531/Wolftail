@@ -3,11 +3,13 @@ package net.wolftail.util.tracker;
 import javax.annotation.Nonnull;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.BlockStateContainer;
 
 public final class SlaveChunk {
 	
-	private final PartialWorld world;
+	private PartialWorld world;
 	
 	private final int chunkX;
 	private final int chunkZ;
@@ -20,30 +22,59 @@ public final class SlaveChunk {
 		this.chunkX = x;
 		this.chunkZ = z;
 		
-		BlockStateContainer[] b = this.blocks = new BlockStateContainer[16];
-		for(int i = 0; i < 16; ++i)
-			b[i] = new BlockStateContainer();
+		this.blocks = new BlockStateContainer[16];
 	}
 	
 	@Nonnull
 	public PartialWorld world() {
-		return this.world;
+		return this.check().world;
 	}
 	
 	public int chunkX() {
-		return this.chunkX;
+		return this.check().chunkX;
 	}
 	
 	public int chunkZ() {
-		return this.chunkZ;
+		return this.check().chunkZ;
+	}
+	
+	public void free() {
+		this.check().world.chunks.remove(ChunkPos.asLong(this.chunkX, this.chunkZ));
+		
+		this.world = null;
+	}
+	
+	public boolean valid() {
+		return this.world != null;
+	}
+	
+	private SlaveChunk check() {
+		if(!this.valid())
+			throw new IllegalStateException();
+		
+		return this;
 	}
 	
 	@Nonnull
 	public IBlockState blockState(int localX, int localY, int localZ) {
-		return this.blocks[localY >> 4].get(localX, localY & 15, localZ);
+		if((localX & 15) != localX || (localZ & 15) != localZ || (localY & 255) != localY)
+			throw new IllegalArgumentException();
+		
+		return this.check().get(localX, localY, localZ);
+	}
+	
+	IBlockState get(int lx, int ly, int lz) {
+		BlockStateContainer c = this.blocks[ly >> 4];
+		
+		return c == null ? Blocks.AIR.getDefaultState() : c.get(lx, ly & 15, lz);
 	}
 	
 	void set(short index, IBlockState state) {
-		//TODO
+		int i = (index & 255) >> 4;
+		
+		if(this.blocks[i] == null)
+			this.blocks[i] = new BlockStateContainer();
+		
+		this.blocks[i].set(index >> 12 & 15, index & 15, index >> 8 & 15, state);
 	}
 }

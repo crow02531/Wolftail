@@ -3,9 +3,11 @@ package net.wolftail.impl.mixin.client;
 import java.io.IOException;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.util.Throwables;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
@@ -37,6 +39,7 @@ import net.wolftail.impl.ExtensionsMinecraft;
 import net.wolftail.impl.ImplPCClient;
 import net.wolftail.impl.ImplUPT;
 import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.network.DefaultNetHandler;
 
 //do game loop and check (C) connection disconnect
 @Mixin(Minecraft.class)
@@ -53,6 +56,9 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	@Final
 	@Shadow
 	public FrameTimer frameTimer;
+	
+	@Shadow
+	public GuiScreen currentScreen;
 	
 	@Final
 	@Shadow
@@ -89,9 +95,6 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	private Framebuffer framebufferMc;
 	
 	@Shadow
-	public GuiScreen currentScreen;
-	
-	@Shadow
 	public int displayWidth;
 	
 	@Shadow
@@ -120,6 +123,9 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	@Unique
 	private ImplPCClient play_context;
 	
+	@Unique
+	private FutureTask<Void> specialTask;
+	
 	@Inject(method = "init", at = @At("RETURN"))
 	private void onInit(CallbackInfo info) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		SharedImpls.H1.finish_loading(false);
@@ -130,11 +136,18 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 		ImplPCClient context = this.play_context;
 		
 		if(context != null && !context.getConnection().isChannelOpen())
-			this.wolftail_unloadPlayContext();
+			this.unloadPlayContext();
 	}
 	
 	@Inject(method = "runGameLoop", at = @At("HEAD"), cancellable = true)
 	private void onRunGameLoop(CallbackInfo info) throws LWJGLException, IOException {
+		FutureTask<Void> task = this.specialTask;
+		if(task != null) {
+			task.run();
+			
+			this.specialTask = null;
+		}
+		
 		ImplPCClient context = this.play_context;
 		ImplUPT type;
 		
@@ -144,7 +157,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 			try {
 				this.doGameLoop(context, type);
 			} catch(OutOfMemoryError e) {
-				this.wolftail_unloadPlayContext();
+				this.unloadPlayContext();
 				
 				throw e;
 			}
@@ -168,18 +181,6 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 		//---------------------------------------start our section-----------------------------
 		profiler.startSection("wolftailSection");
 		
-		//check weather we are in the first frame
-		if(context.checkFirstFrameAndClear()) {
-			GuiScreen deserted = this.currentScreen;
-			if(deserted != null) {
-				deserted.onGuiClosed();
-				
-				this.currentScreen = null;
-			}
-			
-			type.callClientEnter(context);
-		}
-		
 		boolean lostContext = false;
 		
 		//do tick
@@ -196,7 +197,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 			if(!connection.isChannelOpen()) {
 				connection.checkDisconnected();
 				
-				this.wolftail_unloadPlayContext();
+				this.unloadPlayContext();
 				this.displayGuiScreen(connection.isLocalChannel() ? new GuiMainMenu() : new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", new TextComponentTranslation("disconnect.genericReason")));
 				lostContext = true;
 				
@@ -269,16 +270,39 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	}
 	
 	@Override
-	public ImplPCClient wolftail_setupPlayContext(ImplUPT type, UUID id, NetworkManager connect) {
-		ImplPCClient ret = this.play_context = new ImplPCClient(type, id, this.session.getUsername(), connect);
-		
-		SharedImpls.H1.on_client_playing_change();
-		
-		return ret;
+	public void wolftail_func0(ImplUPT type, UUID id, NetworkManager connect) {
+		try {
+			(this.specialTask = new FutureTask<Void>(() -> {
+				ImplPCClient context = this.play_context = new ImplPCClient(type, id, this.session.getUsername(), connect);
+				SharedImpls.as(connect).wolftail_setPlayContext(context);
+				
+				SharedImpls.H1.on_client_playing_change();
+				
+				SharedImpls.LOGGER_NETWORK.info("Client side Wolftail connection set up, with remote address {}", connect.getRemoteAddress());
+				SharedImpls.LOGGER_USER.info("The universal player type in use is {}", type.registeringId());
+				
+				if(type != UniversalPlayerType.TYPE_PLAYER) {
+					GuiScreen gs = this.currentScreen;
+					
+					if(gs != null) {
+						gs.onGuiClosed();
+						
+						this.currentScreen = null;
+					}
+					
+					connect.setNetHandler(new DefaultNetHandler());
+					type.callClientEnter(context);
+				}
+				
+				return null;
+			})).get();
+		} catch(InterruptedException | ExecutionException e) {
+			Throwables.rethrow(e);
+		}
 	}
 	
-	@Override
-	public void wolftail_unloadPlayContext() {
+	@Unique
+	private void unloadPlayContext() {
 		SharedImpls.H1.on_client_playing_change();
 		
 		this.play_context = null;

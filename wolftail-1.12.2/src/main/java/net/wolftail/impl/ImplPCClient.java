@@ -10,8 +10,6 @@ public final class ImplPCClient extends ImplPC implements ClientPlayContext {
 	
 	final UniversalPlayerType type;
 	
-	private boolean firstFrame = true;
-	
 	public ImplPCClient(UniversalPlayerType arg0, UUID arg1, String arg2, NetworkManager arg3) {
 		super(arg1, arg2, arg3);
 		
@@ -25,15 +23,5 @@ public final class ImplPCClient extends ImplPC implements ClientPlayContext {
 	
 	public NetworkManager getConnection() {
 		return this.connection;
-	}
-	
-	public boolean checkFirstFrameAndClear() {
-		if(this.firstFrame) {
-			this.firstFrame = false;
-			
-			return true;
-		}
-		
-		return false;
 	}
 }

@@ -29,12 +29,12 @@ public abstract class MixinNetHandlerLoginClient implements ExtensionsNetHandler
 		if(this.stored_ls_packet == null) {
 			info.cancel();
 			
-			//client when receiving SPacketLoginSuccess, will store it and wait
-			//for SPacketTypeNotify to invoke it again(Only for players-type)
+			//when receiving SPacketLoginSuccess, client will store it and wait
+			//for SPacketTypeNotify
 			
 			this.stored_ls_packet = packetIn;
 			this.networkManager.setConnectionState(EnumConnectionState.PLAY); //set it so that WPS enabled
-		} else this.stored_ls_packet = null; //clear reference for players-type, since only players-type will invoke this method twice
+		}
 	}
 	
 	@Override

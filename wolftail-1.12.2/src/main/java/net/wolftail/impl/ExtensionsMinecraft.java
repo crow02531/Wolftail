@@ -6,7 +6,5 @@ import net.minecraft.network.NetworkManager;
 
 public interface ExtensionsMinecraft {
 	
-	ImplPCClient wolftail_setupPlayContext(ImplUPT type, UUID id, NetworkManager connect);
-	
-	void wolftail_unloadPlayContext();
+	void wolftail_func0(ImplUPT type, UUID id, NetworkManager connect);
 }
