@@ -53,7 +53,7 @@ public abstract class MixinNetHandlerLoginServer {
 		
 		//wolftail connection set up
 		
-		SharedImpls.LOGGER_NETWORK.info("Server side Wolftail connection set up, with remote address {}", connect.getRemoteAddress());
+		SharedImpls.LOGGER_NETWORK.info("Server side wolftail connection set up, with remote address {}", connect.getRemoteAddress());
 		SharedImpls.LOGGER_USER.info("{}({}) the universal player logged in with type {} and address {}", profile.getId(), profile.getName(), type.registeringId(), connect.getRemoteAddress());
 		
 		if(type != UniversalPlayerType.TYPE_PLAYER) {

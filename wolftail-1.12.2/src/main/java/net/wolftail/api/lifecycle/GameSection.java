@@ -7,13 +7,57 @@ import javax.annotation.Nonnull;
 
 import net.wolftail.impl.SharedImpls.H1;
 
+/**
+ * Minecraft's lifecycle could be divided into server sections.
+ * 
+ * <h3>{@link PhysicalType#DEDICATED_SERVER Dedicated Server}</h3>
+ * 
+ * <pre>
+ *   +-----------+---------+-----------+-----------------------+
+ *   |           |                PREPARED                     |
+ *   |                     |               LOADED              |
+ *   | PREPARING | LOADING | WANDERING |        PLAYING        |
+ *   +-----------+---------+-----------+-----------------------+
+ * </pre>
+ * 
+ * <h3>{@link PhysicalType#INTEGRATED_CLIENT Integrated Client}</h3>
+ * 
+ * <pre>
+ *   +-----------+---------+-----------+---------+-----------+---------+-----+
+ *   |           |                         PREPARED                          |
+ *   |                     |                      LOADED                     |
+ *   | PREPARING | LOADING | WANDERING | PLAYING | WANDERING | PLAYING | ... |
+ *   +-----------+---------+-----------+---------+-----------+---------+-----+
+ * </pre>
+ * 
+ * @see PhysicalType
+ */
 public enum GameSection {
 	
-	GAME_PREPARING(H1.TOKEN_PREPARING), 
-	GAME_PREPARED(H1.TOKEN_PREPARED), 
-	GAME_LOADING(H1.TOKEN_LOADING), 
-	GAME_LOADED(H1.TOKEN_LOADED), 
-	GAME_WANDERING(H1.TOKEN_WANDERING), 
+	/**
+	 * The very early stage, during which lunchwrapper initializes tweakers.
+	 */
+	GAME_PREPARING(H1.TOKEN_PREPARING),
+	
+	GAME_PREPARED(H1.TOKEN_PREPARED),
+	
+	/**
+	 * The stage where game content registering occurs.
+	 */
+	GAME_LOADING(H1.TOKEN_LOADING),
+	
+	GAME_LOADED(H1.TOKEN_LOADED),
+	
+	/**
+	 * In dedicated server this stage takes a very short period and the
+	 * application simply do nothing. However in client this stage means loaded
+	 * but not in playing, such as the time you are facing main menu.
+	 */
+	GAME_WANDERING(H1.TOKEN_WANDERING),
+	
+	/**
+	 * The playing stage.
+	 */
 	GAME_PLAYING(H1.TOKEN_PLAYING);
 	
 	private final H1 token;

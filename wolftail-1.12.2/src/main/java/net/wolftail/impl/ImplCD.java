@@ -23,13 +23,13 @@ public final class ImplCD implements ContentDiff {
 	}
 	
 	@Override
-	public ByteBuf asByteBuf() {
+	public ByteBuf toByteBuf() {
 		return this.data.duplicate();
 	}
 	
 	@Override
 	public void apply(PartialUniverse dst) {
-		ContentDiff.apply(this.asByteBuf(), dst);
+		ContentDiff.apply(this.toByteBuf(), dst);
 	}
 	
 	@Override

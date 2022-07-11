@@ -18,7 +18,7 @@ public class S2CContentDiff implements Packet<ClientNetHandler> {
 	public S2CContentDiff() {}
 	
 	public S2CContentDiff(ContentDiff cd) {
-		this.data = cd.asByteBuf();
+		this.data = cd.toByteBuf();
 	}
 	
 	@Override

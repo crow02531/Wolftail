@@ -6,7 +6,10 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.BlockStateContainer;
+import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.api.lifecycle.SideWith;
 
+@SideWith(section = GameSection.GAME_PLAYING)
 public final class SlaveChunk {
 	
 	private PartialWorld world;

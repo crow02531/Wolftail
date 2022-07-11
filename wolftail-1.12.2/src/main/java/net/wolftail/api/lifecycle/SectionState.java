@@ -2,6 +2,11 @@ package net.wolftail.api.lifecycle;
 
 import javax.annotation.Nonnull;
 
+/**
+ * Represent the state of a {@link GameSection}.
+ * 
+ * @see GameSection
+ */
 public enum SectionState {
 	
 	BEFORE {

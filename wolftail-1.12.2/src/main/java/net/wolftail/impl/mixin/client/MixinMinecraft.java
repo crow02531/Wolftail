@@ -278,7 +278,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 				
 				SharedImpls.H1.on_client_playing_change();
 				
-				SharedImpls.LOGGER_NETWORK.info("Client side Wolftail connection set up, with remote address {}", connect.getRemoteAddress());
+				SharedImpls.LOGGER_NETWORK.info("Client side wolftail connection set up, with remote address {}", connect.getRemoteAddress());
 				SharedImpls.LOGGER_USER.info("The universal player type in use is {}", type.registeringId());
 				
 				if(type != UniversalPlayerType.TYPE_PLAYER) {

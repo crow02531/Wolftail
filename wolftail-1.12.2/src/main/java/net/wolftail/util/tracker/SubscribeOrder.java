@@ -3,11 +3,13 @@ package net.wolftail.util.tracker;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
+@Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
 public final class SubscribeOrder {
 	

@@ -8,7 +8,10 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.DimensionType;
+import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.api.lifecycle.SideWith;
 
+@SideWith(section = GameSection.GAME_PLAYING)
 public final class PartialWorld {
 	
 	private PartialUniverse universe;

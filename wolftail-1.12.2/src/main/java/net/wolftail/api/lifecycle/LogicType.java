@@ -4,6 +4,26 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.wolftail.impl.SharedImpls;
 
+/**
+ * There are many threads running in Minecraft. In
+ * {@link PhysicalType#INTEGRATED_CLIENT INTEGRATED_CLIENT}, there is a thread
+ * responsible of registering game content, doing game loop. This thread is
+ * {@link #LOGIC_CLIENT}. When you are in singleplayer, the thread running
+ * {@link IntegratedServer} is called {@link #LOGIC_SERVER}. And in
+ * {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}, there isn't logic client
+ * , the thread that registers game content and ticking the server is logic server.
+ * 
+ * <p>
+ * If a thread is found logic client(or logic server), then the thread is logic
+ * client(or logic server) till its death. There is only one logic server thread at
+ * a time. However in two distinct time, the logic server thread could be different.
+ * Think about leaving a singleplayer and start a new singleplayer. And in dedicated
+ * server the thread registering game content and the thread ticking the server is
+ * different. See {@link net.minecraft.server.MinecraftServer#main(String[])}.
+ * </p>
+ * 
+ * @see PhysicalType
+ */
 public enum LogicType {
 	
 	LOGIC_CLIENT {
@@ -44,6 +64,13 @@ public enum LogicType {
 			throw new IllegalStateException("Not in " + this);
 	}
 	
+	/**
+	 * In {@link PhysicalType#INTEGRATED_CLIENT INTEGRATED_CLIENT}, the host thread
+	 * is {@link #LOGIC_CLIENT}. And in {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}
+	 * , {@link #LOGIC_SERVER}.
+	 * 
+	 * @return true means the current thread is host thread
+	 */
 	public static boolean inHost() {
 		return PhysicalType.INTEGRATED_CLIENT.is() ? LOGIC_CLIENT.in() : LOGIC_SERVER.in();
 	}

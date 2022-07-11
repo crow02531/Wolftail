@@ -10,9 +10,12 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.chunk.BlockStateContainer;
+import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.SharedImpls;
 
 //TODO clean and optimize
+@SideWith(section = GameSection.GAME_PLAYING)
 public final class PartialUniverse {
 	
 	final Map<DimensionType, PartialWorld> worlds;
