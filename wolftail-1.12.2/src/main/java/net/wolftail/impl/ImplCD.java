@@ -2,7 +2,7 @@ package net.wolftail.impl;
 
 import io.netty.buffer.ByteBuf;
 import net.wolftail.util.tracker.ContentDiff;
-import net.wolftail.util.tracker.PartialUniverse;
+import net.wolftail.util.tracker.SlaveUniverse;
 import net.wolftail.util.tracker.ContentOrder;
 
 public final class ImplCD implements ContentDiff {
@@ -28,7 +28,7 @@ public final class ImplCD implements ContentDiff {
 	}
 	
 	@Override
-	public void apply(PartialUniverse dst) {
+	public void apply(SlaveUniverse dst) {
 		ContentDiff.apply(this.toByteBuf(), dst);
 	}
 	

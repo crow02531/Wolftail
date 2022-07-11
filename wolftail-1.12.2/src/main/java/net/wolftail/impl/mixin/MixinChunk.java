@@ -19,8 +19,10 @@ import net.wolftail.impl.ExtensionsWorldServer;
 import net.wolftail.impl.ImplCD;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
+import net.wolftail.impl.SharedImpls.H4;
 import net.wolftail.util.tracker.ContentDiff;
-import net.wolftail.util.tracker.ContentOrder;
+import net.wolftail.util.tracker.ContentType;
+import net.wolftail.util.tracker.OrderChunkBlock;
 
 //ContentTracker Supporter
 @Mixin(Chunk.class)
@@ -89,7 +91,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Override
 	public void wolftail_tick() {
-		ContentOrder order = new ContentOrder(this.world.provider.getDimensionType(), this.x, this.z);
+		OrderChunkBlock order = ContentType.orderBlock(this.world.provider.getDimensionType(), this.x, this.z);
 		
 		ImplCD init = null;
 		ImplCD diff = null;
@@ -99,7 +101,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 		for(H3 e : this.subscribers) {
 			if(e.initial) {
 				if(init == null)
-					init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)));
+					init = new ImplCD(order, H4.make_CB_Init(order, SharedImpls.as(this)));
 				
 				e.subscriber.accept(init);
 				e.initial = false;
@@ -107,9 +109,9 @@ public abstract class MixinChunk implements ExtensionsChunk {
 				if(diff == null) {
 					if(changes >= 64) {
 						if((diff = init) == null) {
-							diff = init = new ImplCD(order, SharedImpls.H2.makeInitCD(order, SharedImpls.as(this)));
+							diff = init = new ImplCD(order, H4.make_CB_Init(order, SharedImpls.as(this)));
 						}
-					} else diff = new ImplCD(order, SharedImpls.H2.makeDiffCD(order, SharedImpls.as(this)));
+					} else diff = new ImplCD(order, H4.make_CB_Diff(order, SharedImpls.as(this)));
 					
 					this.changedBlocks.clear();
 				}

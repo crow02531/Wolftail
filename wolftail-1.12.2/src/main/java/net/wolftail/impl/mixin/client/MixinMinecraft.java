@@ -73,6 +73,9 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	private Snooper usageSnooper;
 	
 	@Shadow
+	private NetworkManager myNetworkManager;
+	
+	@Shadow
 	static int debugFPS;
 	
 	@Shadow
@@ -198,6 +201,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 				connection.checkDisconnected();
 				
 				this.unloadPlayContext();
+				this.myNetworkManager = null;
 				this.displayGuiScreen(connection.isLocalChannel() ? new GuiMainMenu() : new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", new TextComponentTranslation("disconnect.genericReason")));
 				lostContext = true;
 				

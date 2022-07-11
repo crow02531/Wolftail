@@ -12,15 +12,15 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
 @SideWith(section = GameSection.GAME_PLAYING)
-public final class PartialWorld {
+public final class SlaveWorld {
 	
-	private PartialUniverse universe;
+	private SlaveUniverse universe;
 	
 	private final DimensionType dimension;
 	
 	final Long2ObjectMap<SlaveChunk> chunks;
 	
-	PartialWorld(PartialUniverse universeIn, DimensionType dimIn) {
+	SlaveWorld(SlaveUniverse universeIn, DimensionType dimIn) {
 		this.universe = universeIn;
 		
 		this.dimension = dimIn;
@@ -29,7 +29,7 @@ public final class PartialWorld {
 	}
 	
 	@Nonnull
-	public PartialUniverse universe() {
+	public SlaveUniverse universe() {
 		return this.check().universe;
 	}
 	
@@ -38,7 +38,7 @@ public final class PartialWorld {
 		return this.check().dimension;
 	}
 	
-	public void free() {
+	public void release() {
 		this.check().universe.worlds.remove(this.dimension);
 		
 		this.universe = null;
@@ -48,7 +48,7 @@ public final class PartialWorld {
 		return this.universe != null;
 	}
 	
-	private PartialWorld check() {
+	private SlaveWorld check() {
 		if(!this.valid())
 			throw new IllegalStateException();
 		

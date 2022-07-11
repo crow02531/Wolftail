@@ -25,7 +25,8 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
-import net.wolftail.util.tracker.ContentOrder;
+import net.wolftail.util.tracker.ContentType;
+import net.wolftail.util.tracker.OrderChunkBlock;
 
 public final class SharedImpls {
 	
@@ -87,14 +88,9 @@ public final class SharedImpls {
 		};
 	}
 	
-	public static final class H0 {
-		
-		private H0() {}
+	public static final class H1 {
 		
 		public static Thread regular_dedicated_server_host; //dedicatedServer has two host thread, the second one is called regular by us
-	}
-	
-	public static final class H1 {
 		
 		public final ReentrantReadWriteLock lock;
 		
@@ -221,83 +217,6 @@ public final class SharedImpls {
 			
 			LOGGER_USER.info("{}({}) the universal player logged out", context.identifier, context.name);
 		}
-		
-		public static ByteBuf makeInitCD(ContentOrder order, Chunk src) {
-			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
-			ExtendedBlockStorage[] ebs = src.getBlockStorageArray();
-			
-			data.writeByte(0);
-			writeOrder(order, data);
-			
-			int availableSections = 0;
-			
-			for(int i = 0; i < 16; i++) {
-				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
-					availableSections |= 1 << i;
-			}
-			
-			data.writeShort(availableSections);
-			
-			for(int i = 0; i < 16; i++) {
-				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
-					ebs[i].getData().write(data);
-			}
-			
-			return data.asReadOnly();
-		}
-		
-		@SuppressWarnings("deprecation")
-		public static ByteBuf makeDiffCD(ContentOrder order, Chunk src) {
-			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
-			ExtensionsChunk ec = as(src);
-			
-			data.writeByte(1);
-			writeOrder(order, data);
-			
-			for(short s : ec.wolftail_changedBlocks()) {
-				data.writeShort(s);
-				data.writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)));
-			}
-			
-			return data.asReadOnly();
-		}
-		
-		public static void writeOrder(ContentOrder order, ByteBuf dst) {
-			writeVarInt(order.target().getId(), dst);
-			dst.writeInt(order.chunkX());
-			dst.writeInt(order.chunkZ());
-		}
-		
-		public static ContentOrder readOrder(ByteBuf buf) {
-			return new ContentOrder(DimensionType.getById(readVarInt(buf)), buf.readInt(), buf.readInt());
-		}
-		
-		public static void writeVarInt(int i, ByteBuf dst) {
-			while((i & -128) != 0) {
-				dst.writeByte(i & 127 | 128);
-				i >>>= 7;
-			}
-			
-			dst.writeByte(i);
-		}
-		
-		public static int readVarInt(ByteBuf src) {
-			int i = 0;
-			int j = 0;
-			
-			while(true) {
-				byte b0 = src.readByte();
-				i |= (b0 & 127) << j++ * 7;
-				
-				if(j > 5)
-					throw new DecoderException("VarInt too big");
-				
-				if((b0 & 128) != 128)
-					break;
-			}
-			
-			return i;
-		}
 	}
 	
 	public static final class H3 {
@@ -320,6 +239,93 @@ public final class SharedImpls {
 		@Override
 		public boolean equals(Object obj) {
 			return this.subscriber == ((H3) obj).subscriber;
+		}
+	}
+	
+	public static final class H4 {
+		
+		private H4() {}
+		
+		public static ByteBuf make_CB_Init(OrderChunkBlock order, Chunk src) {
+			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+			ExtendedBlockStorage[] ebs = src.getBlockStorageArray();
+			
+			data.writeVarInt(order.type().ordinal());
+			write_CB(order, data);
+			
+			data.writeByte(0);
+			
+			int availableSections = 0;
+			
+			for(int i = 0; i < 16; i++) {
+				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
+					availableSections |= 1 << i;
+			}
+			
+			data.writeShort(availableSections);
+			
+			for(int i = 0; i < 16; i++) {
+				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
+					ebs[i].getData().write(data);
+			}
+			
+			return data.asReadOnly();
+		}
+		
+		@SuppressWarnings("deprecation")
+		public static ByteBuf make_CB_Diff(OrderChunkBlock order, Chunk src) {
+			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+			ExtensionsChunk ec = as(src);
+			
+			data.writeVarInt(order.type().ordinal());
+			write_CB(order, data);
+			
+			data.writeByte(1);
+			
+			for(short s : ec.wolftail_changedBlocks()) {
+				data.writeShort(s);
+				data.writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)));
+			}
+			
+			return data.asReadOnly();
+		}
+		
+		public static void write_CB(OrderChunkBlock src, ByteBuf dst) {
+			writeVarInt(src.dimension().getId(), dst);
+			
+			dst.writeInt(src.chunkX());
+			dst.writeInt(src.chunkZ());
+		}
+		
+		public static OrderChunkBlock read_CB(ByteBuf src) {
+			return ContentType.orderBlock(DimensionType.getById(readVarInt(src)), src.readInt(), src.readInt());
+		}
+		
+		public static int readVarInt(ByteBuf src) {
+			int i = 0;
+			int j = 0;
+			
+			while(true) {
+				byte b0 = src.readByte();
+				i |= (b0 & 127) << j++ * 7;
+				
+				if(j > 5)
+					throw new DecoderException("VarInt too big");
+				
+				if((b0 & 128) != 128)
+					break;
+			}
+			
+			return i;
+		}
+		
+		public static void writeVarInt(int i, ByteBuf dst) {
+			while((i & -128) != 0) {
+				dst.writeByte(i & 127 | 128);
+				i >>>= 7;
+			}
+			
+			dst.writeByte(i);
 		}
 	}
 }

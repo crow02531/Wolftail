@@ -8,7 +8,7 @@ import net.minecraft.network.PacketBuffer;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.ImplCD;
-import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.SharedImpls.H4;
 
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
@@ -27,9 +27,9 @@ public interface ContentDiff {
 	/**
 	 * Apply the content diff to the given partial universe.
 	 * 
-	 * @see #apply(ByteBuf, PartialUniverse)
+	 * @see #apply(ByteBuf, SlaveUniverse)
 	 */
-	void apply(@Nonnull PartialUniverse dst);
+	void apply(@Nonnull SlaveUniverse dst);
 	
 	int hashCode();
 	
@@ -44,16 +44,16 @@ public interface ContentDiff {
 	public static ContentDiff from(@Nonnull ByteBuf buf) {
 		buf = buf.copy();
 		
-		buf.readByte();
-		
-		return new ImplCD(SharedImpls.H2.readOrder(buf), buf.readerIndex(0).asReadOnly());
+		return new ImplCD(ContentType.values()[H4.readVarInt(buf)].read(buf), buf.readerIndex(0).asReadOnly());
 	}
 	
 	/**
 	 * Similar to {@code from(buf).apply(dst)}, except this method analyze the buf
 	 * directly without any copy.
 	 */
-	public static void apply(@Nonnull ByteBuf buf, @Nonnull PartialUniverse dst) {
-		dst.accept(buf instanceof PacketBuffer ? (PacketBuffer) buf : new PacketBuffer(buf));
+	public static void apply(@Nonnull ByteBuf buf, @Nonnull SlaveUniverse dst) {
+		PacketBuffer buf0 = buf instanceof PacketBuffer ? (PacketBuffer) buf : new PacketBuffer(buf);
+		
+		ContentType.values()[buf0.readVarInt()].apply(buf0, dst);
 	}
 }

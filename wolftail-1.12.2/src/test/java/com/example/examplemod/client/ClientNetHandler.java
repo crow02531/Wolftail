@@ -10,8 +10,8 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.ClientPlayContext;
-import net.wolftail.util.tracker.PartialUniverse;
-import net.wolftail.util.tracker.PartialWorld;
+import net.wolftail.util.tracker.SlaveUniverse;
+import net.wolftail.util.tracker.SlaveWorld;
 
 public class ClientNetHandler implements INetHandler, ITickable {
 	
@@ -20,12 +20,12 @@ public class ClientNetHandler implements INetHandler, ITickable {
 	private boolean shift_pressed;
 	private boolean ctrl_pressed;
 	
-	public PartialUniverse universe;
+	public SlaveUniverse universe;
 	
 	ClientNetHandler(ClientPlayContext context) {
 		this.context = context;
 		
-		this.universe = new PartialUniverse();
+		this.universe = new SlaveUniverse();
 	}
 	
 	@Override
@@ -71,7 +71,7 @@ public class ClientNetHandler implements INetHandler, ITickable {
 			ClientCallback.ui.setScrollVertical(ClientCallback.ui.getScrollVertical() - i);
 		}
 		
-		PartialWorld w = this.universe.world(DimensionType.OVERWORLD);
+		SlaveWorld w = this.universe.world(DimensionType.OVERWORLD);
 		if(w != null) {
 			System.out.println(w.chunk(0, 0).blockState(4, 5, 4));
 		}

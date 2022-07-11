@@ -12,14 +12,14 @@ import net.wolftail.api.lifecycle.SideWith;
 @SideWith(section = GameSection.GAME_PLAYING)
 public final class SlaveChunk {
 	
-	private PartialWorld world;
+	private SlaveWorld world;
 	
 	private final int chunkX;
 	private final int chunkZ;
 	
 	final BlockStateContainer[] blocks;
 	
-	SlaveChunk(PartialWorld worldIn, int x, int z) {
+	SlaveChunk(SlaveWorld worldIn, int x, int z) {
 		this.world = worldIn;
 		
 		this.chunkX = x;
@@ -29,7 +29,7 @@ public final class SlaveChunk {
 	}
 	
 	@Nonnull
-	public PartialWorld world() {
+	public SlaveWorld world() {
 		return this.check().world;
 	}
 	
@@ -41,7 +41,7 @@ public final class SlaveChunk {
 		return this.check().chunkZ;
 	}
 	
-	public void free() {
+	public void release() {
 		this.check().world.chunks.remove(ChunkPos.asLong(this.chunkX, this.chunkZ));
 		
 		this.world = null;

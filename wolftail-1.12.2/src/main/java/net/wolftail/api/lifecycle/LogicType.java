@@ -46,7 +46,7 @@ public enum LogicType {
 				
 				return server == null ? false : server.isCallingFromMinecraftThread();
 			} else {
-				Thread regular_host = SharedImpls.H0.regular_dedicated_server_host;
+				Thread regular_host = SharedImpls.H1.regular_dedicated_server_host;
 				Thread current = Thread.currentThread();
 				
 				if(current == regular_host) return true;
