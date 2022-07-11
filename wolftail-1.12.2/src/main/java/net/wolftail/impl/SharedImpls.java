@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.DecoderException;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.EnumPacketDirection;
@@ -24,7 +25,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
-import net.wolftail.util.tracker.SubscribeOrder;
+import net.wolftail.util.tracker.ContentOrder;
 
 public final class SharedImpls {
 	
@@ -221,7 +222,7 @@ public final class SharedImpls {
 			LOGGER_USER.info("{}({}) the universal player logged out", context.identifier, context.name);
 		}
 		
-		public static ByteBuf makeInitCD(SubscribeOrder order, Chunk src) {
+		public static ByteBuf makeInitCD(ContentOrder order, Chunk src) {
 			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
 			ExtendedBlockStorage[] ebs = src.getBlockStorageArray();
 			
@@ -246,7 +247,7 @@ public final class SharedImpls {
 		}
 		
 		@SuppressWarnings("deprecation")
-		public static ByteBuf makeDiffCD(SubscribeOrder order, Chunk src) {
+		public static ByteBuf makeDiffCD(ContentOrder order, Chunk src) {
 			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
 			ExtensionsChunk ec = as(src);
 			
@@ -261,14 +262,41 @@ public final class SharedImpls {
 			return data.asReadOnly();
 		}
 		
-		private static void writeOrder(SubscribeOrder order, ByteBuf dst) {
-			dst.writeInt(order.target().getId());
+		public static void writeOrder(ContentOrder order, ByteBuf dst) {
+			writeVarInt(order.target().getId(), dst);
 			dst.writeInt(order.chunkX());
 			dst.writeInt(order.chunkZ());
 		}
 		
-		public static SubscribeOrder readOrder(ByteBuf buf) {
-			return new SubscribeOrder(DimensionType.getById(buf.readInt()), buf.readInt(), buf.readInt());
+		public static ContentOrder readOrder(ByteBuf buf) {
+			return new ContentOrder(DimensionType.getById(readVarInt(buf)), buf.readInt(), buf.readInt());
+		}
+		
+		public static void writeVarInt(int i, ByteBuf dst) {
+			while((i & -128) != 0) {
+				dst.writeByte(i & 127 | 128);
+				i >>>= 7;
+			}
+			
+			dst.writeByte(i);
+		}
+		
+		public static int readVarInt(ByteBuf src) {
+			int i = 0;
+			int j = 0;
+			
+			while(true) {
+				byte b0 = src.readByte();
+				i |= (b0 & 127) << j++ * 7;
+				
+				if(j > 5)
+					throw new DecoderException("VarInt too big");
+				
+				if((b0 & 128) != 128)
+					break;
+			}
+			
+			return i;
 		}
 	}
 	

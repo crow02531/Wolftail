@@ -30,14 +30,14 @@ public final class PartialUniverse {
 	
 	@SuppressWarnings("deprecation")
 	void accept(PacketBuffer buf) {
-		int type = buf.readByte();
-		SubscribeOrder order = SharedImpls.H2.readOrder(buf);
+		int type = buf.readUnsignedByte();
+		ContentOrder order = SharedImpls.H2.readOrder(buf);
 		
 		PartialWorld w = this.getOrCreate(order.target());
 		SlaveChunk c;
 		
 		if(type == 0) {
-			int availableSections = buf.readShort() & 0xFFFF;
+			int availableSections = buf.readUnsignedShort();
 			
 			c = new SlaveChunk(w, order.chunkX(), order.chunkZ());
 			BlockStateContainer[] b = c.blocks;

@@ -12,7 +12,7 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 import net.wolftail.api.ServerPlayContext;
 import net.wolftail.util.tracker.ContentTracker;
-import net.wolftail.util.tracker.SubscribeOrder;
+import net.wolftail.util.tracker.ContentOrder;
 
 public class ServerNetHandler implements INetHandler, ITickable {
 	
@@ -32,7 +32,7 @@ public class ServerNetHandler implements INetHandler, ITickable {
 		p.setAlwaysRenderNameTag(true);
 		w.spawnEntity(p);
 		
-		ContentTracker.instanceFor(server).subscribe(new SubscribeOrder(DimensionType.OVERWORLD, 0, 0), (d) -> {
+		ContentTracker.instanceFor(server).subscribe(new ContentOrder(DimensionType.OVERWORLD, 0, 0), (d) -> {
 			this.context.sendPacket(new S2CContentDiff(d));
 		});
 	}

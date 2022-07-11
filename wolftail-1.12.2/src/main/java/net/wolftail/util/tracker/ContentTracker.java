@@ -21,11 +21,11 @@ public final class ContentTracker {
 		this.server = arg0;
 	}
 	
-	public void subscribe(@Nonnull SubscribeOrder order, @Nonnull Consumer<ContentDiff> subscriber) {
+	public void subscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber) {
 		SharedImpls.as(this.server.getWorld(order.target().getId()).getChunkFromChunkCoords(order.chunkX(), order.chunkZ())).wolftail_register(subscriber);
 	}
 	
-	public void unsubscribe(@Nonnull SubscribeOrder order, @Nonnull Consumer<ContentDiff> subscriber) {
+	public void unsubscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber) {
 		Chunk chunk = this.server.getWorld(order.target().getId()).getChunkProvider().getLoadedChunk(order.chunkX(), order.chunkZ());
 		
 		if(chunk != null) SharedImpls.as(chunk).wolftail_unregister(subscriber);

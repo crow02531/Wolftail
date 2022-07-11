@@ -20,7 +20,7 @@ import net.wolftail.impl.ImplCD;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.util.tracker.ContentDiff;
-import net.wolftail.util.tracker.SubscribeOrder;
+import net.wolftail.util.tracker.ContentOrder;
 
 //ContentTracker Supporter
 @Mixin(Chunk.class)
@@ -89,7 +89,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Override
 	public void wolftail_tick() {
-		SubscribeOrder order = new SubscribeOrder(this.world.provider.getDimensionType(), this.x, this.z);
+		ContentOrder order = new ContentOrder(this.world.provider.getDimensionType(), this.x, this.z);
 		
 		ImplCD init = null;
 		ImplCD diff = null;

@@ -3,22 +3,22 @@ package net.wolftail.impl;
 import io.netty.buffer.ByteBuf;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.PartialUniverse;
-import net.wolftail.util.tracker.SubscribeOrder;
+import net.wolftail.util.tracker.ContentOrder;
 
 public final class ImplCD implements ContentDiff {
 	
-	private final SubscribeOrder order;
+	private final ContentOrder order;
 	
 	private final ByteBuf data;
 	
-	public ImplCD(SubscribeOrder order, ByteBuf data) {
+	public ImplCD(ContentOrder order, ByteBuf data) {
 		this.order = order;
 		
 		this.data = data;
 	}
 	
 	@Override
-	public SubscribeOrder order() {
+	public ContentOrder order() {
 		return this.order;
 	}
 	

@@ -14,7 +14,7 @@ import net.wolftail.impl.SharedImpls;
 @SideWith(section = GameSection.GAME_PLAYING)
 public interface ContentDiff {
 	
-	@Nonnull SubscribeOrder order();
+	@Nonnull ContentOrder order();
 	
 	/**
 	 * Transfer the whole content diff into a newly created
