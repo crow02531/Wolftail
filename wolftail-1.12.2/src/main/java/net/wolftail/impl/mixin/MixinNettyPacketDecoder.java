@@ -59,7 +59,7 @@ public abstract class MixinNettyPacketDecoder {
 		if(state == EnumConnectionState.PLAY && id == SharedImpls.H2.custom_payload_pid(this.direction)) {
 			wrapper.markReaderIndex();
 			
-			if(wrapper.readString(20).equals("WOLFTAIL|WPS")) {
+			if(wrapper.readString(20).equals("WT|WPS")) {
 				info.cancel();
 				handledWPS = true;
 				

@@ -52,7 +52,7 @@ public abstract class MixinNettyPacketEncoder {
 			 * Wild Packet Support(WPS)
 			 * 
 			 * 	Our implement is based on CustomPayload mechanism, in the most of the time,
-			 * 	A WPS packet looks like this Int[24];String[WOLFTAIL|WPS];Byte[0];String[com.exmplemod.SomePacket];Bytes[Its payload]
+			 * 	A WPS packet looks like this VarInt[24];String[WT|WPS];Byte[0];String[com.exmplemod.SomePacket];Bytes[Its payload]
 			 * 
 			 * 	The 24 can be 9, they both are CustomPayloadPacket's packet id, the former is for SPacketCustomPayload,
 			 * 	the later is for CPacketCustomPayload.
@@ -61,9 +61,9 @@ public abstract class MixinNettyPacketEncoder {
 			 * 	C2S's is 32767, this restriction was bad for Wild Packets since sometimes you need to send a large Wild Packet.
 			 * 
 			 * 	So sometimes you will see a WPS packet looks like this
-			 * 		24;"WOLFTAIL|WPS";1;"com.exmplemod.SomePacket";Payload_first_part
+			 * 		24;"WT|WPS";1;"com.exmplemod.SomePacket";Payload_first_part
 			 * 	and after receiving this, you soon will get another WPS packet:
-			 * 		24;"WOLFTAIL|WPS";0;Payload_second_part
+			 * 		24;"WT|WPS";0;Payload_second_part
 			 * 
 			 * 	To support large size Wild Packet, we simply divide your packet into several parts, send them out
 			 * 	using the CustomPayloadPacket and when receiving, we join the divided parts up.
@@ -73,7 +73,7 @@ public abstract class MixinNettyPacketEncoder {
 			
 			final int id = SharedImpls.H2.custom_payload_pid(this.direction);
 			final int maxload = SharedImpls.H2.custom_payload_maxload(this.direction);
-			final String channel = "WOLFTAIL|WPS";
+			final String channel = "WT|WPS";
 			
 			PacketBuffer wrapper = new PacketBuffer(buf);
 			
@@ -111,7 +111,7 @@ public abstract class MixinNettyPacketEncoder {
 					has_following = (rawload -= maxload) > maxload;
 					
 					writer_backward(buf, length_headers);
-					wrapper.writeInt(id);
+					wrapper.writeVarInt(id);
 					wrapper.writeString(channel);
 					wrapper.writeByte(has_following ? 1 : 0);
 					writer_backward(buf, length_headers);
