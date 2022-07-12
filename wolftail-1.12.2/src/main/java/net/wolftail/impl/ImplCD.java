@@ -40,7 +40,7 @@ public final class ImplCD implements ContentDiff {
 	@Override
 	public boolean equals(Object o) {
 		if(o == this) return true;
-		if(o == null || o.getClass() != ImplCD.class) return false;
+		if(o == null || !(o instanceof ImplCD)) return false;
 		
 		ImplCD obj = (ImplCD) o;
 		

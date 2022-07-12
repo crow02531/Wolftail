@@ -73,7 +73,13 @@ public class ClientNetHandler implements INetHandler, ITickable {
 		
 		SlaveWorld w = this.universe.world(DimensionType.OVERWORLD);
 		if(w != null) {
-			System.out.println(w.chunk(0, 0).blockState(4, 5, 4));
+			StringBuilder sb = new StringBuilder();
+			
+			sb.append(w.chunk(0, 0).blockState(4, 5, 4)).append('\n');
+			sb.append(w.rainingStrength()).append('\n');
+			sb.append(w.thunderingStrength());
+			
+			ClientCallback.ui.useDoc(sb.toString());
 		}
 	}
 	

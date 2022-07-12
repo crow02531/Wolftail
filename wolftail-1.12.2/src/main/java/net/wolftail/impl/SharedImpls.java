@@ -27,6 +27,7 @@ import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentType;
 import net.wolftail.util.tracker.OrderChunkBlock;
+import net.wolftail.util.tracker.OrderWorldWeather;
 
 public final class SharedImpls {
 	
@@ -290,6 +291,18 @@ public final class SharedImpls {
 			return data.asReadOnly();
 		}
 		
+		public static ByteBuf make_WW(OrderWorldWeather order, float rainingStrength, float thunderingStrength) {
+			ByteBuf buf = Unpooled.buffer();
+			
+			writeVarInt(order.type().ordinal(), buf);
+			write_WW(order, buf);
+			
+			buf.writeFloat(rainingStrength);
+			buf.writeFloat(thunderingStrength);
+			
+			return buf.asReadOnly();
+		}
+		
 		public static void write_CB(OrderChunkBlock src, ByteBuf dst) {
 			writeVarInt(src.dimension().getId(), dst);
 			
@@ -299,6 +312,14 @@ public final class SharedImpls {
 		
 		public static OrderChunkBlock read_CB(ByteBuf src) {
 			return ContentType.orderBlock(DimensionType.getById(readVarInt(src)), src.readInt(), src.readInt());
+		}
+		
+		public static void write_WW(OrderWorldWeather src, ByteBuf dst) {
+			writeVarInt(src.dimension().getId(), dst);
+		}
+		
+		public static OrderWorldWeather read_WW(ByteBuf src) {
+			return ContentType.orderWeather(DimensionType.getById(readVarInt(src)));
 		}
 		
 		public static int readVarInt(ByteBuf src) {

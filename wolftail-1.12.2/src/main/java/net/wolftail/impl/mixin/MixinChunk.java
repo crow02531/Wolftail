@@ -84,9 +84,8 @@ public abstract class MixinChunk implements ExtensionsChunk {
 			this.next = prevHead;
 		}
 		
-		if(!this.subscribers.add(new H3(subscriber))) {
+		if(!this.subscribers.add(new H3(subscriber)))
 			throw new IllegalArgumentException();
-		}
 	}
 	
 	@Override
@@ -123,6 +122,8 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Override
 	public void wolftail_unregister(Consumer<ContentDiff> subscriber) {
+		if(this.subscribers == null) return;
+		
 		this.subscribers.remove(new H3(subscriber));
 		
 		if(this.subscribers.isEmpty()) {

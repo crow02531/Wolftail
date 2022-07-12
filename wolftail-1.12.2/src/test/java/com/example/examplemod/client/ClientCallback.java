@@ -5,10 +5,10 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 import net.minecraft.client.Minecraft;
+import net.wolftail.api.ClientPlayContext;
 import net.wolftail.api.IClientEntryPoint;
 import net.wolftail.api.IClientFrameCallback;
 import net.wolftail.util.client.renderer.CmdUnit;
-import net.wolftail.api.ClientPlayContext;
 
 public class ClientCallback implements IClientEntryPoint, IClientFrameCallback {
 	
@@ -34,14 +34,8 @@ public class ClientCallback implements IClientEntryPoint, IClientFrameCallback {
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glLoadIdentity();
 		
-		cmd.useDoc(genDoc(context));
-		
 		cmd.flush();
 		cmd.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
-	}
-	
-	private static String genDoc(ClientPlayContext context) {
-		return "Playing...";
 	}
 	
 	@Override

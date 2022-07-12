@@ -1,5 +1,7 @@
 package com.example.examplemod.server;
 
+import java.util.function.Consumer;
+
 import com.example.examplemod.network.S2CContentDiff;
 
 import net.minecraft.entity.passive.EntityPig;
@@ -11,6 +13,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 import net.wolftail.api.ServerPlayContext;
+import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentTracker;
 import net.wolftail.util.tracker.ContentType;
 
@@ -32,9 +35,13 @@ public class ServerNetHandler implements INetHandler, ITickable {
 		p.setAlwaysRenderNameTag(true);
 		w.spawnEntity(p);
 		
-		ContentTracker.instanceFor(server).subscribe(ContentType.orderBlock(DimensionType.OVERWORLD, 0, 0), (d) -> {
+		ContentTracker ct = ContentTracker.instanceFor(server);
+		Consumer<ContentDiff> subscriber = (d) -> {
 			this.context.sendPacket(new S2CContentDiff(d));
-		});
+		};
+		
+		ct.subscribe(ContentType.orderBlock(DimensionType.OVERWORLD, 0, 0), subscriber);
+		ct.subscribe(ContentType.orderWeather(DimensionType.OVERWORLD), subscriber);
 	}
 	
 	public EntityPig getPlayEntity() {

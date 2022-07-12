@@ -1,6 +1,5 @@
 package net.wolftail.util.tracker;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -13,9 +12,12 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.chunk.BlockStateContainer;
 import net.minecraft.world.chunk.Chunk;
+import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H4;
 
+@SideWith(section = GameSection.GAME_PLAYING)
 public enum ContentType {
 	
 	CHUNK_BLOCK {
@@ -81,11 +83,45 @@ public enum ContentType {
 					throw new IllegalArgumentException();
 			}
 		}
+	},
+	
+	WORLD_WEATHER {
+		
+		@Override
+		ContentOrder read(ByteBuf src) {
+			return H4.read_WW(src);
+		}
+		
+		@Override
+		void subscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
+			SharedImpls.as(target.getWorld(((OrderWorldWeather) order).dim.getId())).wolftail_register(subscriber);
+		}
+		
+		@Override
+		void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
+			SharedImpls.as(target.getWorld(((OrderWorldWeather) order).dim.getId())).wolftail_unregister(subscriber);
+		}
+		
+		@Override
+		void apply(PacketBuffer buf, SlaveUniverse dst) {
+			SlaveWorld w = dst.getOrCreate(H4.read_WW(buf).dim);
+			
+			w.rainingStrength = buf.readFloat();
+			w.thunderingStrength = buf.readFloat();
+			
+			if(buf.isReadable())
+				throw new IllegalArgumentException();
+		}
 	};
 	
 	@Nonnull
 	public static OrderChunkBlock orderBlock(@Nonnull DimensionType dim, int chunkX, int chunkZ) {
-		return new OrderChunkBlock(Objects.requireNonNull(dim), chunkX, chunkZ);
+		return new OrderChunkBlock(dim, chunkX, chunkZ);
+	}
+	
+	@Nonnull
+	public static OrderWorldWeather orderWeather(@Nonnull DimensionType dim) {
+		return new OrderWorldWeather(dim);
 	}
 	
 	abstract ContentOrder read(ByteBuf src);

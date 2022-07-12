@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import net.wolftail.impl.SharedImpls.H1;
 
 /**
- * Minecraft's lifecycle could be divided into server sections.
+ * Minecraft's lifecycle could be divided into several sections.
  * 
  * <h3>{@link PhysicalType#DEDICATED_SERVER Dedicated Server}</h3>
  * 
