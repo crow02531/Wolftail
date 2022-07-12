@@ -11,6 +11,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.ClientPlayContext;
 import net.wolftail.util.tracker.SlaveUniverse;
+import net.wolftail.util.tracker.SlaveWeather;
 import net.wolftail.util.tracker.SlaveWorld;
 
 public class ClientNetHandler implements INetHandler, ITickable {
@@ -72,12 +73,14 @@ public class ClientNetHandler implements INetHandler, ITickable {
 		}
 		
 		SlaveWorld w = this.universe.world(DimensionType.OVERWORLD);
-		if(w != null) {
+		SlaveWeather weather;
+		
+		if(w != null && (weather = w.weather()) != null) {
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append(w.chunk(0, 0).blockState(4, 5, 4)).append('\n');
-			sb.append(w.rainingStrength()).append('\n');
-			sb.append(w.thunderingStrength());
+			sb.append(weather.rainingStrength()).append('\n');
+			sb.append(weather.thunderingStrength());
 			
 			ClientCallback.ui.useDoc(sb.toString());
 		}

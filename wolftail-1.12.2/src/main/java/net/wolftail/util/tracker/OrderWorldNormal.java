@@ -9,18 +9,22 @@ import net.wolftail.api.lifecycle.SideWith;
 
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
-public final class OrderWorldWeather extends ContentOrder {
+public final class OrderWorldNormal extends ContentOrder {
+	
+	private final ContentType type;
 	
 	final DimensionType dim;
 	
-	OrderWorldWeather(DimensionType dim) {
+	OrderWorldNormal(ContentType type, DimensionType dim) {
+		this.type = type;
+		
 		this.dim = dim;
 	}
 	
 	@Nonnull
 	@Override
 	public ContentType type() {
-		return ContentType.WORLD_WEATHER;
+		return this.type;
 	}
 	
 	@Nonnull
@@ -36,8 +40,8 @@ public final class OrderWorldWeather extends ContentOrder {
 	@Override
 	public boolean equals(Object o) {
 		if(o == this) return true;
-		if(o == null || !(o instanceof OrderWorldWeather)) return false;
+		if(o == null || !(o instanceof OrderWorldNormal)) return false;
 		
-		return this.dim == ((OrderWorldWeather) o).dim;
+		return this.dim == ((OrderWorldNormal) o).dim;
 	}
 }

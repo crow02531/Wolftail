@@ -9,14 +9,18 @@ import net.wolftail.api.lifecycle.SideWith;
 
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
-public final class OrderChunkBlock extends ContentOrder {
+public final class OrderChunkNormal extends ContentOrder {
+	
+	private final ContentType type;
 	
 	final DimensionType dim;
 	
 	final int chunkX;
 	final int chunkZ;
 	
-	OrderChunkBlock(DimensionType target, int chunkX, int chunkZ) {
+	OrderChunkNormal(ContentType type, DimensionType target, int chunkX, int chunkZ) {
+		this.type = type;
+		
 		this.dim = target;
 		
 		this.chunkX = chunkX;
@@ -26,7 +30,7 @@ public final class OrderChunkBlock extends ContentOrder {
 	@Nonnull
 	@Override
 	public ContentType type() {
-		return ContentType.CHUNK_BLOCK;
+		return this.type;
 	}
 	
 	@Nonnull
@@ -50,9 +54,9 @@ public final class OrderChunkBlock extends ContentOrder {
 	@Override
 	public boolean equals(Object o) {
 		if(this == o) return true;
-		if(o == null || !(o instanceof OrderChunkBlock)) return false;
+		if(o == null || !(o instanceof OrderChunkNormal)) return false;
 		
-		OrderChunkBlock o0 = (OrderChunkBlock) o;
+		OrderChunkNormal o0 = (OrderChunkNormal) o;
 		
 		return this.dim == o0.dim && this.chunkX == o0.chunkX && this.chunkZ == o0.chunkZ;
 	}

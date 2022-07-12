@@ -15,6 +15,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
 
 @SideWith(section = GameSection.GAME_PLAYING)
@@ -28,24 +29,24 @@ public enum ContentType {
 		}
 
 		@Override
-		void subscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
-			OrderChunkBlock order0 = (OrderChunkBlock) order;
+		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
+			OrderChunkNormal order0 = (OrderChunkNormal) order;
 			
-			SharedImpls.as(target.getWorld(order0.dim.getId()).getChunkFromChunkCoords(order0.chunkX, order0.chunkZ)).wolftail_register(subscriber);
+			SharedImpls.as(target.getWorld(order0.dim.getId()).getChunkFromChunkCoords(order0.chunkX, order0.chunkZ)).wolftail_register_CB(subscribeEntry);
 		}
 
 		@Override
 		void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
-			OrderChunkBlock order0 = (OrderChunkBlock) order;
+			OrderChunkNormal order0 = (OrderChunkNormal) order;
 			Chunk chunk = target.getWorld(order0.dim.getId()).getChunkProvider().getLoadedChunk(order0.chunkX, order0.chunkZ);
 			
-			if(chunk != null) SharedImpls.as(chunk).wolftail_unregister(subscriber);
+			if(chunk != null) SharedImpls.as(chunk).wolftail_unregister_CB(subscriber);
 		}
 		
 		@SuppressWarnings("deprecation")
 		@Override
 		void apply(PacketBuffer buf, SlaveUniverse dst) {
-			OrderChunkBlock order = H4.read_CB(buf);
+			OrderChunkNormal order = H4.read_CB(buf);
 			
 			SlaveWorld w = dst.getOrCreate(order.dim);
 			SlaveChunk c;
@@ -93,18 +94,18 @@ public enum ContentType {
 		}
 		
 		@Override
-		void subscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
-			SharedImpls.as(target.getWorld(((OrderWorldWeather) order).dim.getId())).wolftail_register(subscriber);
+		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
+			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_register_WW(subscribeEntry);
 		}
 		
 		@Override
 		void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
-			SharedImpls.as(target.getWorld(((OrderWorldWeather) order).dim.getId())).wolftail_unregister(subscriber);
+			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_unregister_WW(subscriber);
 		}
 		
 		@Override
 		void apply(PacketBuffer buf, SlaveUniverse dst) {
-			SlaveWorld w = dst.getOrCreate(H4.read_WW(buf).dim);
+			SlaveWeather w = dst.getOrCreate(H4.read_WW(buf).dim).getOrCreate();
 			
 			w.rainingStrength = buf.readFloat();
 			w.thunderingStrength = buf.readFloat();
@@ -115,18 +116,18 @@ public enum ContentType {
 	};
 	
 	@Nonnull
-	public static OrderChunkBlock orderBlock(@Nonnull DimensionType dim, int chunkX, int chunkZ) {
-		return new OrderChunkBlock(dim, chunkX, chunkZ);
+	public static OrderChunkNormal orderBlock(@Nonnull DimensionType dim, int chunkX, int chunkZ) {
+		return new OrderChunkNormal(CHUNK_BLOCK, dim, chunkX, chunkZ);
 	}
 	
 	@Nonnull
-	public static OrderWorldWeather orderWeather(@Nonnull DimensionType dim) {
-		return new OrderWorldWeather(dim);
+	public static OrderWorldNormal orderWeather(@Nonnull DimensionType dim) {
+		return new OrderWorldNormal(WORLD_WEATHER, dim);
 	}
 	
 	abstract ContentOrder read(ByteBuf src);
 	
-	abstract void subscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber);
+	abstract void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry);
 	abstract void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber);
 	
 	abstract void apply(PacketBuffer buf, SlaveUniverse dst);

@@ -20,8 +20,7 @@ public final class SlaveWorld {
 	
 	final Long2ObjectMap<SlaveChunk> chunks;
 	
-	float rainingStrength;
-	float thunderingStrength;
+	SlaveWeather weather;
 	
 	SlaveWorld(SlaveUniverse universeIn, DimensionType dimIn) {
 		this.universe = universeIn;
@@ -70,16 +69,16 @@ public final class SlaveWorld {
 		if((y & 255) != y)
 			throw new IllegalArgumentException();
 		
-		SlaveChunk c = this.check().chunk(x >> 4, z >> 4);
+		SlaveChunk c = this.chunk(x >> 4, z >> 4);
 		
 		return c == null ? null : c.get(x & 15, y, z & 15);
 	}
 	
-	public float rainingStrength() {
-		return this.rainingStrength;
+	public SlaveWeather weather() {
+		return this.check().weather;
 	}
 	
-	public float thunderingStrength() {
-		return this.thunderingStrength;
+	SlaveWeather getOrCreate() {
+		return this.weather != null ? this.weather : (this.weather = new SlaveWeather(this));
 	}
 }

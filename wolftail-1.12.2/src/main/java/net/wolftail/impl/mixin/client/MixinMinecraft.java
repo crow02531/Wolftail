@@ -178,7 +178,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 		this.timer.updateTimer();
 		
 		profiler.startSection("scheduledExecutables");
-		runQueuedTasks(this.scheduledTasks);
+		runQueuedTasks(this.scheduledTasks); //here we will apply all packets received
 		profiler.endSection(); //scheduledExecutables
 		
 		//---------------------------------------start our section-----------------------------

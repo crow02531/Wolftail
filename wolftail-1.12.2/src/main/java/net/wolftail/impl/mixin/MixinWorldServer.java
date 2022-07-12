@@ -1,17 +1,15 @@
 package net.wolftail.impl.mixin;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.wolftail.impl.ExtensionsChunk;
@@ -21,18 +19,20 @@ import net.wolftail.impl.ServerWorldListener;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
+import net.wolftail.impl.SharedImpls.H5;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentType;
-import net.wolftail.util.tracker.OrderWorldWeather;
+import net.wolftail.util.tracker.OrderWorldNormal;
 
-//ContentTracker Supporter
-//ticking subscribed chunks and adding an IWorldEventListener
-//send weather changes to subscribers
+//ContentTracker Supporter TODO optimize
 @Mixin(WorldServer.class)
 public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	
 	@Unique
-	private Set<H3> subscribers = new HashSet<>();
+	private HashMap<H3, H3> subscribers_WW = new HashMap<>();
+	
+	@Unique
+	private Long2ObjectArrayMap<H5> prevWeathers = new Long2ObjectArrayMap<>(3);
 	
 	@Unique
 	private ExtensionsChunk head;
@@ -42,50 +42,53 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 		((WorldServer) SharedImpls.as(this)).addEventListener(new ServerWorldListener());
 	}
 	
-	@Inject(method = "tick", at = @At(value = "INVOKE_STRING", target = "endStartSection(Ljava/lang/String;)V", args = "ldc=chunkMap", shift = Shift.AFTER))
-	private void onTick(CallbackInfo info) {
+	@Unique
+	private void postTick_C(int tick) {
 		ExtensionsChunk c = this.head;
 		
 		while(c != null) {
-			c.wolftail_tick();
+			c.wolftail_postTick(tick);
 			
 			c = c.wolftail_getNext();
 		}
 	}
 	
-	@Inject(method = "updateWeather", at = @At(value = "INVOKE", target = "updateWeather()V", shift = Shift.AFTER))
-	private void onUpdateWeather(CallbackInfo info) {
-		if(this.subscribers.isEmpty()) return;
+	@Unique
+	private void postTick_WW(int tick) {
+		if(this.subscribers_WW.isEmpty()) return;
 		
 		WorldServer w = (WorldServer) SharedImpls.as(this);
-		OrderWorldWeather order = ContentType.orderWeather(w.provider.getDimensionType());
+		OrderWorldNormal order = ContentType.orderWeather(w.provider.getDimensionType());
 		
-		ImplCD init = null;
-		ImplCD diff = null;
+		ImplCD sent = null;
 		
-		for(H3 e : this.subscribers) {
+		this.prevWeathers.long2ObjectEntrySet().forEach(e -> e.getValue().bool = false);
+		
+		for(H3 e : this.subscribers_WW.keySet()) {
 			if(e.initial) {
-				if(init == null) {
-					if(diff == null)
-						diff = new ImplCD(order, H4.make_WW(order, w.rainingStrength, w.thunderingStrength));
-					
-					init = diff;
-				}
+				if(sent == null)
+					sent = new ImplCD(order, H4.make_WW(order, w.rainingStrength, w.thunderingStrength));
 				
-				e.subscriber.accept(init);
+				if(!this.prevWeathers.containsKey(e.tickSequence))
+					this.prevWeathers.put(e.tickSequence, new H5(w.rainingStrength, w.thunderingStrength));
+				
+				e.subscriber.accept(sent);
 				e.initial = false;
-			} else {
-				if(diff == null) {
-					if(w.rainingStrength != w.prevRainingStrength || w.thunderingStrength != w.prevThunderingStrength) {
-						if(init == null)
-							init = new ImplCD(order, H4.make_WW(order, w.rainingStrength, w.thunderingStrength));
+			} else if(e.shouldSend(tick)) {
+				H5 prev = this.prevWeathers.get(e.tickSequence);
+				
+				if(prev.bool || !prev.equals(w.rainingStrength, w.thunderingStrength)) {
+					if(sent == null)
+						sent = new ImplCD(order, H4.make_WW(order, w.rainingStrength, w.thunderingStrength));
+					
+					e.subscriber.accept(sent);
+					
+					if(!prev.bool) {
+						prev.bool = true;
 						
-						diff = init;
+						prev.set(w.rainingStrength, w.thunderingStrength);
 					}
 				}
-				
-				if(diff != null)
-					e.subscriber.accept(diff);
 			}
 		}
 	}
@@ -101,13 +104,28 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	}
 	
 	@Override
-	public void wolftail_register(Consumer<ContentDiff> subscriber) {
-		if(!this.subscribers.add(new H3(subscriber)))
+	public void wolftail_register_WW(H3 subscribeEntry) {
+		if(this.subscribers_WW.putIfAbsent(subscribeEntry, subscribeEntry) != null)
 			throw new IllegalArgumentException();
 	}
 	
 	@Override
-	public void wolftail_unregister(Consumer<ContentDiff> subscriber) {
-		this.subscribers.remove(new H3(subscriber));
+	public void wolftail_unregister_WW(Consumer<ContentDiff> subscriber) {
+		H3 entry = this.subscribers_WW.remove(new H3(subscriber));
+		
+		if(entry != null) {
+			for(H3 e : this.subscribers_WW.keySet()) {
+				if(e.tickSequence == entry.tickSequence)
+					return;
+			}
+			
+			this.prevWeathers.remove(entry.tickSequence);
+		}
+	}
+	
+	@Override
+	public void wolftail_postTick(int tick) {
+		this.postTick_C(tick);
+		this.postTick_WW(tick);
 	}
 }

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.EnumPacketDirection;
@@ -26,8 +27,8 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentType;
-import net.wolftail.util.tracker.OrderChunkBlock;
-import net.wolftail.util.tracker.OrderWorldWeather;
+import net.wolftail.util.tracker.OrderChunkNormal;
+import net.wolftail.util.tracker.OrderWorldNormal;
 
 public final class SharedImpls {
 	
@@ -222,14 +223,27 @@ public final class SharedImpls {
 	
 	public static final class H3 {
 		
-		public Consumer<ContentDiff> subscriber;
+		public final Consumer<ContentDiff> subscriber;
+		public final long tickSequence;
 		
 		public boolean initial;
 		
-		public H3(Consumer<ContentDiff> arg) {
-			this.subscriber = arg;
+		//used for creating prob
+		public H3(Consumer<ContentDiff> subs) {
+			this(subs, 0, 0);
+		}
+		
+		public H3(Consumer<ContentDiff> subs, int tick, int freq) {
+			this.subscriber = subs;
+			this.tickSequence = (((long) (tick % freq)) << 32) | ((long) freq);
 			
 			this.initial = true;
+		}
+		
+		public boolean shouldSend(int tick) {
+			long seq = this.tickSequence;
+			
+			return tick % ((int) seq) == (int) (seq >> 32);
 		}
 		
 		@Override
@@ -247,12 +261,11 @@ public final class SharedImpls {
 		
 		private H4() {}
 		
-		public static ByteBuf make_CB_Init(OrderChunkBlock order, Chunk src) {
+		public static ByteBuf make_CB_init(OrderChunkNormal order, Chunk src) {
 			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
 			ExtendedBlockStorage[] ebs = src.getBlockStorageArray();
 			
-			data.writeVarInt(order.type().ordinal());
-			write_CB(order, data);
+			write_CN0(order, data);
 			
 			data.writeByte(0);
 			
@@ -274,16 +287,14 @@ public final class SharedImpls {
 		}
 		
 		@SuppressWarnings("deprecation")
-		public static ByteBuf make_CB_Diff(OrderChunkBlock order, Chunk src) {
+		public static ByteBuf make_CB_diff(OrderChunkNormal order, Chunk src, ShortSet changes) {
 			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
-			ExtensionsChunk ec = as(src);
 			
-			data.writeVarInt(order.type().ordinal());
-			write_CB(order, data);
+			write_CN0(order, data);
 			
 			data.writeByte(1);
 			
-			for(short s : ec.wolftail_changedBlocks()) {
+			for(short s : changes) {
 				data.writeShort(s);
 				data.writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)));
 			}
@@ -291,11 +302,10 @@ public final class SharedImpls {
 			return data.asReadOnly();
 		}
 		
-		public static ByteBuf make_WW(OrderWorldWeather order, float rainingStrength, float thunderingStrength) {
+		public static ByteBuf make_WW(OrderWorldNormal order, float rainingStrength, float thunderingStrength) {
 			ByteBuf buf = Unpooled.buffer();
 			
-			writeVarInt(order.type().ordinal(), buf);
-			write_WW(order, buf);
+			write_WN0(order, buf);
 			
 			buf.writeFloat(rainingStrength);
 			buf.writeFloat(thunderingStrength);
@@ -303,22 +313,32 @@ public final class SharedImpls {
 			return buf.asReadOnly();
 		}
 		
-		public static void write_CB(OrderChunkBlock src, ByteBuf dst) {
+		public static void write_CN(OrderChunkNormal src, ByteBuf dst) {
 			writeVarInt(src.dimension().getId(), dst);
 			
 			dst.writeInt(src.chunkX());
 			dst.writeInt(src.chunkZ());
 		}
 		
-		public static OrderChunkBlock read_CB(ByteBuf src) {
+		private static void write_CN0(OrderChunkNormal src, ByteBuf dst) {
+			writeVarInt(src.type().ordinal(), dst);
+			write_CN(src, dst);
+		}
+		
+		public static OrderChunkNormal read_CB(ByteBuf src) {
 			return ContentType.orderBlock(DimensionType.getById(readVarInt(src)), src.readInt(), src.readInt());
 		}
 		
-		public static void write_WW(OrderWorldWeather src, ByteBuf dst) {
+		public static void write_WN(OrderWorldNormal src, ByteBuf dst) {
 			writeVarInt(src.dimension().getId(), dst);
 		}
 		
-		public static OrderWorldWeather read_WW(ByteBuf src) {
+		private static void write_WN0(OrderWorldNormal src, ByteBuf dst) {
+			writeVarInt(src.type().ordinal(), dst);
+			write_WN(src, dst);
+		}
+		
+		public static OrderWorldNormal read_WW(ByteBuf src) {
 			return ContentType.orderWeather(DimensionType.getById(readVarInt(src)));
 		}
 		
@@ -347,6 +367,28 @@ public final class SharedImpls {
 			}
 			
 			dst.writeByte(i);
+		}
+	}
+	
+	public static final class H5 {
+		
+		public float x;
+		public float y;
+		
+		public boolean bool;
+		
+		public H5(float x, float y) {
+			this.x = x;
+			this.y = y;
+		}
+		
+		public boolean equals(float x, float y) {
+			return this.x == x && this.y == y;
+		}
+		
+		public void set(float x, float y) {
+			this.x = x;
+			this.y = y;
 		}
 	}
 }
