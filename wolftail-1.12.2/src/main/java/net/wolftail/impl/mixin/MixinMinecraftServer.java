@@ -1,5 +1,6 @@
 package net.wolftail.impl.mixin;
 
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -38,7 +39,7 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 			this.root = new ImplMPCRoot(SharedImpls.as(this));
 	}
 	
-	@Inject(method = "tick", at = @At("RETURN"))
+	@Inject(method = "tick", at = @At(value = "FIELD", target = "tickCounter:I", opcode = Opcodes.PUTFIELD))
 	private void onTick(CallbackInfo info) {
 		for(WorldServer w : this.worlds)
 			SharedImpls.as(w).wolftail_postTick(this.tickCounter);

@@ -8,8 +8,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
-import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
@@ -19,13 +17,18 @@ import net.wolftail.impl.ImplCD;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
+import net.wolftail.impl.SmallLong2ObjectMap;
+import net.wolftail.impl.SmallShortSet;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentType;
 import net.wolftail.util.tracker.OrderChunkNormal;
 
-//ContentTracker Supporter TODO optimize
+//ContentTracker Supporter
 @Mixin(Chunk.class)
 public abstract class MixinChunk implements ExtensionsChunk {
+	
+	@Unique
+	private static final SmallShortSet DUMMY = new SmallShortSet();
 	
 	@Unique
 	private HashMap<H3, H3> subscribers_CB;
@@ -34,7 +37,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	private ExtensionsChunk prev, next;
 	
 	@Unique
-	private Long2ObjectArrayMap<ShortArraySet> changedBlocks;
+	private SmallLong2ObjectMap<SmallShortSet> changedBlocks;
 	
 	@Final
 	@Shadow
@@ -46,8 +49,17 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Override
 	public void wolftail_blockChanged(int localX, int localY, int localZ) {
-		if(this.subscribers_CB != null)
-			this.changedBlocks.long2ObjectEntrySet().forEach(e -> e.getValue().add((short) (localX << 12 | localZ << 8 | localY)));
+		if(this.subscribers_CB != null) {
+			SmallLong2ObjectMap<SmallShortSet> cbs = this.changedBlocks;
+			
+			for(int i = cbs.size(); i-- != 0;) {
+				SmallShortSet set = cbs.getVal(i);
+				
+				if(set != DUMMY && set.add((short) (localX << 12 | localZ << 8 | localY))) {
+					if(set.isFull()) cbs.setVal(i, DUMMY);
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -90,13 +102,13 @@ public abstract class MixinChunk implements ExtensionsChunk {
 				throw new IllegalArgumentException();
 			
 			if(!this.changedBlocks.containsKey(subscribeEntry.tickSequence))
-				this.changedBlocks.put(subscribeEntry.tickSequence, new ShortArraySet(32));
+				this.changedBlocks.put(subscribeEntry.tickSequence, new SmallShortSet(64));
 		} else {
 			if(!this.wolftail_hasSubscriber())
 				this.join_chain();
 			
 			(this.subscribers_CB = new HashMap<>(8)).put(subscribeEntry, subscribeEntry);
-			this.changedBlocks = new Long2ObjectArrayMap<>(new long[] { subscribeEntry.tickSequence }, new ShortArraySet[] { new ShortArraySet(32) });
+			this.changedBlocks = new SmallLong2ObjectMap<>(subscribeEntry.tickSequence, new SmallShortSet(64));
 		}
 	}
 	
@@ -137,7 +149,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 		OrderChunkNormal order = ContentType.orderBlock(this.world.provider.getDimensionType(), this.x, this.z);
 		
 		ImplCD init = null;
-		Long2ObjectArrayMap<ImplCD> diffs = new Long2ObjectArrayMap<>(this.changedBlocks.size());
+		SmallLong2ObjectMap<ImplCD> diffs = new SmallLong2ObjectMap<>(this.changedBlocks.size());
 		
 		for(H3 e : this.subscribers_CB.keySet()) {
 			if(e.initial) {
@@ -150,17 +162,21 @@ public abstract class MixinChunk implements ExtensionsChunk {
 				ImplCD diff = diffs.get(e.tickSequence);
 				
 				if(diff == null) {
-					ShortArraySet changes = this.changedBlocks.get(e.tickSequence);
+					SmallShortSet changes = this.changedBlocks.get(e.tickSequence);
 					
-					if(changes.size() > 0) {
-						if(changes.size() >= 64) {
-							if((diff = init) == null)
-								diff = init = new ImplCD(order, H4.make_CB_init(order, SharedImpls.as(this)));
-						} else diff = new ImplCD(order, H4.make_CB_diff(order, SharedImpls.as(this), changes));
+					if(changes == DUMMY) {
+						if((diff = init) == null)
+							diff = init = new ImplCD(order, H4.make_CB_init(order, SharedImpls.as(this)));
+						
+						this.changedBlocks.put(e.tickSequence, new SmallShortSet(64));
+					} else if(changes.size() > 0) {
+						diff = new ImplCD(order, H4.make_CB_diff(order, SharedImpls.as(this), changes));
 						
 						changes.clear();
-						diffs.put(e.tickSequence, diff);
 					}
+					
+					if(diff != null)
+						diffs.put(e.tickSequence, diff);
 				}
 				
 				if(diff != null)

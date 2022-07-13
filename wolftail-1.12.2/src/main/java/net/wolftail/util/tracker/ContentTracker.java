@@ -12,6 +12,7 @@ import net.wolftail.impl.ExtensionsMinecraftServer;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 
+//TODO consider atomic subscribe
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
 public final class ContentTracker {
 	

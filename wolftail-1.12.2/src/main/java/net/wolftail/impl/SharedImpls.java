@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
-import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.EnumPacketDirection;
@@ -287,14 +286,16 @@ public final class SharedImpls {
 		}
 		
 		@SuppressWarnings("deprecation")
-		public static ByteBuf make_CB_diff(OrderChunkNormal order, Chunk src, ShortSet changes) {
+		public static ByteBuf make_CB_diff(OrderChunkNormal order, Chunk src, SmallShortSet changes) {
 			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
 			
 			write_CN0(order, data);
 			
 			data.writeByte(1);
 			
-			for(short s : changes) {
+			for(int i = changes.size(); i-- != 0;) {
+				short s = changes.get(i);
+				
 				data.writeShort(s);
 				data.writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)));
 			}

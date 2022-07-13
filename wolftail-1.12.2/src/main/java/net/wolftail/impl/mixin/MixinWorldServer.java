@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.wolftail.impl.ExtensionsChunk;
@@ -20,11 +19,12 @@ import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
 import net.wolftail.impl.SharedImpls.H5;
+import net.wolftail.impl.SmallLong2ObjectMap;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentType;
 import net.wolftail.util.tracker.OrderWorldNormal;
 
-//ContentTracker Supporter TODO optimize
+//ContentTracker Supporter
 @Mixin(WorldServer.class)
 public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	
@@ -32,7 +32,7 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	private HashMap<H3, H3> subscribers_WW = new HashMap<>();
 	
 	@Unique
-	private Long2ObjectArrayMap<H5> prevWeathers = new Long2ObjectArrayMap<>(3);
+	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(3);
 	
 	@Unique
 	private ExtensionsChunk head;
@@ -55,27 +55,27 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	
 	@Unique
 	private void postTick_WW(int tick) {
-		if(this.subscribers_WW.isEmpty()) return;
-		
 		WorldServer w = (WorldServer) SharedImpls.as(this);
 		OrderWorldNormal order = ContentType.orderWeather(w.provider.getDimensionType());
+		SmallLong2ObjectMap<H5> prevWeathers = this.prevWeathers;
 		
 		ImplCD sent = null;
 		
-		this.prevWeathers.long2ObjectEntrySet().forEach(e -> e.getValue().bool = false);
+		for(int i = prevWeathers.size(); i-- != 0;)
+			prevWeathers.getVal(i).bool = false;
 		
 		for(H3 e : this.subscribers_WW.keySet()) {
 			if(e.initial) {
 				if(sent == null)
 					sent = new ImplCD(order, H4.make_WW(order, w.rainingStrength, w.thunderingStrength));
 				
-				if(!this.prevWeathers.containsKey(e.tickSequence))
-					this.prevWeathers.put(e.tickSequence, new H5(w.rainingStrength, w.thunderingStrength));
+				if(!prevWeathers.containsKey(e.tickSequence))
+					prevWeathers.put(e.tickSequence, new H5(w.rainingStrength, w.thunderingStrength));
 				
 				e.subscriber.accept(sent);
 				e.initial = false;
 			} else if(e.shouldSend(tick)) {
-				H5 prev = this.prevWeathers.get(e.tickSequence);
+				H5 prev = prevWeathers.get(e.tickSequence);
 				
 				if(prev.bool || !prev.equals(w.rainingStrength, w.thunderingStrength)) {
 					if(sent == null)
@@ -126,6 +126,6 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	@Override
 	public void wolftail_postTick(int tick) {
 		this.postTick_C(tick);
-		this.postTick_WW(tick);
+		if(!this.subscribers_WW.isEmpty()) this.postTick_WW(tick);
 	}
 }
