@@ -9,7 +9,10 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
 import net.minecraft.block.Block;
@@ -25,6 +28,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.SectionState;
 import net.wolftail.util.tracker.ContentDiff;
+import net.wolftail.util.tracker.ContentOrder;
 import net.wolftail.util.tracker.ContentType;
 import net.wolftail.util.tracker.OrderChunkNormal;
 import net.wolftail.util.tracker.OrderWorldNormal;
@@ -220,21 +224,22 @@ public final class SharedImpls {
 		}
 	}
 	
+	//subscribe entry, representing a subscribe
 	public static final class H3 {
 		
-		public final Consumer<ContentDiff> subscriber;
+		private H6 wrapper;
 		public final long tickSequence;
 		
 		public boolean initial;
 		
 		//used for creating prob
-		public H3(Consumer<ContentDiff> subs) {
-			this(subs, 0, 0);
+		public H3(H6 wrapper) {
+			this(wrapper, 0, 0);
 		}
 		
-		public H3(Consumer<ContentDiff> subs, int tick, int freq) {
-			this.subscriber = subs;
-			this.tickSequence = (((long) (tick % freq)) << 32) | ((long) freq);
+		public H3(H6 wrapper, int tick, int interval) {
+			this.wrapper = wrapper;
+			this.tickSequence = (((long) (tick % interval)) << 32) | ((long) interval);
 			
 			this.initial = true;
 		}
@@ -245,14 +250,24 @@ public final class SharedImpls {
 			return tick % ((int) seq) == (int) (seq >> 32);
 		}
 		
-		@Override
-		public int hashCode() {
-			return System.identityHashCode(this.subscriber);
+		public void cumulate(ContentOrder order, ByteBuf content_diff) {
+			this.wrapper.cumulate(order, content_diff);
+		}
+		
+		public void replaceRef(H6 newRef) {
+			//assert(this.wrapper.subscriber == newRef.subscriber)
+			
+			this.wrapper = newRef;
 		}
 		
 		@Override
-		public boolean equals(Object obj) {
-			return this.subscriber == ((H3) obj).subscriber;
+		public int hashCode() {
+			return System.identityHashCode(this.wrapper.subscriber);
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			return this.wrapper.subscriber == ((H3) o).wrapper.subscriber;
 		}
 	}
 	
@@ -261,12 +276,12 @@ public final class SharedImpls {
 		private H4() {}
 		
 		public static ByteBuf make_CB_init(OrderChunkNormal order, Chunk src) {
-			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+			ByteBuf buf = Unpooled.buffer();
 			ExtendedBlockStorage[] ebs = src.getBlockStorageArray();
 			
-			write_CN0(order, data);
+			write_CN0(order, buf);
 			
-			data.writeByte(0);
+			buf.writeByte(0);
 			
 			int availableSections = 0;
 			
@@ -275,32 +290,33 @@ public final class SharedImpls {
 					availableSections |= 1 << i;
 			}
 			
-			data.writeShort(availableSections);
+			buf.writeShort(availableSections);
 			
+			PacketBuffer wrap = new PacketBuffer(buf);
 			for(int i = 0; i < 16; i++) {
 				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
-					ebs[i].getData().write(data);
+					ebs[i].getData().write(wrap);
 			}
 			
-			return data.asReadOnly();
+			return buf;
 		}
 		
 		@SuppressWarnings("deprecation")
 		public static ByteBuf make_CB_diff(OrderChunkNormal order, Chunk src, SmallShortSet changes) {
-			PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+			ByteBuf buf = Unpooled.buffer();
 			
-			write_CN0(order, data);
+			write_CN0(order, buf);
 			
-			data.writeByte(1);
+			buf.writeByte(1);
 			
 			for(int i = changes.size(); i-- != 0;) {
 				short s = changes.get(i);
 				
-				data.writeShort(s);
-				data.writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)));
+				buf.writeShort(s);
+				writeVarInt(Block.BLOCK_STATE_IDS.get(src.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15)), buf);
 			}
 			
-			return data.asReadOnly();
+			return buf;
 		}
 		
 		public static ByteBuf make_WW(OrderWorldNormal order, float rainingStrength, float thunderingStrength) {
@@ -404,6 +420,40 @@ public final class SharedImpls {
 		public void set(float x, float y) {
 			this.x = x;
 			this.y = y;
+		}
+	}
+	
+	//subscriber wrapper
+	public static final class H6 {
+		
+		public final Consumer<ContentDiff> subscriber;
+		
+		public int num;
+		
+		private ImmutableSet.Builder<ContentOrder> orders;
+		private CompositeByteBuf contentDiff;
+		
+		public H6(Consumer<ContentDiff> arg0) {
+			this.subscriber = arg0;
+		}
+		
+		public void cumulate(ContentOrder order, ByteBuf content_diff) {
+			if(this.orders == null) {
+				this.orders = ImmutableSet.builder();
+				this.contentDiff = Unpooled.compositeBuffer(Integer.MAX_VALUE);
+			}
+			
+			this.orders.add(order);
+			this.contentDiff.addComponent(true, content_diff);
+		}
+		
+		public void flush() {
+			if(this.orders != null) {
+				this.subscriber.accept(new ImplCD(this.orders.build(), this.contentDiff.asReadOnly()));
+				
+				this.orders = null;
+				this.contentDiff = null;
+			}
 		}
 	}
 }

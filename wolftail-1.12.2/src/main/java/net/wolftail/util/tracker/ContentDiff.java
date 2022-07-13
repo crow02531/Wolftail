@@ -3,24 +3,28 @@ package net.wolftail.util.tracker;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.PacketBuffer;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.ImplCD;
-import net.wolftail.impl.SharedImpls.H4;
 
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
 public interface ContentDiff {
 	
-	@Nonnull ContentOrder order();
+	/**
+	 * The orders regarding the changes.
+	 * 
+	 * @return a non-empty immutable set
+	 */
+	@Nonnull ImmutableSet<ContentOrder> orders();
 	
 	/**
 	 * Transfer the whole content diff into a newly created
-	 * byte buf. Don't worry about its performance.
+	 * read-only byte buf. Don't worry about its performance.
 	 * 
-	 * @return the byte buf
+	 * @return a newly created read-only buf
 	 */
 	@Nonnull ByteBuf toByteBuf();
 	
@@ -42,9 +46,9 @@ public interface ContentDiff {
 	 */
 	@Nonnull
 	public static ContentDiff from(@Nonnull ByteBuf buf) {
-		buf = buf.copy();
+		//TODO ContentDiff.from
 		
-		return new ImplCD(ContentType.values()[H4.readVarInt(buf)].read(buf), buf.readerIndex(0).asReadOnly());
+		throw new UnsupportedOperationException();
 	}
 	
 	/**
@@ -52,8 +56,10 @@ public interface ContentDiff {
 	 * directly without any copy.
 	 */
 	public static void apply(@Nonnull ByteBuf buf, @Nonnull SlaveUniverse dst) {
-		PacketBuffer buf0 = buf instanceof PacketBuffer ? (PacketBuffer) buf : new PacketBuffer(buf);
+		//PacketBuffer buf0 = buf instanceof PacketBuffer ? (PacketBuffer) buf : new PacketBuffer(buf);
 		
-		ContentType.values()[buf0.readVarInt()].apply(buf0, dst);
+		//TODO ContentDiff.apply
+		
+		throw new UnsupportedOperationException();
 	}
 }

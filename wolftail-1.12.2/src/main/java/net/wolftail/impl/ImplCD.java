@@ -1,25 +1,27 @@
 package net.wolftail.impl;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.netty.buffer.ByteBuf;
 import net.wolftail.util.tracker.ContentDiff;
-import net.wolftail.util.tracker.SlaveUniverse;
 import net.wolftail.util.tracker.ContentOrder;
+import net.wolftail.util.tracker.SlaveUniverse;
 
 public final class ImplCD implements ContentDiff {
 	
-	private final ContentOrder order;
+	private final ImmutableSet<ContentOrder> orders;
 	
 	private final ByteBuf data;
 	
-	public ImplCD(ContentOrder order, ByteBuf data) {
-		this.order = order;
+	public ImplCD(ImmutableSet<ContentOrder> orders, ByteBuf content_diff) {
+		this.orders = orders;
 		
-		this.data = data;
+		this.data = content_diff;
 	}
 	
 	@Override
-	public ContentOrder order() {
-		return this.order;
+	public ImmutableSet<ContentOrder> orders() {
+		return this.orders;
 	}
 	
 	@Override
@@ -34,7 +36,7 @@ public final class ImplCD implements ContentDiff {
 	
 	@Override
 	public int hashCode() {
-		return this.order.hashCode() ^ this.data.hashCode();
+		return this.orders.hashCode() ^ this.data.hashCode();
 	}
 	
 	@Override
@@ -44,6 +46,6 @@ public final class ImplCD implements ContentDiff {
 		
 		ImplCD obj = (ImplCD) o;
 		
-		return obj.order.equals(this.order) && obj.data.equals(this.data);
+		return obj.orders.equals(this.orders) && obj.data.equals(this.data);
 	}
 }

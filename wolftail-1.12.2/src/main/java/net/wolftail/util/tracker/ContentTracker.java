@@ -11,8 +11,8 @@ import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.ExtensionsMinecraftServer;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
+import net.wolftail.impl.SharedImpls.H6;
 
-//TODO consider atomic subscribe
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
 public final class ContentTracker {
 	
@@ -23,7 +23,7 @@ public final class ContentTracker {
 	}
 	
 	/**
-	 * It is identical to {@code subscribe(order, subscriber, 1)}. The change will be
+	 * Shortcut for {@code subscribe(order, subscriber, 1)}. The change will be
 	 * sent to you every tick if necessary.
 	 * 
 	 * @param order			the content in interest
@@ -31,6 +31,7 @@ public final class ContentTracker {
 	 * 
 	 * @throws IllegalArgumentException	thrown when the {@code subscriber} has
 	 * 		subscribed the {@code order}
+	 * @throws IllegalStateException	thrown if called by {@code subscriber::accept}
 	 * 
 	 * @see #subscribe(ContentOrder, Consumer, int)
 	 */
@@ -39,14 +40,24 @@ public final class ContentTracker {
 	}
 	
 	/**
-	 * Subscribe a specific content in the server. The change will be sent to you
-	 * every some ticks(at a specific frequency) if necessary. Notice that the change
-	 * will be sent only by logic server during the post tick.
+	 * Subscribe a specific content in the server. The change will be sent to
+	 * {@code subscriber} every {@code interval} ticks if necessary. Notice that
+	 * the change will be sent only by logic server during the post tick, and
+	 * if your subscriber subscribes more than one content, it will still get at
+	 * most one content diff(a composite one) every tick.
 	 * 
 	 * <p>
-	 * For example, {@code subscribe(orderBlock(OVERWORLD, 0, 0), mySubs, 2)}
-	 * has the following effect.
-	 * </p>
+	 * For example, codes
+	 * 
+	 * <pre>
+	 *   o0 = orderBlock(OVERWORLD, 0, 0);
+	 *   o1 = orderBlock(OVERWORLD, 0, 1);
+	 *   
+	 *   subscribe(o0, mySubs, 2);
+	 *   subscribe(o1, mySubs, 2);
+	 * </pre>
+	 * 
+	 * may has the following effect.
 	 * 
 	 * <pre>
 	 *   +-------------------+-------------------+-------------------+
@@ -54,32 +65,66 @@ public final class ContentTracker {
 	 *   |              |POST|              |POST|              |POST|
 	 *   +-------------------+-------------------+-------------------+
 	 *          ↑          ↑                                      ↑
-	 *  subscribe called   |                                      |
+	 *    method called    |                                      |
 	 *                     |                                      |
-	 *            mySubs received data                   mySubs received data
+	 *      mySubs received ContentDiff(orders = o0, o1)          |
+	 *                                                            |
+	 *                                        mySubs received ContentDiff(orders = o0)
 	 * </pre>
+	 * 
+	 * <p>
+	 * Note that it dosen't mean the bigger interval the better performance.
+	 * Generally a fast-changing content(like {@link ContentType#WORLD_DAYTIME
+	 * WORLD_DAYTIME}) would perform better with big interval, while the
+	 * slow-changing content(like {@link ContentType#CHUNK_BLOCK CHUNK_BLOCK})
+	 * prefers small interval.
 	 * 
 	 * @param order			the content in interest
 	 * @param subscriber	the subscriber
-	 * @param frequency		in the unit of tick, must larger than 0
+	 * @param interval		in the unit of tick, must larger than 0
 	 * 
 	 * @throws IllegalArgumentException	thrown when the {@code subscriber} has
 	 * 		subscribed the {@code order}
+	 * @throws IllegalStateException	thrown if called by {@code subscriber::accept}
 	 */
-	public void subscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber, int frequency) {
-		order.type().subscribe(this.server, order, new H3(subscriber, this.server.getTickCounter(), frequency));
+	public void subscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber, int interval) {
+		H6 wrapper = new H6(subscriber);
+		H3 entry = new H3(wrapper, this.check().getTickCounter(), interval);
+		
+		order.type().subscribe(this.server, order, entry);
+		
+		H6 prev = SharedImpls.as(this.server).wolftail_wrappers().putIfAbsent(subscriber, wrapper);
+		if(prev == null) prev = wrapper;
+		
+		prev.num++;
+		entry.replaceRef(prev);
 	}
 	
 	/**
-	 * Cancel the subscribe.
+	 * Cancel the subscribe. Have no effect if the subscribe hasn't been made.
 	 * 
 	 * @param order			the content subscribed
 	 * @param subscriber	the subscriber
 	 * 
+	 * @return true if the subscribe exists
+	 * 
+	 * @throws IllegalStateException	thrown if called by {@code subscriber::accept}
+	 * 
 	 * @see #subscribe(ContentOrder, Consumer, int)
 	 */
-	public void unsubscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber) {
-		order.type().unsubscribe(this.server, order, subscriber);
+	public boolean unsubscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber) {
+		H6 wrapper = SharedImpls.as(this.check()).wolftail_wrappers().get(subscriber);
+		
+		if(wrapper != null) {
+			if(order.type().unsubscribe(this.server, order, wrapper)) {
+				if(--wrapper.num == 0)
+					SharedImpls.as(this.server).wolftail_wrappers().remove(subscriber);
+				
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	@Nonnull
@@ -88,7 +133,7 @@ public final class ContentTracker {
 		ContentTracker r = ext.wolftail_getContentTracker();
 		
 		if(r == null) {
-			synchronized(LOCK) {
+			synchronized(server) {
 				r = ext.wolftail_getContentTracker();
 				
 				if(r == null)
@@ -99,5 +144,10 @@ public final class ContentTracker {
 		return r;
 	}
 	
-	private static final Object LOCK = new Object();
+	private MinecraftServer check() {
+		if(SharedImpls.as(this.server).wolftail_duringSending())
+			throw new IllegalStateException();
+		
+		return this.server;
+	}
 }

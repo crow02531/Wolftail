@@ -1,5 +1,8 @@
 package net.wolftail.impl.mixin;
 
+import java.util.IdentityHashMap;
+import java.util.function.Consumer;
+
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,10 +17,12 @@ import net.wolftail.api.lifecycle.PhysicalType;
 import net.wolftail.impl.ExtensionsMinecraftServer;
 import net.wolftail.impl.ImplMPCRoot;
 import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.SharedImpls.H6;
+import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentTracker;
 
 //rootPlayContextManager, content tracker addition
-//send all content diffs to subscribers
+//collect and send all content diffs to subscribers
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer {
 	
@@ -33,6 +38,12 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	@Unique
 	private ContentTracker tracker;
 	
+	@Unique
+	private IdentityHashMap<Consumer<ContentDiff>, H6> wrappers = new IdentityHashMap<>();
+	
+	@Unique
+	private boolean sending;
+	
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void onConstruct(CallbackInfo info) {
 		if(PhysicalType.INTEGRATED_CLIENT.is())
@@ -43,6 +54,10 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	private void onTick(CallbackInfo info) {
 		for(WorldServer w : this.worlds)
 			SharedImpls.as(w).wolftail_postTick(this.tickCounter);
+		
+		this.sending = true;
+		this.wrappers.values().forEach(H6::flush);
+		this.sending = false;
 	}
 	
 	@Override
@@ -58,5 +73,15 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	@Override
 	public void wolftail_setContentTracker(ContentTracker obj) {
 		this.tracker = obj;
+	}
+	
+	@Override
+	public boolean wolftail_duringSending() {
+		return this.sending;
+	}
+	
+	@Override
+	public IdentityHashMap<Consumer<ContentDiff>, H6> wolftail_wrappers() {
+		return this.wrappers;
 	}
 }

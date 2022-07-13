@@ -1,25 +1,24 @@
 package net.wolftail.impl.mixin;
 
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.wolftail.impl.ExtensionsChunk;
 import net.wolftail.impl.ExtensionsWorldServer;
-import net.wolftail.impl.ImplCD;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
+import net.wolftail.impl.SharedImpls.H6;
 import net.wolftail.impl.SmallLong2ObjectMap;
 import net.wolftail.impl.SmallShortSet;
-import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentType;
 import net.wolftail.util.tracker.OrderChunkNormal;
 
@@ -113,12 +112,12 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	}
 	
 	@Override
-	public void wolftail_unregister_CB(Consumer<ContentDiff> subscriber) {
-		if(this.subscribers_CB == null) return;
+	public boolean wolftail_unregister_CB(H6 wrapper) {
+		if(this.subscribers_CB == null) return false;
 		
-		H3 entry = this.subscribers_CB.remove(new H3(subscriber));
+		H3 entry = this.subscribers_CB.remove(new H3(wrapper));
 		
-		if(entry == null) return;
+		if(entry == null) return false;
 		
 		if(this.subscribers_CB.isEmpty()) {
 			this.subscribers_CB = null;
@@ -132,11 +131,13 @@ public abstract class MixinChunk implements ExtensionsChunk {
 		} else {
 			for(H3 e : this.subscribers_CB.keySet()) {
 				if(e.tickSequence == entry.tickSequence)
-					return;
+					return true;
 			}
 			
 			this.changedBlocks.remove(entry.tickSequence);
 		}
+		
+		return true;
 	}
 	
 	@Override
@@ -148,29 +149,29 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	private void postTick_CB(int tick) {
 		OrderChunkNormal order = ContentType.orderBlock(this.world.provider.getDimensionType(), this.x, this.z);
 		
-		ImplCD init = null;
-		SmallLong2ObjectMap<ImplCD> diffs = new SmallLong2ObjectMap<>(this.changedBlocks.size());
+		ByteBuf init = null;
+		SmallLong2ObjectMap<ByteBuf> diffs = new SmallLong2ObjectMap<>(this.changedBlocks.size());
 		
 		for(H3 e : this.subscribers_CB.keySet()) {
 			if(e.initial) {
 				if(init == null)
-					init = new ImplCD(order, H4.make_CB_init(order, SharedImpls.as(this)));
+					init = H4.make_CB_init(order, SharedImpls.as(this));
 				
-				e.subscriber.accept(init);
+				e.cumulate(order, init);
 				e.initial = false;
 			} else if(e.shouldSend(tick)) {
-				ImplCD diff = diffs.get(e.tickSequence);
+				ByteBuf diff = diffs.get(e.tickSequence);
 				
 				if(diff == null) {
 					SmallShortSet changes = this.changedBlocks.get(e.tickSequence);
 					
 					if(changes == DUMMY) {
 						if((diff = init) == null)
-							diff = init = new ImplCD(order, H4.make_CB_init(order, SharedImpls.as(this)));
+							diff = init = H4.make_CB_init(order, SharedImpls.as(this));
 						
 						this.changedBlocks.put(e.tickSequence, new SmallShortSet(64));
 					} else if(changes.size() > 0) {
-						diff = new ImplCD(order, H4.make_CB_diff(order, SharedImpls.as(this), changes));
+						diff = H4.make_CB_diff(order, SharedImpls.as(this), changes);
 						
 						changes.clear();
 					}
@@ -180,7 +181,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 				}
 				
 				if(diff != null)
-					e.subscriber.accept(diff);
+					e.cumulate(order, diff);
 			}
 		}
 	}

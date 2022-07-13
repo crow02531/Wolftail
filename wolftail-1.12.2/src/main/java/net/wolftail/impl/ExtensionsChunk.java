@@ -1,16 +1,14 @@
 package net.wolftail.impl;
 
-import java.util.function.Consumer;
-
 import net.wolftail.impl.SharedImpls.H3;
-import net.wolftail.util.tracker.ContentDiff;
+import net.wolftail.impl.SharedImpls.H6;
 
 public interface ExtensionsChunk {
 	
 	boolean wolftail_hasSubscriber();
 	
 	void wolftail_register_CB(H3 subscribeEntry);
-	void wolftail_unregister_CB(Consumer<ContentDiff> subscriber);
+	boolean wolftail_unregister_CB(H6 wrapper);
 	
 	ExtensionsChunk wolftail_getNext();
 	void wolftail_setNext(ExtensionsChunk c);

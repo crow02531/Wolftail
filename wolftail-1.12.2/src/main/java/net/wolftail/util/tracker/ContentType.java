@@ -1,7 +1,5 @@
 package net.wolftail.util.tracker;
 
-import java.util.function.Consumer;
-
 import javax.annotation.Nonnull;
 
 import io.netty.buffer.ByteBuf;
@@ -17,35 +15,39 @@ import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
+import net.wolftail.impl.SharedImpls.H6;
 
+/**
+ * The type of an order.
+ * 
+ * @see ContentOrder
+ */
 @SideWith(section = GameSection.GAME_PLAYING)
 public enum ContentType {
 	
 	CHUNK_BLOCK {
 		
 		@Override
-		ContentOrder read(ByteBuf src) {
-			return H4.read_CB(src);
-		}
-
-		@Override
 		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
 			OrderChunkNormal order0 = (OrderChunkNormal) order;
 			
 			SharedImpls.as(target.getWorld(order0.dim.getId()).getChunkFromChunkCoords(order0.chunkX, order0.chunkZ)).wolftail_register_CB(subscribeEntry);
 		}
-
+		
 		@Override
-		void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
+		boolean unsubscribe(MinecraftServer target, ContentOrder order, H6 wrapper) {
 			OrderChunkNormal order0 = (OrderChunkNormal) order;
 			Chunk chunk = target.getWorld(order0.dim.getId()).getChunkProvider().getLoadedChunk(order0.chunkX, order0.chunkZ);
 			
-			if(chunk != null) SharedImpls.as(chunk).wolftail_unregister_CB(subscriber);
+			if(chunk != null)
+				return SharedImpls.as(chunk).wolftail_unregister_CB(wrapper);
+			else
+				return false;
 		}
 		
 		@SuppressWarnings("deprecation")
 		@Override
-		void apply(PacketBuffer buf, SlaveUniverse dst) {
+		void apply(ByteBuf buf, SlaveUniverse dst) {
 			OrderChunkNormal order = H4.read_CB(buf);
 			
 			SlaveWorld w = dst.goc_world(order.dim);
@@ -57,9 +59,10 @@ public enum ContentType {
 				c = new SlaveChunk(w, order.chunkX(), order.chunkZ());
 				BlockStateContainer[] b = c.blocks;
 				
+				PacketBuffer wrap = new PacketBuffer(buf);
 				for(int i = 0; i < 16; ++i) {
 					if((availableSections & (1 << i)) != 0)
-						(b[i] = new BlockStateContainer()).read(buf);
+						(b[i] = new BlockStateContainer()).read(wrap);
 					else
 						b[i] = null;
 				}
@@ -73,7 +76,7 @@ public enum ContentType {
 				int t = 0;
 				
 				while(buf.isReadable()) {
-					c.set(buf.readShort(), Block.BLOCK_STATE_IDS.getByValue(buf.readVarInt()));
+					c.set(buf.readShort(), Block.BLOCK_STATE_IDS.getByValue(H4.readVarInt(buf)));
 					
 					if(++t > 64)
 						throw new IllegalArgumentException();
@@ -88,22 +91,17 @@ public enum ContentType {
 	WORLD_WEATHER {
 		
 		@Override
-		ContentOrder read(ByteBuf src) {
-			return H4.read_WW(src);
-		}
-		
-		@Override
 		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
 			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_register_WW(subscribeEntry);
 		}
 		
 		@Override
-		void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
-			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_unregister_WW(subscriber);
+		boolean unsubscribe(MinecraftServer target, ContentOrder order, H6 wrapper) {
+			return SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_unregister_WW(wrapper);
 		}
 		
 		@Override
-		void apply(PacketBuffer buf, SlaveUniverse dst) {
+		void apply(ByteBuf buf, SlaveUniverse dst) {
 			SlaveWeather w = dst.goc_world(H4.read_WW(buf).dim).goc_weather();
 			
 			w.rainingStrength = buf.readFloat();
@@ -116,22 +114,17 @@ public enum ContentType {
 	WORLD_DAYTIME {
 		
 		@Override
-		ContentOrder read(ByteBuf src) {
-			return H4.read_WDT(null);
-		}
-		
-		@Override
 		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
 			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_register_WDT(subscribeEntry);
 		}
 		
 		@Override
-		void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
-			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_unregister_WDT(subscriber);
+		boolean unsubscribe(MinecraftServer target, ContentOrder order, H6 wrapper) {
+			return SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_unregister_WDT(wrapper);
 		}
 		
 		@Override
-		void apply(PacketBuffer buf, SlaveUniverse dst) {
+		void apply(ByteBuf buf, SlaveUniverse dst) {
 			SlaveTime t = dst.goc_world(H4.read_WDT(buf).dim).goc_time();
 			
 			t.dayTime = buf.readLong();
@@ -155,12 +148,10 @@ public enum ContentType {
 		return new OrderWorldNormal(WORLD_DAYTIME, dim);
 	}
 	
-	abstract ContentOrder read(ByteBuf src);
-	
 	abstract void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry);
-	abstract void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber);
+	abstract boolean unsubscribe(MinecraftServer target, ContentOrder order, H6 wrapper);
 	
-	abstract void apply(PacketBuffer buf, SlaveUniverse dst);
+	abstract void apply(ByteBuf buf /*the first varint has read*/, SlaveUniverse dst);
 	
 	private static void ensureReadAll(ByteBuf buf) {
 		if(buf.isReadable()) throw new IllegalArgumentException();
