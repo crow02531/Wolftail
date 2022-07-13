@@ -22,7 +22,7 @@ public final class SlaveUniverse {
 		return this.worlds.get(dim);
 	}
 	
-	SlaveWorld getOrCreate(DimensionType d) {
+	SlaveWorld goc_world(DimensionType d) {
 		SlaveWorld w = this.worlds.get(d);
 		
 		if(w == null) 

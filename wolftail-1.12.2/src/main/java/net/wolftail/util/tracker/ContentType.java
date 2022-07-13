@@ -48,7 +48,7 @@ public enum ContentType {
 		void apply(PacketBuffer buf, SlaveUniverse dst) {
 			OrderChunkNormal order = H4.read_CB(buf);
 			
-			SlaveWorld w = dst.getOrCreate(order.dim);
+			SlaveWorld w = dst.goc_world(order.dim);
 			SlaveChunk c;
 			
 			if(buf.readByte() == 0) {
@@ -66,8 +66,7 @@ public enum ContentType {
 				
 				w.chunks.put(ChunkPos.asLong(order.chunkX(), order.chunkZ()), c);
 				
-				if(buf.isReadable())
-					throw new IllegalArgumentException();
+				ensureReadAll(buf);
 			} else {
 				c = w.chunk(order.chunkX(), order.chunkZ());
 				
@@ -105,13 +104,39 @@ public enum ContentType {
 		
 		@Override
 		void apply(PacketBuffer buf, SlaveUniverse dst) {
-			SlaveWeather w = dst.getOrCreate(H4.read_WW(buf).dim).getOrCreate();
+			SlaveWeather w = dst.goc_world(H4.read_WW(buf).dim).goc_weather();
 			
 			w.rainingStrength = buf.readFloat();
 			w.thunderingStrength = buf.readFloat();
 			
-			if(buf.isReadable())
-				throw new IllegalArgumentException();
+			ensureReadAll(buf);
+		}
+	},
+	
+	WORLD_DAYTIME {
+		
+		@Override
+		ContentOrder read(ByteBuf src) {
+			return H4.read_WDT(null);
+		}
+		
+		@Override
+		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
+			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_register_WDT(subscribeEntry);
+		}
+		
+		@Override
+		void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber) {
+			SharedImpls.as(target.getWorld(((OrderWorldNormal) order).dim.getId())).wolftail_unregister_WDT(subscriber);
+		}
+		
+		@Override
+		void apply(PacketBuffer buf, SlaveUniverse dst) {
+			SlaveTime t = dst.goc_world(H4.read_WDT(buf).dim).goc_time();
+			
+			t.dayTime = buf.readLong();
+			
+			ensureReadAll(buf);
 		}
 	};
 	
@@ -125,10 +150,19 @@ public enum ContentType {
 		return new OrderWorldNormal(WORLD_WEATHER, dim);
 	}
 	
+	@Nonnull
+	public static OrderWorldNormal orderDaytime(@Nonnull DimensionType dim) {
+		return new OrderWorldNormal(WORLD_DAYTIME, dim);
+	}
+	
 	abstract ContentOrder read(ByteBuf src);
 	
 	abstract void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry);
 	abstract void unsubscribe(MinecraftServer target, ContentOrder order, Consumer<ContentDiff> subscriber);
 	
 	abstract void apply(PacketBuffer buf, SlaveUniverse dst);
+	
+	private static void ensureReadAll(ByteBuf buf) {
+		if(buf.isReadable()) throw new IllegalArgumentException();
+	}
 }

@@ -13,5 +13,8 @@ public interface ExtensionsWorldServer {
 	void wolftail_register_WW(H3 subscribeEntry);
 	void wolftail_unregister_WW(Consumer<ContentDiff> subscriber);
 	
+	void wolftail_register_WDT(H3 subscribeEntry);
+	void wolftail_unregister_WDT(Consumer<ContentDiff> subscriber);
+	
 	void wolftail_postTick(int tick);
 }

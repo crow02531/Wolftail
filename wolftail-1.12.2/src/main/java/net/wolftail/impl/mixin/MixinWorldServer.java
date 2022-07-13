@@ -32,6 +32,9 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	private HashMap<H3, H3> subscribers_WW = new HashMap<>();
 	
 	@Unique
+	private HashMap<H3, H3> subscribers_WDT = new HashMap<>();
+	
+	@Unique
 	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(3);
 	
 	@Unique
@@ -93,6 +96,24 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 		}
 	}
 	
+	@Unique
+	private void postTick_WDT(int tick) {
+		ImplCD sent = null;
+		
+		for(H3 e : this.subscribers_WDT.keySet()) {
+			if(e.shouldSend(tick)) {
+				if(sent == null) {
+					WorldServer w = (WorldServer) SharedImpls.as(this);
+					OrderWorldNormal order = ContentType.orderDaytime(w.provider.getDimensionType());
+					
+					sent = new ImplCD(order, H4.make_WDT(order, w));
+				}
+				
+				e.subscriber.accept(sent);
+			}
+		}
+	}
+	
 	@Override
 	public ExtensionsChunk wolftail_getHead() {
 		return this.head;
@@ -124,8 +145,21 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	}
 	
 	@Override
+	public void wolftail_register_WDT(H3 subscribeEntry) {
+		if(this.subscribers_WDT.putIfAbsent(subscribeEntry, subscribeEntry) != null)
+			throw new IllegalArgumentException();
+	}
+	
+	@Override
+	public void wolftail_unregister_WDT(Consumer<ContentDiff> subscriber) {
+		this.subscribers_WDT.remove(new H3(subscriber));
+	}
+	
+	@Override
 	public void wolftail_postTick(int tick) {
 		this.postTick_C(tick);
+		
 		if(!this.subscribers_WW.isEmpty()) this.postTick_WW(tick);
+		if(!this.subscribers_WDT.isEmpty()) this.postTick_WDT(tick);
 	}
 }

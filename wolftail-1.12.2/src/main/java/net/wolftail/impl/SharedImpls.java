@@ -314,6 +314,16 @@ public final class SharedImpls {
 			return buf.asReadOnly();
 		}
 		
+		public static ByteBuf make_WDT(OrderWorldNormal order, WorldServer w) {
+			ByteBuf buf = Unpooled.buffer();
+			
+			write_WN0(order, buf);
+			
+			buf.writeLong(w.getWorldTime());
+			
+			return buf.asReadOnly();
+		}
+		
 		public static void write_CN(OrderChunkNormal src, ByteBuf dst) {
 			writeVarInt(src.dimension().getId(), dst);
 			
@@ -341,6 +351,10 @@ public final class SharedImpls {
 		
 		public static OrderWorldNormal read_WW(ByteBuf src) {
 			return ContentType.orderWeather(DimensionType.getById(readVarInt(src)));
+		}
+		
+		public static OrderWorldNormal read_WDT(ByteBuf src) {
+			return ContentType.orderDaytime(DimensionType.getById(readVarInt(src)));
 		}
 		
 		public static int readVarInt(ByteBuf src) {

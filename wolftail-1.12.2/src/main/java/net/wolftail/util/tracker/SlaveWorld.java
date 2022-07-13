@@ -22,6 +22,8 @@ public final class SlaveWorld {
 	
 	SlaveWeather weather;
 	
+	SlaveTime time;
+	
 	SlaveWorld(SlaveUniverse universeIn, DimensionType dimIn) {
 		this.universe = universeIn;
 		
@@ -78,7 +80,15 @@ public final class SlaveWorld {
 		return this.check().weather;
 	}
 	
-	SlaveWeather getOrCreate() {
+	public SlaveTime time() {
+		return this.check().time;
+	}
+	
+	SlaveWeather goc_weather() {
 		return this.weather != null ? this.weather : (this.weather = new SlaveWeather(this));
+	}
+	
+	SlaveTime goc_time() {
+		return this.time != null ? this.time : (this.time = new SlaveTime(this));
 	}
 }
