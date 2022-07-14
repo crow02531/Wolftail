@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.ByteBuf;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
+import net.wolftail.impl.ImplCD;
+import net.wolftail.impl.SharedImpls.H4;
 
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
@@ -46,9 +48,14 @@ public interface ContentDiff {
 	 */
 	@Nonnull
 	public static ContentDiff from(@Nonnull ByteBuf buf) {
-		//TODO ContentDiff.from
+		buf = buf.copy().asReadOnly();
 		
-		throw new UnsupportedOperationException();
+		ContentType types[] = ContentType.values();
+		ImmutableSet.Builder<ContentOrder> orders = ImmutableSet.builder();
+		
+		while(buf.isReadable()) orders.add(types[H4.readVarInt(buf)].check(buf));
+		
+		return new ImplCD(orders.build(), buf.readerIndex(0));
 	}
 	
 	/**
@@ -56,10 +63,8 @@ public interface ContentDiff {
 	 * directly without any copy.
 	 */
 	public static void apply(@Nonnull ByteBuf buf, @Nonnull SlaveUniverse dst) {
-		//PacketBuffer buf0 = buf instanceof PacketBuffer ? (PacketBuffer) buf : new PacketBuffer(buf);
+		ContentType types[] = ContentType.values();
 		
-		//TODO ContentDiff.apply
-		
-		throw new UnsupportedOperationException();
+		while(buf.isReadable()) types[H4.readVarInt(buf)].apply(buf, dst);
 	}
 }

@@ -254,7 +254,7 @@ public final class SharedImpls {
 			this.wrapper.cumulate(order, content_diff);
 		}
 		
-		public void replaceRef(H6 newRef) {
+		public void updateRef(H6 newRef) {
 			//assert(this.wrapper.subscriber == newRef.subscriber)
 			
 			this.wrapper = newRef;
@@ -307,9 +307,10 @@ public final class SharedImpls {
 			
 			write_CN0(order, buf);
 			
-			buf.writeByte(1);
+			int i = changes.size();
+			buf.writeByte(i);
 			
-			for(int i = changes.size(); i-- != 0;) {
+			for(; i-- != 0;) {
 				short s = changes.get(i);
 				
 				buf.writeShort(s);

@@ -97,7 +97,7 @@ public final class ContentTracker {
 		if(prev == null) prev = wrapper;
 		
 		prev.num++;
-		entry.replaceRef(prev);
+		entry.updateRef(prev);
 	}
 	
 	/**
