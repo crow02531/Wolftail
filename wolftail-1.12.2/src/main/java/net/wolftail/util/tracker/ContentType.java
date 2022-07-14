@@ -1,5 +1,7 @@
 package net.wolftail.util.tracker;
 
+import java.util.Objects;
+
 import javax.annotation.Nonnull;
 
 import io.netty.buffer.ByteBuf;
@@ -46,7 +48,7 @@ public enum ContentType {
 		@Override
 		void apply(ByteBuf buf, SlaveUniverse dst) {
 			OrderChunkNormal order = H4.read_CB(buf);
-			int op = buf.readByte();
+			int op = buf.readByte() & 0xFF;
 			
 			SlaveWorld w = dst.goc_world(order.dim);
 			SlaveChunk c;
@@ -55,7 +57,7 @@ public enum ContentType {
 				int availableSections;
 				
 				if((availableSections = buf.readUnsignedShort()) == 0)
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException("Illegal availableSections 0");
 				
 				c = new SlaveChunk(w, order.chunkX, order.chunkZ);
 				PacketBuffer wrap = new PacketBuffer(buf);
@@ -68,25 +70,25 @@ public enum ContentType {
 				}
 				
 				w.chunks.put(ChunkPos.asLong(order.chunkX, order.chunkZ), c);
-			} else if(0 < op && op <= 64) {
-				c = w.chunk(order.chunkX(), order.chunkZ());
+			} else if(0 < op && op <= H4.THRESHOLD_ABANDON) {
+				c = w.chunk(order.chunkX, order.chunkZ);
 				
 				for(; op-- != 0;)
 					c.set(buf.readShort(), Block.BLOCK_STATE_IDS.getByValue(H4.readVarInt(buf)));
-			} else throw new IllegalArgumentException();
+			} else throw new IllegalArgumentException("Illegal op " + op);
 		}
 		
 		@SuppressWarnings("deprecation")
 		@Override
 		ContentOrder check(ByteBuf buf) {
 			OrderChunkNormal ord = H4.read_CB(buf);
-			int op = buf.readByte();
+			int op = buf.readByte() & 0xFF;
 			
 			if(op == 0) {
 				int availableSections;
 				
 				if((availableSections = buf.readUnsignedShort()) == 0)
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException("Illegal availableSections 0");
 				
 				PacketBuffer wrap = new PacketBuffer(buf);
 				
@@ -94,14 +96,13 @@ public enum ContentType {
 					if((availableSections & (1 << i)) != 0)
 						new BlockStateContainer().read(wrap);
 				}
-			} else if(0 < op && op <= 64) {
+			} else if(0 < op && op <= H4.THRESHOLD_ABANDON) {
 				for(; op-- != 0;) {
 					buf.readShort();
 					
-					if(Block.BLOCK_STATE_IDS.getByValue(H4.readVarInt(buf)) == null)
-						throw new IllegalArgumentException();
+					Objects.requireNonNull(Block.BLOCK_STATE_IDS.getByValue(H4.readVarInt(buf)));
 				}
-			} else throw new IllegalArgumentException();
+			} else throw new IllegalArgumentException("Illegal op " + op);
 			
 			return ord;
 		}

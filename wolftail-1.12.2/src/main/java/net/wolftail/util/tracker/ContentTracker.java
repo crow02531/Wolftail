@@ -1,5 +1,6 @@
 package net.wolftail.util.tracker;
 
+import java.util.IdentityHashMap;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -13,6 +14,11 @@ import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H6;
 
+/**
+ * Every server, no matter it is integrated or dedicated, has an unique
+ * content tracker. The content tracker was used for tracking content
+ * in server.
+ */
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
 public final class ContentTracker {
 	
@@ -88,16 +94,14 @@ public final class ContentTracker {
 	 * @throws IllegalStateException	thrown if called by {@code subscriber::accept}
 	 */
 	public void subscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber, int interval) {
-		H6 wrapper = new H6(subscriber);
-		H3 entry = new H3(wrapper, this.check().getTickCounter(), interval);
+		IdentityHashMap<Consumer<ContentDiff>, H6> wrappers = SharedImpls.as(this.check()).wolftail_wrappers();
 		
-		order.type().subscribe(this.server, order, entry);
+		H6 wrapper = wrappers.get(subscriber);
+		if(wrapper == null) wrapper = new H6(subscriber);
 		
-		H6 prev = SharedImpls.as(this.server).wolftail_wrappers().putIfAbsent(subscriber, wrapper);
-		if(prev == null) prev = wrapper;
+		order.type().subscribe(this.server, order, new H3(wrapper, this.server.getTickCounter(), interval));
 		
-		prev.num++;
-		entry.updateRef(prev);
+		if(wrapper.num++ == 0) wrappers.put(subscriber, wrapper);
 	}
 	
 	/**
@@ -127,19 +131,17 @@ public final class ContentTracker {
 		return false;
 	}
 	
+	/**
+	 * Get the unique content tracker of the given server.
+	 * 
+	 * @return the content tracker
+	 */
 	@Nonnull
 	public static ContentTracker instanceFor(@Nonnull MinecraftServer server) {
 		ExtensionsMinecraftServer ext = SharedImpls.as(server);
 		ContentTracker r = ext.wolftail_getContentTracker();
 		
-		if(r == null) {
-			synchronized(server) {
-				r = ext.wolftail_getContentTracker();
-				
-				if(r == null)
-					ext.wolftail_setContentTracker(r = new ContentTracker(server));
-			}
-		}
+		if(r == null) ext.wolftail_setContentTracker(r = new ContentTracker(server));
 		
 		return r;
 	}

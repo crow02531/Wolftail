@@ -7,6 +7,14 @@ import net.minecraft.world.DimensionType;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
+/**
+ * A kind of {@link ContentOrder}. Its type can only be either
+ * {@link ContentType#WORLD_WEATHER WORLD_WEATHER} or
+ * {@link ContentType#WORLD_DAYTIME WORLD_DAYTIME}. And the param is
+ * {@link #dimension()}.
+ * 
+ * @see ContentOrder
+ */
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
 public final class OrderWorldNormal extends ContentOrder {
@@ -43,5 +51,11 @@ public final class OrderWorldNormal extends ContentOrder {
 		if(o == null || !(o instanceof OrderWorldNormal)) return false;
 		
 		return this.dim == ((OrderWorldNormal) o).dim;
+	}
+	
+	@Nonnull
+	@Override
+	public String toString() {
+		return this.type + ": " + this.dim;
 	}
 }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 
@@ -55,7 +54,12 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 	}
 	
 	private int find(final short o) {
-		return Arrays.binarySearch(this.array, 0, this.size, o);
+		short[] a = this.array;
+		
+		for(int i = this.size; i-- != 0;)
+			if(a[i] == o) return i;
+		
+		return -1;
 	}
 	
 	@Override

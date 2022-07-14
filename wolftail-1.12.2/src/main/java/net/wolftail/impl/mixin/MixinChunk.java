@@ -87,11 +87,10 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	
 	@Unique
 	private void leave_chain() {
-		if(this.prev == null) {
+		if(this.prev == null)
 			((ExtensionsWorldServer) SharedImpls.as(this.world)).wolftail_setHead(this.next);
-		} else {
+		else
 			this.prev.wolftail_setNext(this.next);
-		}
 	}
 	
 	@Override
@@ -101,13 +100,13 @@ public abstract class MixinChunk implements ExtensionsChunk {
 				throw new IllegalArgumentException();
 			
 			if(!this.changedBlocks.containsKey(subscribeEntry.tickSequence))
-				this.changedBlocks.put(subscribeEntry.tickSequence, new SmallShortSet(64));
+				this.changedBlocks.put(subscribeEntry.tickSequence, new SmallShortSet(H4.THRESHOLD_ABANDON));
 		} else {
 			if(!this.wolftail_hasSubscriber())
 				this.join_chain();
 			
 			(this.subscribers_CB = new HashMap<>(8)).put(subscribeEntry, subscribeEntry);
-			this.changedBlocks = new SmallLong2ObjectMap<>(subscribeEntry.tickSequence, new SmallShortSet(64));
+			this.changedBlocks = new SmallLong2ObjectMap<>(subscribeEntry.tickSequence, new SmallShortSet(H4.THRESHOLD_ABANDON));
 		}
 	}
 	
@@ -157,7 +156,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 				if(init == null)
 					init = H4.make_CB_init(order, SharedImpls.as(this));
 				
-				e.cumulate(order, init);
+				e.wrapper.cumulate(order, init);
 				e.initial = false;
 			} else if(e.shouldSend(tick)) {
 				ByteBuf diff = diffs.get(e.tickSequence);
@@ -169,7 +168,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 						if((diff = init) == null)
 							diff = init = H4.make_CB_init(order, SharedImpls.as(this));
 						
-						this.changedBlocks.put(e.tickSequence, new SmallShortSet(64));
+						this.changedBlocks.put(e.tickSequence, new SmallShortSet(H4.THRESHOLD_ABANDON));
 					} else if(changes.size() > 0) {
 						diff = H4.make_CB_diff(order, SharedImpls.as(this), changes);
 						
@@ -181,7 +180,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 				}
 				
 				if(diff != null)
-					e.cumulate(order, diff);
+					e.wrapper.cumulate(order, diff);
 			}
 		}
 	}

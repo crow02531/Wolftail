@@ -35,7 +35,7 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	private HashSet<H3> subscribers_WDT = new HashSet<>();
 	
 	@Unique
-	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(3);
+	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(10);
 	
 	@Unique
 	private ExtensionsChunk head;
@@ -75,7 +75,7 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 				if(!prevWeathers.containsKey(e.tickSequence))
 					prevWeathers.put(e.tickSequence, new H5(w.rainingStrength, w.thunderingStrength));
 				
-				e.cumulate(order, sent);
+				e.wrapper.cumulate(order, sent);
 				e.initial = false;
 			} else if(e.shouldSend(tick)) {
 				H5 prev = prevWeathers.get(e.tickSequence);
@@ -84,7 +84,7 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 					if(sent == null)
 						sent = H4.make_WW(order, w.rainingStrength, w.thunderingStrength);
 					
-					e.cumulate(order, sent);
+					e.wrapper.cumulate(order, sent);
 					
 					if(!prev.bool) {
 						prev.bool = true;
@@ -110,7 +110,7 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 					sent = H4.make_WDT(order, w);
 				}
 				
-				e.cumulate(order, sent);
+				e.wrapper.cumulate(order, sent);
 			}
 		}
 	}

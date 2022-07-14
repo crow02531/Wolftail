@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.RandomAccess;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 import it.unimi.dsi.fastutil.longs.AbstractLong2ObjectMap;
@@ -48,7 +49,12 @@ public class SmallLong2ObjectMap<V> extends AbstractLong2ObjectMap<V> implements
 	}
 	
 	private int findKey(final long k) {
-		return Arrays.binarySearch(this.key, 0, this.size, k);
+		long[] key = this.key;
+		
+		for(int i = this.size; i-- != 0;)
+			if(key[i] == k) return i;
+		
+		return -1;
 	}
 	
 	@Override
@@ -105,7 +111,12 @@ public class SmallLong2ObjectMap<V> extends AbstractLong2ObjectMap<V> implements
 	
 	@Override
 	public boolean containsValue(Object v) {
-		return Arrays.binarySearch(this.value, 0, this.size, v) >= 0;
+		Object[] value = this.value;
+		
+		for(int i = this.size; i-- != 0;)
+			if(Objects.equal(value[i], v)) return true;
+		
+		return false;
 	}
 	
 	@SuppressWarnings("unchecked")

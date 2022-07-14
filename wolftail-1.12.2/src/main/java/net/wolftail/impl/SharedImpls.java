@@ -74,7 +74,7 @@ public final class SharedImpls {
 		return as(Minecraft.getMinecraft());
 	}
 	
-	public static <E> Set<E> wrap(Collection<E> wrapped) {
+	public static <E> Set<E> wrap(Collection<E> wrapped /*must have no duplicated element*/) {
 		return new Set<E>() {
 			
 			@Override public int size() { return wrapped.size(); }
@@ -227,12 +227,12 @@ public final class SharedImpls {
 	//subscribe entry, representing a subscribe
 	public static final class H3 {
 		
-		private H6 wrapper;
+		public final H6 wrapper;
 		public final long tickSequence;
 		
 		public boolean initial;
 		
-		//used for creating prob
+		//ONLY used for creating prob in finding entry
 		public H3(H6 wrapper) {
 			this(wrapper, 0, 0);
 		}
@@ -250,16 +250,6 @@ public final class SharedImpls {
 			return tick % ((int) seq) == (int) (seq >> 32);
 		}
 		
-		public void cumulate(ContentOrder order, ByteBuf content_diff) {
-			this.wrapper.cumulate(order, content_diff);
-		}
-		
-		public void updateRef(H6 newRef) {
-			//assert(this.wrapper.subscriber == newRef.subscriber)
-			
-			this.wrapper = newRef;
-		}
-		
 		@Override
 		public int hashCode() {
 			return System.identityHashCode(this.wrapper.subscriber);
@@ -274,6 +264,8 @@ public final class SharedImpls {
 	public static final class H4 {
 		
 		private H4() {}
+		
+		public static final int THRESHOLD_ABANDON = 64;
 		
 		public static ByteBuf make_CB_init(OrderChunkNormal order, Chunk src) {
 			ByteBuf buf = Unpooled.buffer();

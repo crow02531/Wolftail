@@ -7,6 +7,13 @@ import net.minecraft.world.DimensionType;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
+/**
+ * A kind of {@link ContentOrder}. Its type can only be
+ * {@link ContentType#CHUNK_BLOCK CHUNK_BLOCK}. And the params are {@link #dimension()}
+ * , {@link #chunkX()} and {@link #chunkZ()}.
+ * 
+ * @see ContentOrder
+ */
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
 public final class OrderChunkNormal extends ContentOrder {
@@ -64,6 +71,6 @@ public final class OrderChunkNormal extends ContentOrder {
 	@Nonnull
 	@Override
 	public String toString() {
-		return "CHUNK_BLOCK: " + this.dim + "[" + this.chunkX + ", " + this.chunkZ + "]";
+		return this.type + ": " + this.dim + "[" + this.chunkX + ", " + this.chunkZ + "]";
 	}
 }

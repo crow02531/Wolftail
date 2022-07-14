@@ -52,11 +52,13 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	
 	@Inject(method = "tick", at = @At(value = "FIELD", target = "tickCounter:I", opcode = Opcodes.PUTFIELD))
 	private void onTick(CallbackInfo info) {
+		this.sending = true;
+		
 		for(WorldServer w : this.worlds)
 			SharedImpls.as(w).wolftail_postTick(this.tickCounter);
 		
-		this.sending = true;
 		this.wrappers.values().forEach(H6::flush);
+		
 		this.sending = false;
 	}
 	

@@ -59,8 +59,9 @@ public interface ContentDiff {
 	}
 	
 	/**
-	 * Similar to {@code from(buf).apply(dst)}, except this method analyze the buf
-	 * directly without any copy.
+	 * Similar to {@code from(buf).apply(dst)}, except this method analyzes the
+	 * {@code buf} directly without any copy and extra operation. Thus it has
+	 * higher performance.
 	 */
 	public static void apply(@Nonnull ByteBuf buf, @Nonnull SlaveUniverse dst) {
 		ContentType types[] = ContentType.values();
