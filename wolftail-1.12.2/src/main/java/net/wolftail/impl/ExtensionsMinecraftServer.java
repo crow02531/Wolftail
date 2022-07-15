@@ -1,6 +1,7 @@
 package net.wolftail.impl;
 
 import java.util.IdentityHashMap;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import net.wolftail.impl.SharedImpls.H6;
@@ -17,4 +18,6 @@ public interface ExtensionsMinecraftServer {
 	boolean wolftail_duringSending();
 	
 	IdentityHashMap<Consumer<ContentDiff>, H6> wolftail_wrappers();
+	
+	Random wolftail_random();
 }

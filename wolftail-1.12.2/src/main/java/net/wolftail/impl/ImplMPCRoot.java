@@ -1,5 +1,10 @@
 package net.wolftail.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,6 +13,8 @@ import java.util.UUID;
 
 import com.google.common.collect.ImmutableMap;
 
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
@@ -27,7 +34,10 @@ public final class ImplMPCRoot implements RootPlayContextManager {
 	private Set<SubPlayContextManager>		view_set_m;
 	private Set<ServerPlayContext>			view_set_c;
 	
-	public ImplMPCRoot(MinecraftServer arg0) {
+	private final File file_uniplayerType;
+	private NBTTagCompound data_uniplayerType;
+	
+	public ImplMPCRoot(MinecraftServer arg0) throws IOException {
 		this.server = arg0;
 		
 		Set<ImplUPT> allTypes = SharedImpls.as(UniversalPlayerTypeRegistry.INSTANCE.asMap().values());
@@ -38,6 +48,10 @@ public final class ImplMPCRoot implements RootPlayContextManager {
 		
 		this.subs = builder.build();
 		this.contexts = new HashMap<>();
+		
+		if((this.file_uniplayerType = new File(arg0.worlds[0].getSaveHandler().getWorldDirectory(), "uniplayer-type.dat")).createNewFile()) {
+			this.data_uniplayerType = new NBTTagCompound();
+		} else this.data_uniplayerType = CompressedStreamTools.readCompressed(new FileInputStream(this.file_uniplayerType));
 	}
 	
 	@Override
@@ -97,11 +111,23 @@ public final class ImplMPCRoot implements RootPlayContextManager {
 		context.manager.current_load--;
 	}
 	
+	public void onServerStopping() throws FileNotFoundException, IOException {
+		CompressedStreamTools.writeCompressed(this.data_uniplayerType, new FileOutputStream(this.file_uniplayerType));
+	}
+	
 	private UniversalPlayerType determine_type(UUID id, String name) {
-		//TODO type determine method missing
-		if(name.equals("Steve"))
-			return UniversalPlayerType.TYPE_PLAYER;
+		NBTTagCompound data = this.data_uniplayerType;
+		UniversalPlayerType type = null;
 		
-		return UniversalPlayerTypeRegistry.INSTANCE.registeredAt(new ResourceLocation("examplemod", "pigs"));
+		if(data.hasKey(name = id.toString()))
+			type = UniversalPlayerTypeRegistry.INSTANCE.registeredAt(new ResourceLocation(data.getString(name)));
+		
+		if(type == null) {
+			type = UniversalPlayerTypeRegistry.INSTANCE.getRandomType(SharedImpls.as(this.server).wolftail_random());
+			
+			data.setString(name, type.registeringId().toString());
+		}
+		
+		return type;
 	}
 }

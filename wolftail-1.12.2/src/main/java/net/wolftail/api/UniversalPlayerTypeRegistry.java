@@ -1,5 +1,7 @@
 package net.wolftail.api;
 
+import java.util.Random;
+
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableBiMap;
@@ -22,6 +24,9 @@ public interface UniversalPlayerTypeRegistry {
 	
 	@SideWith(section = GameSection.GAME_LOADED)
 	UniversalPlayerType registeredAt(ResourceLocation id);
+	
+	@SideWith(section = GameSection.GAME_LOADED)
+	@Nonnull UniversalPlayerType getRandomType(Random rnd);
 	
 	@SideWith(section = GameSection.GAME_LOADED)
 	@Nonnull ImmutableBiMap<ResourceLocation, UniversalPlayerType> asMap();

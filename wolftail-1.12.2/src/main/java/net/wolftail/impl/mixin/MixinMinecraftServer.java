@@ -1,9 +1,13 @@
 package net.wolftail.impl.mixin;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.IdentityHashMap;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -13,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
-import net.wolftail.api.lifecycle.PhysicalType;
 import net.wolftail.impl.ExtensionsMinecraftServer;
 import net.wolftail.impl.ImplMPCRoot;
 import net.wolftail.impl.SharedImpls;
@@ -32,6 +35,10 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	@Shadow
 	private int tickCounter;
 	
+	@Final
+	@Shadow
+	private Random random;
+	
 	@Unique
 	protected ImplMPCRoot root;
 	
@@ -44,12 +51,6 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	@Unique
 	private boolean sending;
 	
-	@Inject(method = "<init>", at = @At("RETURN"))
-	private void onConstruct(CallbackInfo info) {
-		if(PhysicalType.INTEGRATED_CLIENT.is())
-			this.root = new ImplMPCRoot(SharedImpls.as(this));
-	}
-	
 	@Inject(method = "tick", at = @At(value = "FIELD", target = "tickCounter:I", opcode = Opcodes.PUTFIELD))
 	private void onTick(CallbackInfo info) {
 		this.sending = true;
@@ -60,6 +61,11 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 		this.wrappers.values().forEach(H6::flush);
 		
 		this.sending = false;
+	}
+	
+	@Inject(method = "stopServer", at = @At(value = "FIELD", target = "playerList:Lnet/minecraft/server/management/PlayerList;", opcode = Opcodes.GETFIELD, ordinal = 0))
+	private void onStopServer(CallbackInfo info) throws FileNotFoundException, IOException {
+		this.root.onServerStopping();
 	}
 	
 	@Override
@@ -85,5 +91,10 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	@Override
 	public IdentityHashMap<Consumer<ContentDiff>, H6> wolftail_wrappers() {
 		return this.wrappers;
+	}
+	
+	@Override
+	public Random wolftail_random() {
+		return this.random;
 	}
 }

@@ -1,5 +1,7 @@
 package net.wolftail.impl;
 
+import java.util.Random;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -42,8 +44,15 @@ public final class ImplUPTR implements UniversalPlayerTypeRegistry {
 	}
 	
 	@Override
+	public UniversalPlayerType getRandomType(Random rnd) {
+		if(rnd == null) rnd = new Random();
+		
+		return this.asMap().values().asList().get(rnd.nextInt(this.underlying.size()));
+	}
+	
+	@Override
 	public ImmutableBiMap<ResourceLocation, UniversalPlayerType> asMap() {
-		if(this.underlying.getClass() != ImmutableBiMap.class)
+		if(!(this.underlying instanceof ImmutableBiMap))
 			this.underlying = ImmutableBiMap.copyOf(this.underlying);
 		
 		return (ImmutableBiMap<ResourceLocation, UniversalPlayerType>) this.underlying;
