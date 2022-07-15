@@ -17,6 +17,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketBuffer;
@@ -62,6 +63,10 @@ public final class SharedImpls {
 	}
 	
 	public static ExtensionsWorldServer as(WorldServer arg) {
+		return as((Object) arg);
+	}
+	
+	public static ExtensionsFontRenderer as(FontRenderer arg) {
 		return as((Object) arg);
 	}
 	

@@ -8,8 +8,10 @@ import com.example.examplemod.network.C2SForward;
 import net.minecraft.network.INetHandler;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.ClientPlayContext;
+import net.wolftail.util.client.renderer.CmdUnit;
 import net.wolftail.util.tracker.SlaveTime;
 import net.wolftail.util.tracker.SlaveUniverse;
 import net.wolftail.util.tracker.SlaveWeather;
@@ -70,7 +72,7 @@ public class ClientNetHandler implements INetHandler, ITickable {
 			if(!this.shift_pressed) i *= 7;
 			if(this.ctrl_pressed) i *= 7;
 			
-			ClientCallback.ui.setScrollVertical(ClientCallback.ui.getScrollVertical() - i);
+			ClientCallback.ui.pSetScroll(ClientCallback.ui.pGetScroll() - i);
 		}
 		
 		SlaveWorld w = this.universe.world(DimensionType.OVERWORLD);
@@ -78,14 +80,18 @@ public class ClientNetHandler implements INetHandler, ITickable {
 		SlaveTime time;
 		
 		if(w != null && (weather = w.weather()) != null && (time = w.time()) != null) {
-			StringBuilder sb = new StringBuilder();
+			CmdUnit ui = ClientCallback.ui;
 			
-			sb.append(w.chunk(0, 0).blockState(4, 5, 4)).append('\n');
-			sb.append(weather.rainingStrength()).append('\n');
-			sb.append(weather.thunderingStrength()).append('\n');
-			sb.append(time.dayTime());
+			ui.pClear();
 			
-			ClientCallback.ui.useDoc(sb.toString());
+			ui.pPrint(TextFormatting.YELLOW).pPrintln(w.chunk(0, 0).blockState(4, 5, 4));
+			ui.pPrintln(weather.rainingStrength());
+			ui.pPrintln(weather.thunderingStrength());
+			ui.pPrintln(time.dayTime());
+			
+			ui.pPrintln();
+			
+			ui.pPrint(TextFormatting.STRIKETHROUGH).pPrint("hdwahudwadwadwadadadwadwadwadwaifeifshfaidwafeaiufsiufadadadwahudafdfsaikjbchdwadawdawdadwafivdxjjxjvcxfdsfdfdlkdlkjfds");
 		}
 	}
 	

@@ -18,7 +18,8 @@
     "client.MixinMain",
     "client.MixinMinecraft",
     "client.MixinNetHandlerLoginClient",
-    "client.MixinGuiMainMenu"
+    "client.MixinGuiMainMenu",
+    "client.MixinFontRenderer"
   ],
   "server": [
     "server.MixinMinecraftServer",

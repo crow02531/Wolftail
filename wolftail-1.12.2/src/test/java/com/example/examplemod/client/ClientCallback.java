@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.wolftail.api.ClientPlayContext;
 import net.wolftail.api.IClientEntryPoint;
 import net.wolftail.api.IClientFrameCallback;
@@ -21,18 +22,18 @@ public class ClientCallback implements IClientEntryPoint, IClientFrameCallback {
 		if(Display.wasResized()) {
 			Minecraft mc = Minecraft.getMinecraft();
 			
-			cmd.resize(mc.displayWidth, mc.displayHeight);
+			cmd.resize(mc.displayWidth >> 1, mc.displayHeight >> 1);
 		}
 		
-		GL11.glClearColor(0, 0, 0, 1);
-		GL11.glClearDepth(1);
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GlStateManager.clearColor(0, 0, 0, 1);
+		GlStateManager.clearDepth(1);
+		GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadIdentity();
-		GL11.glOrtho(0, 1, 1, 0, -1, 1);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glLoadIdentity();
+		GlStateManager.matrixMode(GL11.GL_PROJECTION);
+		GlStateManager.loadIdentity();
+		GlStateManager.ortho(0, 1, 1, 0, -1, 1);
+		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+		GlStateManager.loadIdentity();
 		
 		cmd.flush();
 		cmd.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
@@ -42,8 +43,6 @@ public class ClientCallback implements IClientEntryPoint, IClientFrameCallback {
 	public void onEnter(ClientPlayContext context) {
 		context.setNetHandler(new ClientNetHandler(context));
 		
-		//TODO get the actual PPI of screen. Toolkit's is fault.
-		ui = new CmdUnit(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
-		ui.usePPU(21);
+		ui = new CmdUnit(Minecraft.getMinecraft().displayWidth >> 1, Minecraft.getMinecraft().displayHeight >> 1);
 	}
 }
