@@ -139,9 +139,9 @@ public abstract class UIUnit {
 		int old_binding = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
 		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, this.object_fb);
 		
-		GL11.glPushAttrib(GL11.GL_VIEWPORT_BIT | GL11.GL_TRANSFORM_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL11.glPushAttrib(GL11.GL_VIEWPORT_BIT | GL11.GL_TRANSFORM_BIT);
 		
-		GlStateManager.viewport(0, 0, this.param_width, this.param_height);
+		GL11.glViewport(0, 0, this.param_width, this.param_height);
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
@@ -205,15 +205,20 @@ public abstract class UIUnit {
 	public void resize(int width, int height) {
 		this.check();
 		
-		this.param_width = width;
-		this.param_height = height;
+		int oldW = this.param_width;
+		int oldH = this.param_height;
 		
-		this.state_dirty = true;
-		
-		this.resize0();
+		if(oldW != width || oldH != height) {
+			this.param_width = width;
+			this.param_height = height;
+			
+			this.state_dirty = true;
+			
+			this.resize0(oldW, oldH);
+		}
 	}
 	
-	void resize0() {}
+	void resize0(int oldWidth, int oldHeight) {}
 	
 	public int width() {
 		this.check();

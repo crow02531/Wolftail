@@ -79,6 +79,10 @@ public final class SharedImpls {
 		return as(Minecraft.getMinecraft());
 	}
 	
+	public static ExtensionsFontRenderer get_fr_as() {
+		return as(Minecraft.getMinecraft().fontRenderer);
+	}
+	
 	public static <E> Set<E> wrap(Collection<E> wrapped /*must have no duplicated element*/) {
 		return new Set<E>() {
 			

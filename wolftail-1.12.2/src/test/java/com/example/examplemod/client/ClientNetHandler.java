@@ -64,15 +64,15 @@ public class ClientNetHandler implements INetHandler, ITickable {
 		}
 		
 		while(Mouse.next()) {
-			int i = Mouse.getEventDWheel();
+			float i = -Mouse.getEventDWheel();
 			
-			if(i > 1) i = 1;
-			else if(i < -1) i = -1;
+			if(i > 1) i = 1F/9F;
+			else if(i < -1) i = -1F/9F;
 			
-			if(!this.shift_pressed) i *= 7;
-			if(this.ctrl_pressed) i *= 7;
+			if(!this.shift_pressed) i *= 9F;
+			if(this.ctrl_pressed) i *= 9F;
 			
-			ClientCallback.ui.pSetScroll(ClientCallback.ui.pGetScroll() - i);
+			ClientCallback.ui.pScrollMov(i);
 		}
 		
 		SlaveWorld w = this.universe.world(DimensionType.OVERWORLD);
@@ -82,18 +82,19 @@ public class ClientNetHandler implements INetHandler, ITickable {
 		if(w != null && (weather = w.weather()) != null && (time = w.time()) != null) {
 			CmdUnit ui = ClientCallback.ui;
 			
-			ui.pClear();
-			
-			ui.pPrint(TextFormatting.YELLOW).pPrintln(w.chunk(0, 0).blockState(4, 5, 4));
-			ui.pPrintln(weather.rainingStrength());
-			ui.pPrintln(weather.thunderingStrength());
-			ui.pPrintln(time.dayTime());
-			
-			ui.pPrintln();
-			
-			ui.pPrint(TextFormatting.STRIKETHROUGH).pPrint("hdwahudwadwadwadadadwadwadwadwaifeifshfaidwafeaiufsiufadadadwahudafdfsaikjbchdwadawdawdadwafivdxjjxjvcxfdsfdfdlkdlkjfds");
+			if(timer + 3000 < System.currentTimeMillis()) {
+				ui.pPrint(TextFormatting.YELLOW).pPrintln(w.chunk(0, 0).blockState(4, 5, 4));
+				ui.pPrintln(weather.rainingStrength());
+				ui.pPrintln(weather.thunderingStrength());
+				ui.pPrintln(time.dayTime());
+				ui.pPrintln();
+				
+				timer = System.currentTimeMillis();
+			}
 		}
 	}
+	
+	private long timer;
 	
 	@Override
 	public void onDisconnect(ITextComponent reason) {
