@@ -57,8 +57,18 @@ public enum LogicType {
 		}
 	};
 	
+	/**
+	 * @return true if the logic type of current thread is {@code this}
+	 */
 	public abstract boolean in();
 	
+	/**
+	 * Ensure {@code in()} return true.
+	 * 
+	 * @throws IllegalStateException	when the current thread is not the desiring one
+	 * 
+	 * @see #in()
+	 */
 	public void ensure() {
 		if(!this.in())
 			throw new IllegalStateException("Not in " + this);
@@ -69,12 +79,19 @@ public enum LogicType {
 	 * is {@link #LOGIC_CLIENT}. And in {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}
 	 * , {@link #LOGIC_SERVER}.
 	 * 
-	 * @return true means the current thread is host thread
+	 * @return true if the current thread is the host thread
 	 */
 	public static boolean inHost() {
 		return PhysicalType.INTEGRATED_CLIENT.is() ? LOGIC_CLIENT.in() : LOGIC_SERVER.in();
 	}
 	
+	/**
+	 * Ensure {@code inHost()} return true.
+	 * 
+	 * @throws IllegalStateException	when the current thread is not the host thread
+	 * 
+	 * @see #inHost()
+	 */
 	public static void ensureHost() {
 		if(!inHost())
 			throw new IllegalStateException("Not in " + PhysicalType.currentType() + "'s host thread");

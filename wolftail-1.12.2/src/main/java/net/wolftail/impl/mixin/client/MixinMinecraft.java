@@ -39,7 +39,7 @@ import net.wolftail.impl.ExtensionsMinecraft;
 import net.wolftail.impl.ImplPCClient;
 import net.wolftail.impl.ImplUPT;
 import net.wolftail.impl.SharedImpls;
-import net.wolftail.impl.network.DefaultNetHandler;
+import net.wolftail.impl.network.NoopNetHandler;
 
 //do game loop and check (C) connection disconnect
 @Mixin(Minecraft.class)
@@ -294,7 +294,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 						this.currentScreen = null;
 					}
 					
-					connect.setNetHandler(new DefaultNetHandler());
+					connect.setNetHandler(new NoopNetHandler());
 					type.callClientEnter(context);
 				}
 				

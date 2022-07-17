@@ -18,6 +18,14 @@ public enum PhysicalType {
 		return CURRENT_TYPE == this;
 	}
 	
+	/**
+	 * Ensure {@code is()} return true.
+	 * 
+	 * @throws IllegalStateException	when the current physical type is not
+	 * 		equals to {@code this}
+	 * 
+	 * @see #is()
+	 */
 	public void ensure() {
 		if(CURRENT_TYPE != this)
 			throw new IllegalStateException("Not in " + this);

@@ -37,7 +37,7 @@ public class S2CContentDiff implements Packet<ClientNetHandler> {
 	public void processPacket(ClientNetHandler handler) {
 		PacketThreadUtil.checkThreadAndEnqueue(this, handler, Minecraft.getMinecraft());
 		
-		ContentDiff.apply(this.data, handler.universe);
+		//ContentDiff.apply(this.data, handler.universe);
 		this.data.release();
 	}
 }

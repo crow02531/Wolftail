@@ -1,36 +1,48 @@
 package net.wolftail.impl;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.util.Throwables;
 
 import com.google.common.collect.ImmutableSet;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTSizeTracker;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.login.INetHandlerLoginClient;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.SectionState;
+import net.wolftail.impl.util.collect.SmallShortSet;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentOrder;
 import net.wolftail.util.tracker.ContentType;
+import net.wolftail.util.tracker.OrderBlockNormal;
 import net.wolftail.util.tracker.OrderChunkNormal;
 import net.wolftail.util.tracker.OrderWorldNormal;
 
@@ -102,6 +114,7 @@ public final class SharedImpls {
 		};
 	}
 	
+	//game section handler
 	public static final class H1 {
 		
 		public static Thread regular_dedicated_server_host; //dedicatedServer has two host thread, the second one is called regular by us
@@ -231,6 +244,18 @@ public final class SharedImpls {
 			
 			LOGGER_USER.info("{}({}) the universal player logged out", context.identifier, context.name);
 		}
+		
+		public static short toIndex(int localX, int localY, int localZ) {
+			return (short) (localX << 12 | localZ << 8 | localY);
+		}
+		
+		public static short toIndex(BlockPos worldPos) {
+			return toIndex(worldPos.getX() & 0xF, worldPos.getY(), worldPos.getZ() & 0xF);
+		}
+		
+		public static BlockPos toPos(int chunkX, int chunkZ, short index) {
+			return new BlockPos(chunkX << 4 + index >> 12 & 0xF, index & 0xFF, chunkZ << 4 + index >> 8 & 0xF);
+		}
 	}
 	
 	//subscribe entry, representing a subscribe
@@ -254,9 +279,7 @@ public final class SharedImpls {
 		}
 		
 		public boolean shouldSend(int tick) {
-			long seq = this.tickSequence;
-			
-			return tick % ((int) seq) == (int) (seq >> 32);
+			return match(this.tickSequence, tick);
 		}
 		
 		@Override
@@ -267,6 +290,10 @@ public final class SharedImpls {
 		@Override
 		public boolean equals(Object o) {
 			return this.wrapper.subscriber == ((H3) o).wrapper.subscriber;
+		}
+		
+		public static boolean match(long seq, int tick) {
+			return tick % ((int) seq) == (int) (seq >> 32);
 		}
 	}
 	
@@ -342,16 +369,32 @@ public final class SharedImpls {
 			return buf.asReadOnly();
 		}
 		
+		public static ByteBuf make_BTE(OrderBlockNormal order, TileEntity t) {
+			ByteBuf buf = Unpooled.buffer();
+			
+			write_BN0(order, buf);
+			
+			buf.writeBoolean(t == null);
+			if(t != null) writeTag(t.serializeNBT(), buf);
+			
+			return buf;
+		}
+		
+		public static void write_BN(OrderBlockNormal src, ByteBuf dst) {
+			writeVarInt(src.dimension().getId(), dst);
+			
+			dst.writeLong(src.position().toLong());
+		}
+		
+		public static OrderBlockNormal read_BTE(ByteBuf src) {
+			return ContentType.orderTileEntity(DimensionType.getById(readVarInt(src)), BlockPos.fromLong(src.readLong()));
+		}
+		
 		public static void write_CN(OrderChunkNormal src, ByteBuf dst) {
 			writeVarInt(src.dimension().getId(), dst);
 			
 			dst.writeInt(src.chunkX());
 			dst.writeInt(src.chunkZ());
-		}
-		
-		private static void write_CN0(OrderChunkNormal src, ByteBuf dst) {
-			writeVarInt(src.type().ordinal(), dst);
-			write_CN(src, dst);
 		}
 		
 		public static OrderChunkNormal read_CB(ByteBuf src) {
@@ -362,17 +405,27 @@ public final class SharedImpls {
 			writeVarInt(src.dimension().getId(), dst);
 		}
 		
-		private static void write_WN0(OrderWorldNormal src, ByteBuf dst) {
-			writeVarInt(src.type().ordinal(), dst);
-			write_WN(src, dst);
-		}
-		
 		public static OrderWorldNormal read_WW(ByteBuf src) {
 			return ContentType.orderWeather(DimensionType.getById(readVarInt(src)));
 		}
 		
 		public static OrderWorldNormal read_WDT(ByteBuf src) {
 			return ContentType.orderDaytime(DimensionType.getById(readVarInt(src)));
+		}
+		
+		private static void write_BN0(OrderBlockNormal src, ByteBuf dst) {
+			writeVarInt(src.type().ordinal(), dst);
+			write_BN(src, dst);
+		}
+		
+		private static void write_CN0(OrderChunkNormal src, ByteBuf dst) {
+			writeVarInt(src.type().ordinal(), dst);
+			write_CN(src, dst);
+		}
+		
+		private static void write_WN0(OrderWorldNormal src, ByteBuf dst) {
+			writeVarInt(src.type().ordinal(), dst);
+			write_WN(src, dst);
 		}
 		
 		public static int readVarInt(ByteBuf src) {
@@ -400,6 +453,24 @@ public final class SharedImpls {
 			}
 			
 			dst.writeByte(i);
+		}
+		
+		public static NBTTagCompound readTag(ByteBuf src) {
+			try {
+				return CompressedStreamTools.read(new ByteBufInputStream(src), NBTSizeTracker.INFINITE);
+			} catch(IOException e) {
+				Throwables.rethrow(e); //never happen
+				
+				return null;
+			}
+		}
+		
+		public static void writeTag(NBTTagCompound src, ByteBuf dst) {
+			try {
+				CompressedStreamTools.write(src, new ByteBufOutputStream(dst));
+			} catch(IOException e) {
+				Throwables.rethrow(e); //never happen
+			}
 		}
 	}
 	
@@ -457,5 +528,12 @@ public final class SharedImpls {
 				this.contentDiff = null;
 			}
 		}
+	}
+	
+	@SuppressWarnings("serial")
+	public static final class H7 extends LinkedList<H3> {
+		
+		public boolean mark_changed;
+		public boolean mark_initial;
 	}
 }

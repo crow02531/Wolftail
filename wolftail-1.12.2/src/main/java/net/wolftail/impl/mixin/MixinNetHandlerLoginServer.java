@@ -17,7 +17,7 @@ import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.impl.ImplPCServer;
 import net.wolftail.impl.ImplUPT;
 import net.wolftail.impl.SharedImpls;
-import net.wolftail.impl.network.DefaultNetHandler;
+import net.wolftail.impl.network.NoopNetHandler;
 import net.wolftail.impl.network.S2CPacketTypeNotify;
 
 //accept universal player
@@ -59,7 +59,7 @@ public abstract class MixinNetHandlerLoginServer {
 		if(type != UniversalPlayerType.TYPE_PLAYER) {
 			info.cancel();
 			
-			connect.setNetHandler(new DefaultNetHandler());
+			connect.setNetHandler(new NoopNetHandler());
 			type.callServerEnter(context);
 		}
 	}

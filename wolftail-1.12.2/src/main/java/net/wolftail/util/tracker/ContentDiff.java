@@ -61,11 +61,17 @@ public interface ContentDiff {
 	/**
 	 * Similar to {@code from(buf).apply(dst)}, except this method analyzes the
 	 * {@code buf} directly without any copy and extra operation. Thus it has
-	 * higher performance.
+	 * higher performance. It's highly recommended to use this rather than invoke
+	 * {@code from(buf)}.
 	 */
 	public static void apply(@Nonnull ByteBuf buf, @Nonnull SlaveUniverse dst) {
-		ContentType types[] = ContentType.values();
+		dst.jzBegin();
 		
-		while(buf.isReadable()) types[H4.readVarInt(buf)].apply(buf, dst);
+		try {
+			while(buf.isReadable())
+				ContentType.values()[H4.readVarInt(buf)].apply(buf, dst);
+		} finally {
+			dst.jzEnd();
+		}
 	}
 }

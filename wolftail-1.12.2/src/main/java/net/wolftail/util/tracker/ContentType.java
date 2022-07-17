@@ -8,13 +8,14 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.chunk.BlockStateContainer;
 import net.minecraft.world.chunk.Chunk;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.SharedImpls.H2;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
 import net.wolftail.impl.SharedImpls.H6;
@@ -27,31 +28,70 @@ import net.wolftail.impl.SharedImpls.H6;
 @SideWith(section = GameSection.GAME_PLAYING)
 public enum ContentType {
 	
-	CHUNK_BLOCK {
+	BLOCK_TILEENTITY {
 		
 		@Override
 		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
-			OrderChunkNormal order0 = (OrderChunkNormal) order;
+			OrderBlockNormal ord = (OrderBlockNormal) order;
 			
-			SharedImpls.as(target.getWorld(order0.dim.getId()).getChunkFromChunkCoords(order0.chunkX, order0.chunkZ)).wolftail_register_CB(subscribeEntry);
+			SharedImpls.as(target.getWorld(ord.dim.getId()).getChunkFromBlockCoords(ord.pos)).wolftail_register_BTE(subscribeEntry, H2.toIndex(ord.pos));
 		}
 		
 		@Override
 		boolean unsubscribe(MinecraftServer target, ContentOrder order, H6 wrapper) {
-			OrderChunkNormal order0 = (OrderChunkNormal) order;
-			Chunk chunk = target.getWorld(order0.dim.getId()).getChunkProvider().getLoadedChunk(order0.chunkX, order0.chunkZ);
+			OrderBlockNormal ord = (OrderBlockNormal) order;
+			Chunk c = target.getWorld(ord.dim.getId()).getChunkProvider().getLoadedChunk(ord.pos.getX() >> 4, ord.pos.getY() >> 4);
 			
-			return chunk == null ? false : SharedImpls.as(chunk).wolftail_unregister_CB(wrapper);
+			return c == null ? false : SharedImpls.as(c).wolftail_unregister_BTE(wrapper, H2.toIndex(ord.pos));
+		}
+		
+		@Override
+		void apply(ByteBuf buf, SlaveUniverse dst) {
+			OrderBlockNormal ord = H4.read_BTE(buf);
+			BlockPos pos = ord.pos;
+			
+			dst.jzWorld(ord.dim);
+			dst.jzChunk(pos.getX() >> 4, pos.getZ() >> 4);
+			
+			dst.jzSetTileEntity(pos.getX() & 0xF, pos.getY(), pos.getZ() & 0xF, buf.readBoolean() ? null : H4.readTag(buf));
+		}
+		
+		@Override
+		ContentOrder check(ByteBuf buf) {
+			OrderBlockNormal ord = H4.read_BTE(buf);
+			
+			if(!buf.readBoolean())
+				H4.readTag(buf);
+			
+			return ord;
+		}
+	},
+	
+	CHUNK_BLOCK {
+		
+		@Override
+		void subscribe(MinecraftServer target, ContentOrder order, H3 subscribeEntry) {
+			OrderChunkNormal ord = (OrderChunkNormal) order;
+			
+			SharedImpls.as(target.getWorld(ord.dim.getId()).getChunkFromChunkCoords(ord.chunkX, ord.chunkZ)).wolftail_register_CB(subscribeEntry);
+		}
+		
+		@Override
+		boolean unsubscribe(MinecraftServer target, ContentOrder order, H6 wrapper) {
+			OrderChunkNormal ord = (OrderChunkNormal) order;
+			Chunk c = target.getWorld(ord.dim.getId()).getChunkProvider().getLoadedChunk(ord.chunkX, ord.chunkZ);
+			
+			return c == null ? false : SharedImpls.as(c).wolftail_unregister_CB(wrapper);
 		}
 		
 		@SuppressWarnings("deprecation")
 		@Override
 		void apply(ByteBuf buf, SlaveUniverse dst) {
-			OrderChunkNormal order = H4.read_CB(buf);
+			OrderChunkNormal ord = H4.read_CB(buf);
 			int op = buf.readByte() & 0xFF;
 			
-			SlaveWorld w = dst.goc_world(order.dim);
-			SlaveChunk c;
+			dst.jzWorld(ord.dim);
+			dst.jzChunk(ord.chunkX, ord.chunkZ);
 			
 			if(op == 0) {
 				int availableSections;
@@ -59,22 +99,14 @@ public enum ContentType {
 				if((availableSections = buf.readUnsignedShort()) == 0)
 					throw new IllegalArgumentException("Illegal availableSections 0");
 				
-				c = new SlaveChunk(w, order.chunkX, order.chunkZ);
-				PacketBuffer wrap = new PacketBuffer(buf);
-				
-				for(int i = 0; i < 16; ++i) {
-					if((availableSections & (1 << i)) != 0)
-						(c.blocks[i] = new BlockStateContainer()).read(wrap);
-					else
-						c.blocks[i] = null;
-				}
-				
-				w.chunks.put(ChunkPos.asLong(order.chunkX, order.chunkZ), c);
+				for(int i = 0; i < 16; ++i)
+					dst.jzSetSection(i, (availableSections & (1 << i)) == 0 ? null : buf);
 			} else if(0 < op && op <= H4.THRESHOLD_ABANDON) {
-				c = w.chunk(order.chunkX, order.chunkZ);
-				
-				for(; op-- != 0;)
-					c.set(buf.readShort(), Block.BLOCK_STATE_IDS.getByValue(H4.readVarInt(buf)));
+				for(; op-- != 0;) {
+					short s = buf.readShort();
+					
+					dst.jzSetBlock(s >> 12 & 0xF, s & 0xFF, s >> 8 & 0xF, Block.BLOCK_STATE_IDS.getByValue(H4.readVarInt(buf)));
+				}
 			} else throw new IllegalArgumentException("Illegal op " + op);
 		}
 		
@@ -122,10 +154,10 @@ public enum ContentType {
 		
 		@Override
 		void apply(ByteBuf buf, SlaveUniverse dst) {
-			SlaveWeather w = dst.goc_world(H4.read_WW(buf).dim).goc_weather();
+			dst.jzWorld(H4.read_WW(buf).dim);
 			
-			w.rainingStrength = buf.readFloat();
-			w.thunderingStrength = buf.readFloat();
+			dst.jzSetRainingStr(buf.readFloat());
+			dst.jzSetThunderingStr(buf.readFloat());
 		}
 		
 		@Override
@@ -152,9 +184,9 @@ public enum ContentType {
 		
 		@Override
 		void apply(ByteBuf buf, SlaveUniverse dst) {
-			SlaveTime t = dst.goc_world(H4.read_WDT(buf).dim).goc_time();
+			dst.jzWorld(H4.read_WDT(buf).dim);
 			
-			t.dayTime = buf.readLong();
+			dst.jzSetDaytime(buf.readLong());
 		}
 		
 		@Override
@@ -166,6 +198,11 @@ public enum ContentType {
 			return ord;
 		}
 	};
+	
+	@Nonnull
+	public static OrderBlockNormal orderTileEntity(@Nonnull DimensionType dim, @Nonnull BlockPos pos) {
+		return new OrderBlockNormal(BLOCK_TILEENTITY, dim, pos);
+	}
 	
 	@Nonnull
 	public static OrderChunkNormal orderBlock(@Nonnull DimensionType dim, int chunkX, int chunkZ) {
@@ -186,5 +223,5 @@ public enum ContentType {
 	abstract boolean unsubscribe(MinecraftServer target, ContentOrder order, H6 wrapper);
 	
 	abstract void apply(ByteBuf buf /*the first varint has read*/, SlaveUniverse dst);
-	abstract ContentOrder check(ByteBuf buf /*the first varint has read*/);
+	abstract ContentOrder check(ByteBuf buf /*the first varint has read*/); //shouldn't call often
 }

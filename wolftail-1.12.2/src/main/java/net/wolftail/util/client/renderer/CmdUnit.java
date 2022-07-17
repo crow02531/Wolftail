@@ -66,7 +66,7 @@ public final class CmdUnit extends UIUnit {
 	
 	public CmdUnit pPrint(CharSequence s) {
 		if(s == null) s = "null";
-		if(s.length() == 0) return this;
+		else if(s.length() == 0) return this;
 		
 		this.charBuf.append(s);
 		this.updateTmp(s);
@@ -91,7 +91,7 @@ public final class CmdUnit extends UIUnit {
 				if(i + 1 < l) {
 					i++;
 					
-					break;
+					break; 
 				}
 			default:
 				if(this.tmp_posX + fr.wolftail_widthOf(cp) > vw) {

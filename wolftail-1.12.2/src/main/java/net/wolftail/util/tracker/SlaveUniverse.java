@@ -1,33 +1,36 @@
 package net.wolftail.util.tracker;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import javax.annotation.Nonnull;
 
+import io.netty.buffer.ByteBuf;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
 @SideWith(section = GameSection.GAME_PLAYING)
-public final class SlaveUniverse {
+public abstract class SlaveUniverse {
 	
-	final Map<DimensionType, SlaveWorld> worlds;
+	/**
+	 * Mark a new begin of receiving the analyzed data of a content diff.
+	 */
+	protected abstract void jzBegin();
 	
-	public SlaveUniverse() {
-		this.worlds = new EnumMap<>(DimensionType.class);
-	}
+	/**
+	 * Mark the end of receiving.
+	 */
+	protected abstract void jzEnd();
 	
-	public SlaveWorld world(@Nonnull DimensionType dim) {
-		return this.worlds.get(dim);
-	}
+	protected abstract void jzWorld(DimensionType dim);
+	protected abstract void jzChunk(int chunkX, int chunkY);
 	
-	SlaveWorld goc_world(DimensionType d) {
-		SlaveWorld w = this.worlds.get(d);
-		
-		if(w == null) 
-			this.worlds.put(d, w = new SlaveWorld(this, d));
-		
-		return w;
-	}
+	protected abstract void jzSetDaytime(long daytime);
+	protected abstract void jzSetRainingStr(float str);
+	protected abstract void jzSetThunderingStr(float str);
+	
+	protected abstract void jzSetBlock(int localX, int localY, int localZ, @Nonnull IBlockState state);
+	protected abstract void jzSetSection(int index, ByteBuf buf);
+	
+	protected abstract void jzSetTileEntity(int localX, int localY, int localZ, NBTTagCompound serialized);
 }

@@ -1,9 +1,10 @@
-package net.wolftail.impl;
+package net.wolftail.impl.util.collect;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ConcurrentModificationException;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 
@@ -74,6 +75,8 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 		
 		System.arraycopy(this.array, pos + 1, this.array, pos, this.size-- - pos - 1);
 		
+		this.modCount++;
+		
 		return true;
 	}
 	
@@ -87,6 +90,8 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 				throw new IllegalStateException("Full");
 		
 		this.array[this.size++] = k;
+		
+		this.modCount++;
 		
 		return true;
 	}
@@ -113,6 +118,8 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 	@Override
 	public void clear() {
 		this.size = 0;
+		
+		this.modCount = 0;
 	}
 	
 	@Override
@@ -124,11 +131,15 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 		return this.size == this.limit;
 	}
 	
+	private transient int modCount;
+	
 	@Override
 	public ShortIterator iterator() {
 		return new AbstractShortIterator() {
 			
 			int next;
+			
+			int expectedModCount = modCount;
 			
 			@Override
 			public boolean hasNext() {
@@ -137,6 +148,7 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 			
 			@Override
 			public short nextShort() {
+				checkForComodification();
 				if(!hasNext()) throw new NoSuchElementException();
 				
 				return array[next++];
@@ -144,6 +156,8 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 			
 			@Override
 			public void remove() {
+				checkForComodification();
+				
 				final int tail = size-- - next--;
 				
 				System.arraycopy(array, next + 1, array, next, tail);
@@ -151,9 +165,16 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 			
 			@Override
 			public int skip(int n) {
+				checkForComodification();
+				
 				next += (n = Math.min(n, size - next));
 				
 				return n - 1;
+			}
+			
+			void checkForComodification() {
+				if(expectedModCount != modCount)
+					throw new ConcurrentModificationException();
 			}
 		};
 	}
@@ -177,7 +198,8 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 			throw new InternalError();
 		}
 		
-		c.array = array.clone();
+		c.array = this.array.clone();
+		c.modCount = 0;
 		
 		return c;
 	}

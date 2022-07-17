@@ -1,12 +1,13 @@
 package net.wolftail.impl;
 
+import net.minecraft.world.chunk.Chunk;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H6;
+import net.wolftail.impl.util.collect.LinkedObjectCollection;
 
 public interface ExtensionsWorldServer {
 	
-	ExtensionsChunk wolftail_getHead();
-	void wolftail_setHead(ExtensionsChunk h);
+	LinkedObjectCollection<Chunk>.Node wolftail_join(Chunk c);
 	
 	void wolftail_register_WW(H3 subscribeEntry);
 	boolean wolftail_unregister_WW(H6 wrapper);

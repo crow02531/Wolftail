@@ -8,14 +8,7 @@ import com.example.examplemod.network.C2SForward;
 import net.minecraft.network.INetHandler;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.DimensionType;
 import net.wolftail.api.ClientPlayContext;
-import net.wolftail.util.client.renderer.CmdUnit;
-import net.wolftail.util.tracker.SlaveTime;
-import net.wolftail.util.tracker.SlaveUniverse;
-import net.wolftail.util.tracker.SlaveWeather;
-import net.wolftail.util.tracker.SlaveWorld;
 
 public class ClientNetHandler implements INetHandler, ITickable {
 	
@@ -24,12 +17,8 @@ public class ClientNetHandler implements INetHandler, ITickable {
 	private boolean shift_pressed;
 	private boolean ctrl_pressed;
 	
-	public SlaveUniverse universe;
-	
 	ClientNetHandler(ClientPlayContext context) {
 		this.context = context;
-		
-		this.universe = new SlaveUniverse();
 	}
 	
 	@Override
@@ -74,27 +63,7 @@ public class ClientNetHandler implements INetHandler, ITickable {
 			
 			ClientCallback.ui.pScrollMov(i);
 		}
-		
-		SlaveWorld w = this.universe.world(DimensionType.OVERWORLD);
-		SlaveWeather weather;
-		SlaveTime time;
-		
-		if(w != null && (weather = w.weather()) != null && (time = w.time()) != null) {
-			CmdUnit ui = ClientCallback.ui;
-			
-			if(timer + 3000 < System.currentTimeMillis()) {
-				ui.pPrint(TextFormatting.YELLOW).pPrintln(w.chunk(0, 0).blockState(4, 5, 4));
-				ui.pPrintln(weather.rainingStrength());
-				ui.pPrintln(weather.thunderingStrength());
-				ui.pPrintln(time.dayTime());
-				ui.pPrintln();
-				
-				timer = System.currentTimeMillis();
-			}
-		}
 	}
-	
-	private long timer;
 	
 	@Override
 	public void onDisconnect(ITextComponent reason) {

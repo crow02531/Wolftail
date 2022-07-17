@@ -8,12 +8,14 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
+import net.wolftail.impl.SharedImpls.H2;
 
 public final class ServerWorldListener implements IWorldEventListener {
 	
 	@Override
 	public void notifyBlockUpdate(World worldIn, BlockPos pos, IBlockState oldState, IBlockState newState, int flags) {
-		((ExtensionsChunk) SharedImpls.as(worldIn.getChunkFromBlockCoords(pos))).wolftail_blockChanged(pos.getX() & 15, pos.getY(), pos.getZ() & 15);
+		if(oldState != newState)
+			((ExtensionsChunk) SharedImpls.as(worldIn.getChunkFromBlockCoords(pos))).wolftail_blockChanged(H2.toIndex(pos));
 	}
 	
 	@Override

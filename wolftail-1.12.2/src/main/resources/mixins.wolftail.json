@@ -12,7 +12,8 @@
     "MixinPlayerList",
     "MixinChunkProviderServer",
     "MixinChunk",
-    "MixinWorldServer"
+    "MixinWorldServer",
+    "MixinWorld"
   ],
   "client": [
     "client.MixinMain",

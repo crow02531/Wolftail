@@ -1,4 +1,4 @@
-package net.wolftail.impl;
+package net.wolftail.impl.util.collect;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -57,11 +57,6 @@ public class SmallLong2ObjectMap<V> extends AbstractLong2ObjectMap<V> implements
 		return -1;
 	}
 	
-	@Override
-	public ObjectSet<Entry<V>> long2ObjectEntrySet() {
-		throw new UnsupportedOperationException();
-	}
-	
 	@SuppressWarnings("unchecked")
 	@Override
 	public V get(long key) {
@@ -85,6 +80,20 @@ public class SmallLong2ObjectMap<V> extends AbstractLong2ObjectMap<V> implements
 		this.value[index] = newVal;
 		
 		return oldVal;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public V rem(int index) {
+		final Object[] value = this.value;
+		final V oldValue = (V) value[Preconditions.checkElementIndex(index, this.size)];
+		final int tail = this.size - index - 1;
+		
+		System.arraycopy(this.key, index + 1, this.key, index, tail);
+		System.arraycopy(value, index + 1, value, index, tail);
+		
+		value[--this.size] = null;
+		
+		return oldValue;
 	}
 	
 	@Override
@@ -154,23 +163,16 @@ public class SmallLong2ObjectMap<V> extends AbstractLong2ObjectMap<V> implements
 		this.value = newValue;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(final long k) {
 		final int oldIndex = this.findKey(k);
-		if(oldIndex < 0) return this.defRetValue;
 		
-		final Object[] value = this.value;
-		
-		final V oldValue = (V) value[oldIndex];
-		final int tail = this.size - oldIndex - 1;
-		
-		System.arraycopy(this.key, oldIndex + 1, this.key, oldIndex, tail);
-		System.arraycopy(value, oldIndex + 1, value, oldIndex, tail);
-		
-		value[--this.size] = null;
-		
-		return oldValue;
+		return oldIndex < 0 ? this.defRetValue : this.rem(oldIndex);
+	}
+	//TODO SmallLong2ObjectMap: entrySet, keySet, values
+	@Override
+	public ObjectSet<Entry<V>> long2ObjectEntrySet() {
+		throw new UnsupportedOperationException();
 	}
 	
 	@Override

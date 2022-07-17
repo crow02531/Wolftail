@@ -41,6 +41,7 @@ public class ServerNetHandler implements INetHandler, ITickable {
 		};
 		
 		ct.subscribe(ContentType.orderBlock(DimensionType.OVERWORLD, 0, 0), subscriber);
+		ct.subscribe(ContentType.orderTileEntity(DimensionType.OVERWORLD, new BlockPos(4, 5, 4)), subscriber);
 		ct.subscribe(ContentType.orderWeather(DimensionType.OVERWORLD), subscriber, 10);
 		ct.subscribe(ContentType.orderDaytime(DimensionType.OVERWORLD), subscriber, 10);
 	}

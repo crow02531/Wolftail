@@ -8,18 +8,26 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
+import it.unimi.dsi.fastutil.shorts.Short2ObjectOpenHashMap;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraft.world.chunk.Chunk.EnumCreateEntityType;
 import net.wolftail.impl.ExtensionsChunk;
-import net.wolftail.impl.ExtensionsWorldServer;
 import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.SharedImpls.H2;
 import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
 import net.wolftail.impl.SharedImpls.H6;
-import net.wolftail.impl.SmallLong2ObjectMap;
-import net.wolftail.impl.SmallShortSet;
+import net.wolftail.impl.SharedImpls.H7;
+import net.wolftail.impl.util.collect.LinkedObjectCollection;
+import net.wolftail.impl.util.collect.SmallLong2ObjectMap;
+import net.wolftail.impl.util.collect.SmallShortSet;
 import net.wolftail.util.tracker.ContentType;
+import net.wolftail.util.tracker.OrderBlockNormal;
 import net.wolftail.util.tracker.OrderChunkNormal;
 
 //ContentTracker Supporter
@@ -33,10 +41,13 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	private HashMap<H3, H3> subscribers_CB;
 	
 	@Unique
-	private ExtensionsChunk prev, next;
+	private SmallLong2ObjectMap<SmallShortSet> changedBlocks;
 	
 	@Unique
-	private SmallLong2ObjectMap<SmallShortSet> changedBlocks;
+	private SmallLong2ObjectMap<Short2ObjectOpenHashMap<H7>> subscribers_BTE;
+	
+	@Unique
+	private LinkedObjectCollection<Chunk>.Node node;
 	
 	@Final
 	@Shadow
@@ -46,51 +57,31 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	@Shadow
 	public int x, z;
 	
-	@Override
-	public void wolftail_blockChanged(int localX, int localY, int localZ) {
-		if(this.subscribers_CB != null) {
-			SmallLong2ObjectMap<SmallShortSet> cbs = this.changedBlocks;
-			
-			for(int i = cbs.size(); i-- != 0;) {
-				SmallShortSet set = cbs.getVal(i);
-				
-				if(set != DUMMY && set.add((short) (localX << 12 | localZ << 8 | localY))) {
-					if(set.isFull()) cbs.setVal(i, DUMMY);
-				}
-			}
-		}
-	}
+	@Shadow
+	public abstract TileEntity getTileEntity(BlockPos pos, EnumCreateEntityType p_177424_2_);
 	
 	@Override
 	public boolean wolftail_hasSubscriber() {
-		return this.subscribers_CB != null;
-	}
-	
-	@Override
-	public ExtensionsChunk wolftail_getNext() {
-		return this.next;
-	}
-	
-	@Override
-	public void wolftail_setNext(ExtensionsChunk c) {
-		this.next = c;
+		return this.subscribers_CB != null || this.subscribers_BTE != null;
 	}
 	
 	@Unique
-	private void join_chain() {
-		ExtensionsWorldServer ews = ((ExtensionsWorldServer) SharedImpls.as(this.world));
-		ExtensionsChunk prevHead = ews.wolftail_getHead();
-		
-		ews.wolftail_setHead(SharedImpls.as(this));
-		this.next = prevHead;
+	private void joinIfNecessary() {
+		if(!this.wolftail_hasSubscriber())
+			this.node = SharedImpls.as((WorldServer) this.world).wolftail_join(SharedImpls.as(this));
 	}
 	
 	@Unique
-	private void leave_chain() {
-		if(this.prev == null)
-			((ExtensionsWorldServer) SharedImpls.as(this.world)).wolftail_setHead(this.next);
-		else
-			this.prev.wolftail_setNext(this.next);
+	private void leaveIfNecessary() {
+		if(!this.wolftail_hasSubscriber()) {
+			WorldServer w = (WorldServer) this.world;
+			
+			if(!w.getPlayerChunkMap().contains(this.x, this.z))
+				w.getChunkProvider().queueUnload(SharedImpls.as(this));
+			
+			this.node.unlink();
+			this.node = null;
+		}
 	}
 	
 	@Override
@@ -102,8 +93,7 @@ public abstract class MixinChunk implements ExtensionsChunk {
 			if(!this.changedBlocks.containsKey(subscribeEntry.tickSequence))
 				this.changedBlocks.put(subscribeEntry.tickSequence, new SmallShortSet(H4.THRESHOLD_ABANDON));
 		} else {
-			if(!this.wolftail_hasSubscriber())
-				this.join_chain();
+			this.joinIfNecessary();
 			
 			(this.subscribers_CB = new HashMap<>(8)).put(subscribeEntry, subscribeEntry);
 			this.changedBlocks = new SmallLong2ObjectMap<>(subscribeEntry.tickSequence, new SmallShortSet(H4.THRESHOLD_ABANDON));
@@ -115,18 +105,13 @@ public abstract class MixinChunk implements ExtensionsChunk {
 		if(this.subscribers_CB == null) return false;
 		
 		H3 entry = this.subscribers_CB.remove(new H3(wrapper));
-		
 		if(entry == null) return false;
 		
 		if(this.subscribers_CB.isEmpty()) {
 			this.subscribers_CB = null;
 			this.changedBlocks = null;
 			
-			if(!this.wolftail_hasSubscriber()) {
-				((ChunkProviderServer) this.world.getChunkProvider()).queueUnload(SharedImpls.as(this));
-				
-				this.leave_chain();
-			}
+			this.leaveIfNecessary();
 		} else {
 			for(H3 e : this.subscribers_CB.keySet()) {
 				if(e.tickSequence == entry.tickSequence)
@@ -140,8 +125,139 @@ public abstract class MixinChunk implements ExtensionsChunk {
 	}
 	
 	@Override
+	public void wolftail_register_BTE(H3 subscribeEntry, short index) {
+		Short2ObjectOpenHashMap<H7> m = null;
+		H7 l = null;
+		
+		if(this.subscribers_BTE != null) {
+			this.checkExistInAllFrequency(subscribeEntry, index);
+			
+			if((m = this.subscribers_BTE.get(subscribeEntry.tickSequence)) != null)
+				l = m.get(index);
+		} else {
+			this.joinIfNecessary();
+			
+			this.subscribers_BTE = new SmallLong2ObjectMap<>();
+		}
+		
+		if(m == null)
+			this.subscribers_BTE.put(subscribeEntry.tickSequence, m = new Short2ObjectOpenHashMap<>());
+		if(l == null)
+			m.put(index, l = new H7());
+		
+		l.add(subscribeEntry);
+		l.mark_initial = true;
+	}
+	
+	@Unique
+	private void checkExistInAllFrequency(H3 e, short index) {
+		SmallLong2ObjectMap<Short2ObjectOpenHashMap<H7>> ct = this.subscribers_BTE;
+		
+		for(int i = ct.size(); i-- != 0;) {
+			H7 l = ct.getVal(i).get(index);
+			
+			if(l != null && l.contains(e))
+				throw new IllegalArgumentException();
+		}
+	}
+	
+	@Override
+	public boolean wolftail_unregister_BTE(H6 wrapper, short index) {
+		SmallLong2ObjectMap<Short2ObjectOpenHashMap<H7>> ct = this.subscribers_BTE;
+		if(ct == null) return false;
+		
+		H3 e = new H3(wrapper);
+		
+		for(int i = ct.size(); i-- != 0;) {
+			Short2ObjectOpenHashMap<H7> m = ct.getVal(i);
+			H7 l = m.get(index);
+			
+			if(l != null && l.remove(e)) {
+				if(l.isEmpty()) {
+					m.remove(index);
+					
+					if(m.isEmpty()) {
+						ct.rem(i);
+						
+						if(ct.isEmpty()) {
+							this.subscribers_BTE = null;
+							
+							this.leaveIfNecessary();
+						}
+					}
+				}
+				
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public void wolftail_blockChanged(short index) {
+		if(this.subscribers_CB != null) {
+			SmallLong2ObjectMap<SmallShortSet> cbs = this.changedBlocks;
+			
+			for(int i = cbs.size(); i-- != 0;) {
+				SmallShortSet set = cbs.getVal(i);
+				
+				if(set != DUMMY && set.add(index) && set.isFull())
+					cbs.setVal(i, DUMMY);
+			}
+		}
+	}
+	
+	@Override
+	public void wolftail_tileEntityChanged(short index) {
+		if(this.subscribers_BTE != null) {
+			SmallLong2ObjectMap<Short2ObjectOpenHashMap<H7>> ct = this.subscribers_BTE;
+			
+			for(int i = ct.size(); i-- != 0;) {
+				H7 l = ct.getVal(i).get(index);
+				
+				if(l != null) l.mark_changed = true;
+			}
+		}
+	}
+	
+	@Override
 	public void wolftail_postTick(int tick) {
-		this.postTick_CB(tick);
+		if(this.subscribers_CB != null) this.postTick_CB(tick);
+		if(this.subscribers_BTE != null) this.postTick_BTE(tick);
+	}
+	
+	@Unique
+	private void postTick_BTE(int tick) {
+		SmallLong2ObjectMap<Short2ObjectOpenHashMap<H7>> ct = this.subscribers_BTE;
+		
+		for(int i = ct.size(); i-- != 0;) {
+			if(H3.match(ct.getKey(i), tick)) {
+				Short2ObjectOpenHashMap<H7> m = ct.getVal(i);
+				
+				for(Short2ObjectMap.Entry<H7> e : m.short2ObjectEntrySet()) {
+					H7 l = e.getValue();
+					
+					if(!l.mark_changed && !l.mark_initial) continue;
+					
+					OrderBlockNormal order = ContentType.orderTileEntity(this.world.provider.getDimensionType(), H2.toPos(this.x, this.z, e.getShortKey()));
+					ByteBuf sent = H4.make_BTE(order, this.getTileEntity(order.position(), EnumCreateEntityType.CHECK));
+					
+					for(H3 se : l) {
+						if(se.initial) {
+							se.initial = false;
+							
+							se.wrapper.cumulate(order, sent);
+						} else if(l.mark_changed) {
+							se.wrapper.cumulate(order, sent);
+						}
+					}
+					
+					l.mark_initial = false;
+					l.mark_changed = false;
+				}
+			}
+		}
 	}
 	
 	@Unique

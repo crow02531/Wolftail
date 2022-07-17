@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.wolftail.impl.ExtensionsChunk;
+import net.minecraft.world.chunk.Chunk;
 import net.wolftail.impl.ExtensionsWorldServer;
 import net.wolftail.impl.ServerWorldListener;
 import net.wolftail.impl.SharedImpls;
@@ -20,7 +20,8 @@ import net.wolftail.impl.SharedImpls.H3;
 import net.wolftail.impl.SharedImpls.H4;
 import net.wolftail.impl.SharedImpls.H5;
 import net.wolftail.impl.SharedImpls.H6;
-import net.wolftail.impl.SmallLong2ObjectMap;
+import net.wolftail.impl.util.collect.LinkedObjectCollection;
+import net.wolftail.impl.util.collect.SmallLong2ObjectMap;
 import net.wolftail.util.tracker.ContentType;
 import net.wolftail.util.tracker.OrderWorldNormal;
 
@@ -35,10 +36,10 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	private HashSet<H3> subscribers_WDT = new HashSet<>();
 	
 	@Unique
-	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(10);
+	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(2);
 	
 	@Unique
-	private ExtensionsChunk head;
+	private LinkedObjectCollection<Chunk> subscribedChunks = new LinkedObjectCollection<>();
 	
 	@Inject(method = "init", at = @At("RETURN"))
 	private void onInit(CallbackInfoReturnable<World> info) {
@@ -47,13 +48,8 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	
 	@Unique
 	private void postTick_C(int tick) {
-		ExtensionsChunk c = this.head;
-		
-		while(c != null) {
-			c.wolftail_postTick(tick);
-			
-			c = c.wolftail_getNext();
-		}
+		for(Chunk c : this.subscribedChunks)
+			SharedImpls.as(c).wolftail_postTick(tick);
 	}
 	
 	@Unique
@@ -116,13 +112,8 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	}
 	
 	@Override
-	public ExtensionsChunk wolftail_getHead() {
-		return this.head;
-	}
-	
-	@Override
-	public void wolftail_setHead(ExtensionsChunk h) {
-		this.head = h;
+	public LinkedObjectCollection<Chunk>.Node wolftail_join(Chunk c) {
+		return this.subscribedChunks.enter(c);
 	}
 	
 	@Override

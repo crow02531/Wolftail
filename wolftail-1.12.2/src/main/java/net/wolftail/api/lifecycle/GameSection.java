@@ -60,13 +60,22 @@ public enum GameSection {
 	 */
 	GAME_PLAYING(H1.TOKEN_PLAYING);
 	
-	private final H1 token;
+	private final H1 handler;
 	
-	private GameSection(H1 t) {
-		this.token = t;
+	private GameSection(H1 h) {
+		this.handler = h;
 	}
 	
-	public final void ensure(@Nonnull SectionState intended, @Nonnull Runnable action) {
+	/**
+	 * Ensure {@code this}'s state equals to {@code intended} during the {@code action}.
+	 * 
+	 * @param intended	the desiring state
+	 * @param action	the action to be executed
+	 * 
+	 * @throws IllegalStateException	when the current state of {@code this} dosen't
+	 * 		equals to {@code intended}
+	 */
+	public void ensure(@Nonnull SectionState intended, @Nonnull Runnable action) {
 		this.block((current) -> {
 			if(intended != current)
 				throw new IllegalStateException("Not in " + intended + " state but " + current);
@@ -75,13 +84,20 @@ public enum GameSection {
 		});
 	}
 	
-	public final void block(@Nonnull Consumer<SectionState> action) {
-		Lock rlock = this.token.lock.readLock();
+	/**
+	 * Block the game section change progress so that game section remains
+	 * the same during the {@code action}.
+	 * 
+	 * @param action	the action to be executed, consuming the current
+	 * 		state of {@code this}
+	 */
+	public void block(@Nonnull Consumer<SectionState> action) {
+		Lock rlock = this.handler.lock.readLock();
 		
 		rlock.lock();
 		
 		try {
-			action.accept(this.token.state);
+			action.accept(this.handler.state);
 		} finally {
 			rlock.unlock();
 		}

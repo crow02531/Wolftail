@@ -7,6 +7,9 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.ImplUPT;
 
+/**
+ * Represent an uniplayer type.
+ */
 public interface UniversalPlayerType {
 	
 	ResourceLocation	TYPE_PLAYER_ID	= new ResourceLocation("minecraft", "player");

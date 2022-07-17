@@ -35,5 +35,13 @@ public interface PlayContext {
 	
 	void disconnect();
 	
-	void setNetHandler(INetHandler handler);
+	/**
+	 * Set the net handler of context's connection. The handler
+	 * will be used in packet receiving and disconnect handling.
+	 * If the net handler implements {@link net.minecraft.util.ITickable ITickable}
+	 * , it will get call every tick.
+	 * 
+	 * @param handler	the net handler, can't be null
+	 */
+	void setNetHandler(@Nonnull INetHandler handler);
 }

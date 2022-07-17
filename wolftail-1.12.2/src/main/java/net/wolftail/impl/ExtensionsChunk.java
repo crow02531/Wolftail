@@ -10,10 +10,11 @@ public interface ExtensionsChunk {
 	void wolftail_register_CB(H3 subscribeEntry);
 	boolean wolftail_unregister_CB(H6 wrapper);
 	
-	ExtensionsChunk wolftail_getNext();
-	void wolftail_setNext(ExtensionsChunk c);
+	void wolftail_register_BTE(H3 subscribeEntry, short index);
+	boolean wolftail_unregister_BTE(H6 wrapper, short index);
+	
+	void wolftail_blockChanged(short index);
+	void wolftail_tileEntityChanged(short index);
 	
 	void wolftail_postTick(int tick);
-	
-	void wolftail_blockChanged(int localX, int localY, int localZ);
 }
