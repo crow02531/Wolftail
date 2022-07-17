@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.NetworkManager;
-import net.wolftail.impl.ImplPCServer;
+import net.wolftail.impl.ImplPC;
 import net.wolftail.impl.SharedImpls;
 
 //check (S) connection disconnect (Only for PT)
@@ -23,6 +23,6 @@ public abstract class MixinNetHandlerPlayServer {
 	
 	@Inject(method = "onDisconnect", at = @At(value = "INVOKE", target = "playerLoggedOut(Lnet/minecraft/entity/player/EntityPlayerMP;)V", shift = Shift.AFTER))
 	private void onOnDisconnect(CallbackInfo info) {
-		SharedImpls.H2.shared_func_disconnect((ImplPCServer) SharedImpls.as(this.netManager).wolftail_getPlayContext());
+		SharedImpls.H2.shared_func_disconnect((ImplPC.Server) SharedImpls.as(this.netManager).wolftail_getPlayContext());
 	}
 }

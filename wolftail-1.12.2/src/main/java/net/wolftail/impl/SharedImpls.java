@@ -239,7 +239,7 @@ public final class SharedImpls {
 			return direction == EnumPacketDirection.CLIENTBOUND ? 1048576 : 32767;
 		}
 		
-		public static void shared_func_disconnect(ImplPCServer context) {
+		public static void shared_func_disconnect(ImplPC.Server context) {
 			context.manager.root.onLeft(context);
 			
 			LOGGER_USER.info("{}({}) the universal player logged out", context.identifier, context.name);
@@ -282,6 +282,10 @@ public final class SharedImpls {
 			return match(this.tickSequence, tick);
 		}
 		
+		public int getInterval() {
+			return (int) this.tickSequence;
+		}
+		
 		@Override
 		public int hashCode() {
 			return System.identityHashCode(this.wrapper.subscriber);
@@ -322,8 +326,10 @@ public final class SharedImpls {
 			
 			PacketBuffer wrap = new PacketBuffer(buf);
 			for(int i = 0; i < 16; i++) {
-				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE)
+				if(ebs[i] != Chunk.NULL_BLOCK_STORAGE) {
+					writeVarInt(ebs[i].getData().getSerializedSize(), buf);
 					ebs[i].getData().write(wrap);
+				}
 			}
 			
 			return buf;
@@ -459,7 +465,7 @@ public final class SharedImpls {
 			try {
 				return CompressedStreamTools.read(new ByteBufInputStream(src), NBTSizeTracker.INFINITE);
 			} catch(IOException e) {
-				Throwables.rethrow(e); //never happen
+				Throwables.rethrow(e);
 				
 				return null;
 			}
@@ -469,7 +475,7 @@ public final class SharedImpls {
 			try {
 				CompressedStreamTools.write(src, new ByteBufOutputStream(dst));
 			} catch(IOException e) {
-				Throwables.rethrow(e); //never happen
+				Throwables.rethrow(e);
 			}
 		}
 	}

@@ -54,6 +54,7 @@ public final class ContentTracker {
 	 * 
 	 * <p>
 	 * For example, codes
+	 * </p>
 	 * 
 	 * <pre>
 	 *   o0 = orderBlock(OVERWORLD, 0, 0);
@@ -84,6 +85,7 @@ public final class ContentTracker {
 	 * WORLD_DAYTIME}) would perform better with big interval, while the
 	 * slow-changing content(like {@link ContentType#CHUNK_BLOCK CHUNK_BLOCK})
 	 * prefers small interval.
+	 * </p>
 	 * 
 	 * @param order			the content in interest
 	 * @param subscriber	the subscriber

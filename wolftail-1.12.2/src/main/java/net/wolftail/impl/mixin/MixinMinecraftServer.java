@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
 import net.wolftail.impl.ExtensionsMinecraftServer;
-import net.wolftail.impl.ImplMPCRoot;
+import net.wolftail.impl.ImplMPCR;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.SharedImpls.H6;
 import net.wolftail.util.tracker.ContentDiff;
@@ -40,7 +40,7 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	private Random random;
 	
 	@Unique
-	protected ImplMPCRoot root;
+	protected ImplMPCR root;
 	
 	@Unique
 	private ContentTracker tracker;
@@ -69,7 +69,7 @@ public abstract class MixinMinecraftServer implements ExtensionsMinecraftServer 
 	}
 	
 	@Override
-	public ImplMPCRoot wolftail_getRootManager() {
+	public ImplMPCR wolftail_getRootManager() {
 		return this.root;
 	}
 	

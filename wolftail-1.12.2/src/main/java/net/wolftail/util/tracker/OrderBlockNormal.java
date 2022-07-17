@@ -67,7 +67,7 @@ public final class OrderBlockNormal extends ContentOrder {
 	@Override
 	public String toString() {
 		return this.type + ": " + this.dim
-				+ "[" + this.pos.getX() + ", " + this.pos.getY() + ", "
-				+ this.pos.getZ() + "]";
+				+ "(" + this.pos.getX() + ", " + this.pos.getY() + ", "
+				+ this.pos.getZ() + ")";
 	}
 }

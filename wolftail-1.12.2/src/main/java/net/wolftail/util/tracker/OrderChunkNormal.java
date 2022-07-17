@@ -71,6 +71,6 @@ public final class OrderChunkNormal extends ContentOrder {
 	@Nonnull
 	@Override
 	public String toString() {
-		return this.type + ": " + this.dim + "[" + this.chunkX + ", " + this.chunkZ + "]";
+		return this.type + ": " + this.dim + "(" + this.chunkX + ", " + this.chunkZ + ")";
 	}
 }

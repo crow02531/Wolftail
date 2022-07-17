@@ -23,7 +23,6 @@ import net.minecraft.network.play.INetHandlerPlayServer;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.impl.ExtensionsNetworkManager;
 import net.wolftail.impl.ImplPC;
-import net.wolftail.impl.ImplPCServer;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.network.BiDPacketNPTKeepAlive;
 
@@ -65,7 +64,7 @@ public abstract class MixinNetworkManager implements ExtensionsNetworkManager {
 		if(this.direction == EnumPacketDirection.SERVERBOUND) {
 			//server side logic
 			
-			ImplPCServer context = (ImplPCServer) this.play_context;
+			ImplPC.Server context = (ImplPC.Server) this.play_context;
 			if(context == null) return;
 			
 			if(context.playType() != UniversalPlayerType.TYPE_PLAYER) {

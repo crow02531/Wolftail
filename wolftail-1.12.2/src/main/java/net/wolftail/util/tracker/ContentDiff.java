@@ -65,13 +65,15 @@ public interface ContentDiff {
 	 * {@code from(buf)}.
 	 */
 	public static void apply(@Nonnull ByteBuf buf, @Nonnull SlaveUniverse dst) {
-		dst.jzBegin();
-		
-		try {
-			while(buf.isReadable())
-				ContentType.values()[H4.readVarInt(buf)].apply(buf, dst);
-		} finally {
-			dst.jzEnd();
+		synchronized(dst.LOCK_OBJECT) {
+			dst.jzBegin();
+			
+			try {
+				while(buf.isReadable())
+					ContentType.values()[H4.readVarInt(buf)].apply(buf, dst);
+			} finally {
+				dst.jzEnd();
+			}
 		}
 	}
 }

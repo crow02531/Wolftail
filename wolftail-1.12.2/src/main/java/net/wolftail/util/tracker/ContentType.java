@@ -28,6 +28,9 @@ import net.wolftail.impl.SharedImpls.H6;
 @SideWith(section = GameSection.GAME_PLAYING)
 public enum ContentType {
 	
+	/**
+	 * Suggested subscribing interval: 1
+	 */
 	BLOCK_TILEENTITY {
 		
 		@Override
@@ -67,6 +70,9 @@ public enum ContentType {
 		}
 	},
 	
+	/**
+	 * Suggested subscribing interval: 1
+	 */
 	CHUNK_BLOCK {
 		
 		@Override
@@ -94,13 +100,10 @@ public enum ContentType {
 			dst.jzChunk(ord.chunkX, ord.chunkZ);
 			
 			if(op == 0) {
-				int availableSections;
-				
-				if((availableSections = buf.readUnsignedShort()) == 0)
-					throw new IllegalArgumentException("Illegal availableSections 0");
+				int availableSections = buf.readUnsignedShort();
 				
 				for(int i = 0; i < 16; ++i)
-					dst.jzSetSection(i, (availableSections & (1 << i)) == 0 ? null : buf);
+					dst.jzSetSection(i, (availableSections & (1 << i)) == 0 ? null : buf.readSlice(H4.readVarInt(buf)).asReadOnly());
 			} else if(0 < op && op <= H4.THRESHOLD_ABANDON) {
 				for(; op-- != 0;) {
 					short s = buf.readShort();
@@ -117,16 +120,12 @@ public enum ContentType {
 			int op = buf.readByte() & 0xFF;
 			
 			if(op == 0) {
-				int availableSections;
+				int availableSections = buf.readUnsignedShort();
 				
-				if((availableSections = buf.readUnsignedShort()) == 0)
-					throw new IllegalArgumentException("Illegal availableSections 0");
-				
-				PacketBuffer wrap = new PacketBuffer(buf);
-				
+				BlockStateContainer bsl = new BlockStateContainer();
 				for(int i = 0; i < 16; ++i) {
 					if((availableSections & (1 << i)) != 0)
-						new BlockStateContainer().read(wrap);
+						bsl.read(new PacketBuffer(buf.readSlice(H4.readVarInt(buf))));
 				}
 			} else if(0 < op && op <= H4.THRESHOLD_ABANDON) {
 				for(; op-- != 0;) {
@@ -140,6 +139,9 @@ public enum ContentType {
 		}
 	},
 	
+	/**
+	 * Suggested subscribing interval: any
+	 */
 	WORLD_WEATHER {
 		
 		@Override
@@ -170,6 +172,9 @@ public enum ContentType {
 		}
 	},
 	
+	/**
+	 * Suggested subscribing interval: any
+	 */
 	WORLD_DAYTIME {
 		
 		@Override

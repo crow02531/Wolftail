@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.server.dedicated.DedicatedServer;
-import net.wolftail.impl.ImplMPCRoot;
+import net.wolftail.impl.ImplMPCR;
 import net.wolftail.impl.SharedImpls;
 
 @Mixin(DedicatedServer.class)
@@ -18,6 +18,6 @@ public abstract class MixinDedicatedServer extends net.wolftail.impl.mixin.Mixin
 	private void onInit(CallbackInfoReturnable<Boolean> info) throws IOException {
 		SharedImpls.H1.finish_loading(true);
 		
-		this.root = new ImplMPCRoot(SharedImpls.as(this));
+		this.root = new ImplMPCR(SharedImpls.as(this));
 	}
 }

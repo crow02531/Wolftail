@@ -23,19 +23,19 @@ public final class ImplUPT implements UniversalPlayerType {
 		this.callback_client_frame = arg2;
 	}
 	
-	public void callServerEnter(ImplPCServer arg) {
+	public void callServerEnter(ImplPC.Server arg) {
 		IServerEntryPoint ep = this.entrypoint_server;
 		
 		if(ep != null) ep.onEnter(arg);
 	}
 	
-	public void callClientEnter(ImplPCClient arg) {
+	public void callClientEnter(ImplPC.Client arg) {
 		IClientEntryPoint ep = this.entrypoint_client;
 		
 		if(ep != null) ep.onEnter(arg);
 	}
 	
-	public void callClientFrame(ImplPCClient arg) {
+	public void callClientFrame(ImplPC.Client arg) {
 		IClientFrameCallback cb = this.callback_client_frame;
 		
 		if(cb != null) cb.onFrame(arg);

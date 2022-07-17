@@ -36,7 +36,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.impl.ExtensionsMinecraft;
-import net.wolftail.impl.ImplPCClient;
+import net.wolftail.impl.ImplPC;
 import net.wolftail.impl.ImplUPT;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.network.NoopNetHandler;
@@ -124,7 +124,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	//---------------------------------SHADOW END---------------------------------
 	
 	@Unique
-	private ImplPCClient play_context;
+	private ImplPC.Client play_context;
 	
 	@Unique
 	private FutureTask<Void> specialTask;
@@ -136,7 +136,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	
 	@Inject(method = "runTick", at = @At(value = "INVOKE_STRING", target = "endStartSection(Ljava/lang/String;)V", args = { "ldc=textures" }))
 	private void onRunTick(CallbackInfo info) {
-		ImplPCClient context = this.play_context;
+		ImplPC.Client context = this.play_context;
 		
 		if(context != null && !context.getConnection().isChannelOpen())
 			this.unloadPlayContext();
@@ -151,7 +151,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 			this.specialTask = null;
 		}
 		
-		ImplPCClient context = this.play_context;
+		ImplPC.Client context = this.play_context;
 		ImplUPT type;
 		
 		if(context != null && (type = (ImplUPT) context.playType()) != UniversalPlayerType.TYPE_PLAYER) {
@@ -168,7 +168,7 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	}
 	
 	@Unique
-	private void doGameLoop(ImplPCClient context, ImplUPT type) throws LWJGLException, IOException {
+	private void doGameLoop(ImplPC.Client context, ImplUPT type) throws LWJGLException, IOException {
 		Profiler profiler = this.mcProfiler;
 		
 		profiler.startSection("root");
@@ -274,10 +274,10 @@ public abstract class MixinMinecraft implements ExtensionsMinecraft {
 	}
 	
 	@Override
-	public void wolftail_func0(ImplUPT type, UUID id, NetworkManager connect) {
+	public void wolftail_loginSuccess(ImplUPT type, UUID id, NetworkManager connect) {
 		try {
 			(this.specialTask = new FutureTask<Void>(() -> {
-				ImplPCClient context = this.play_context = new ImplPCClient(type, id, this.session.getUsername(), connect);
+				ImplPC.Client context = this.play_context = new ImplPC.Client(type, id, this.session.getUsername(), connect);
 				SharedImpls.as(connect).wolftail_setPlayContext(context);
 				
 				SharedImpls.H1.on_client_playing_change();

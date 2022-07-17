@@ -10,6 +10,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.PacketThreadUtil;
 import net.wolftail.util.tracker.ContentDiff;
+import net.wolftail.util.tracker.builtin.TraceUniverse;
 
 public class S2CContentDiff implements Packet<ClientNetHandler> {
 	
@@ -23,9 +24,7 @@ public class S2CContentDiff implements Packet<ClientNetHandler> {
 	
 	@Override
 	public void readPacketData(PacketBuffer buf) throws IOException {
-		this.data = buf.retainedSlice();
-		
-		buf.readerIndex(buf.writerIndex());
+		this.data = buf.readRetainedSlice(buf.readableBytes());
 	}
 	
 	@Override
@@ -37,7 +36,7 @@ public class S2CContentDiff implements Packet<ClientNetHandler> {
 	public void processPacket(ClientNetHandler handler) {
 		PacketThreadUtil.checkThreadAndEnqueue(this, handler, Minecraft.getMinecraft());
 		
-		//ContentDiff.apply(this.data, handler.universe);
+		ContentDiff.apply(this.data, new TraceUniverse(System.out));
 		this.data.release();
 	}
 }

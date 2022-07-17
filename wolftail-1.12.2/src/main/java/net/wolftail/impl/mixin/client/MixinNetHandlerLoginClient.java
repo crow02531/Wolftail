@@ -48,7 +48,7 @@ public abstract class MixinNetHandlerLoginClient implements ExtensionsNetHandler
 	}
 	
 	@Override
-	public void wolftail_npt_clearStoredPacketRef() {
+	public void wolftail_clearStoredPacketRef() {
 		this.stored_ls_packet = null;
 	}
 }

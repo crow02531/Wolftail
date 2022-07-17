@@ -14,7 +14,7 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.NetHandlerLoginServer;
 import net.wolftail.api.UniversalPlayerType;
-import net.wolftail.impl.ImplPCServer;
+import net.wolftail.impl.ImplPC;
 import net.wolftail.impl.ImplUPT;
 import net.wolftail.impl.SharedImpls;
 import net.wolftail.impl.network.NoopNetHandler;
@@ -43,7 +43,7 @@ public abstract class MixinNetHandlerLoginServer {
 		//now it was EnumConnectionState.LOGIN state and vanilla connection has just set up
 		//we should in LOGIC_SERVER thread
 		
-		ImplPCServer context = SharedImpls.as(this.server).wolftail_getRootManager().join(connect, profile.getId(), profile.getName());
+		ImplPC.Server context = SharedImpls.as(this.server).wolftail_getRootManager().join(connect, profile.getId(), profile.getName());
 		ImplUPT type = context.playType();
 		
 		SharedImpls.as(connect).wolftail_setPlayContext(context);

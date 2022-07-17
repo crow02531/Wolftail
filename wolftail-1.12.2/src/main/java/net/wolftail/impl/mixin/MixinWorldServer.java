@@ -36,7 +36,7 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	private HashSet<H3> subscribers_WDT = new HashSet<>();
 	
 	@Unique
-	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(2);
+	private SmallLong2ObjectMap<H5> prevWeathers = new SmallLong2ObjectMap<>(10);
 	
 	@Unique
 	private LinkedObjectCollection<Chunk> subscribedChunks = new LinkedObjectCollection<>();
@@ -55,9 +55,9 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 	@Unique
 	private void postTick_WW(int tick) {
 		WorldServer w = (WorldServer) SharedImpls.as(this);
-		OrderWorldNormal order = ContentType.orderWeather(w.provider.getDimensionType());
 		SmallLong2ObjectMap<H5> prevWeathers = this.prevWeathers;
 		
+		OrderWorldNormal order = ContentType.orderWeather(w.provider.getDimensionType());
 		ByteBuf sent = null;
 		
 		for(int i = prevWeathers.size(); i-- != 0;)
@@ -65,10 +65,9 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 		
 		for(H3 e : this.subscribers_WW.keySet()) {
 			if(e.initial) {
-				if(sent == null)
-					sent = H4.make_WW(order, w.rainingStrength, w.thunderingStrength);
+				if(sent == null) sent = H4.make_WW(order, w.rainingStrength, w.thunderingStrength);
 				
-				if(!prevWeathers.containsKey(e.tickSequence))
+				if(e.getInterval() <= 20 && !prevWeathers.containsKey(e.tickSequence))
 					prevWeathers.put(e.tickSequence, new H5(w.rainingStrength, w.thunderingStrength));
 				
 				e.wrapper.cumulate(order, sent);
@@ -76,15 +75,13 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 			} else if(e.shouldSend(tick)) {
 				H5 prev = prevWeathers.get(e.tickSequence);
 				
-				if(prev.bool || !prev.equals(w.rainingStrength, w.thunderingStrength)) {
-					if(sent == null)
-						sent = H4.make_WW(order, w.rainingStrength, w.thunderingStrength);
+				if(prev == null || prev.bool || !prev.equals(w.rainingStrength, w.thunderingStrength)) {
+					if(sent == null) sent = H4.make_WW(order, w.rainingStrength, w.thunderingStrength);
 					
 					e.wrapper.cumulate(order, sent);
 					
-					if(!prev.bool) {
+					if(prev != null && !prev.bool) {
 						prev.bool = true;
-						
 						prev.set(w.rainingStrength, w.thunderingStrength);
 					}
 				}
@@ -132,7 +129,7 @@ public abstract class MixinWorldServer implements ExtensionsWorldServer {
 					return true;
 			}
 			
-			this.prevWeathers.remove(entry.tickSequence);
+			if(entry.getInterval() <= 20) this.prevWeathers.remove(entry.tickSequence);
 			return true;
 		}
 		

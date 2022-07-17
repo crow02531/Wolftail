@@ -6,5 +6,5 @@ import net.minecraft.network.NetworkManager;
 
 public interface ExtensionsMinecraft {
 	
-	void wolftail_func0(ImplUPT type, UUID id, NetworkManager connect);
+	void wolftail_loginSuccess(ImplUPT type, UUID id, NetworkManager connect); //called by netty thread
 }

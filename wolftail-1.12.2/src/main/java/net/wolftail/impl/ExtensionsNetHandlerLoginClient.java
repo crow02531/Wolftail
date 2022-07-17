@@ -6,8 +6,7 @@ import net.minecraft.network.login.server.SPacketLoginSuccess;
 public interface ExtensionsNetHandlerLoginClient {
 	
 	SPacketLoginSuccess wolftail_getStoredLoginSuccessPacket();
+	void wolftail_clearStoredPacketRef();
 	
 	NetworkManager wolftail_getConnection();
-	
-	void wolftail_npt_clearStoredPacketRef();
 }

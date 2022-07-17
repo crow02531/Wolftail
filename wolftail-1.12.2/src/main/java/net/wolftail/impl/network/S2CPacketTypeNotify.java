@@ -44,11 +44,11 @@ public final class S2CPacketTypeNotify implements Packet<INetHandlerLoginClient>
 		SPacketLoginSuccess packet = handler_ext.wolftail_getStoredLoginSuccessPacket();
 		
 		//we now should in the netty's thread
-		SharedImpls.get_mc_as().wolftail_func0(type, packet.getProfile().getId(), handler_ext.wolftail_getConnection());
+		SharedImpls.get_mc_as().wolftail_loginSuccess(type, packet.getProfile().getId(), handler_ext.wolftail_getConnection());
 		
 		if(type == UniversalPlayerType.TYPE_PLAYER)
 			handler.handleLoginSuccess(packet);
 		
-		handler_ext.wolftail_npt_clearStoredPacketRef();
+		handler_ext.wolftail_clearStoredPacketRef();
 	}
 }
