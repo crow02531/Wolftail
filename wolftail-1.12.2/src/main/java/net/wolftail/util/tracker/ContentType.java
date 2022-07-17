@@ -53,8 +53,8 @@ public enum ContentType {
 			OrderBlockNormal ord = H4.read_BTE(buf);
 			BlockPos pos = ord.pos;
 			
-			dst.jzWorld(ord.dim);
-			dst.jzChunk(pos.getX() >> 4, pos.getZ() >> 4);
+			dst.jzBindWorld(ord.dim);
+			dst.jzBindChunk(pos.getX() >> 4, pos.getZ() >> 4);
 			
 			dst.jzSetTileEntity(pos.getX() & 0xF, pos.getY(), pos.getZ() & 0xF, buf.readBoolean() ? null : H4.readTag(buf));
 		}
@@ -96,8 +96,8 @@ public enum ContentType {
 			OrderChunkNormal ord = H4.read_CB(buf);
 			int op = buf.readByte() & 0xFF;
 			
-			dst.jzWorld(ord.dim);
-			dst.jzChunk(ord.chunkX, ord.chunkZ);
+			dst.jzBindWorld(ord.dim);
+			dst.jzBindChunk(ord.chunkX, ord.chunkZ);
 			
 			if(op == 0) {
 				int availableSections = buf.readUnsignedShort();
@@ -156,7 +156,7 @@ public enum ContentType {
 		
 		@Override
 		void apply(ByteBuf buf, SlaveUniverse dst) {
-			dst.jzWorld(H4.read_WW(buf).dim);
+			dst.jzBindWorld(H4.read_WW(buf).dim);
 			
 			dst.jzSetRainingStr(buf.readFloat());
 			dst.jzSetThunderingStr(buf.readFloat());
@@ -189,7 +189,7 @@ public enum ContentType {
 		
 		@Override
 		void apply(ByteBuf buf, SlaveUniverse dst) {
-			dst.jzWorld(H4.read_WDT(buf).dim);
+			dst.jzBindWorld(H4.read_WDT(buf).dim);
 			
 			dst.jzSetDaytime(buf.readLong());
 		}
