@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
-import net.wolftail.impl.SharedImpls.H1;
+import net.wolftail.impl.core.SectionHandler;
 
 /**
  * Minecraft's lifecycle could be divided into several sections.
@@ -37,32 +37,32 @@ public enum GameSection {
 	/**
 	 * The very early stage, during which lunchwrapper initializes tweakers.
 	 */
-	GAME_PREPARING(H1.TOKEN_PREPARING),
+	GAME_PREPARING(SectionHandler.HANDLER_PREPARING),
 	
-	GAME_PREPARED(H1.TOKEN_PREPARED),
+	GAME_PREPARED(SectionHandler.HANDLER_PREPARED),
 	
 	/**
 	 * The stage where game content registering occurs.
 	 */
-	GAME_LOADING(H1.TOKEN_LOADING),
+	GAME_LOADING(SectionHandler.HANDLER_LOADING),
 	
-	GAME_LOADED(H1.TOKEN_LOADED),
+	GAME_LOADED(SectionHandler.HANDLER_LOADED),
 	
 	/**
 	 * In dedicated server this stage takes a very short period and the
 	 * application simply do nothing. However in client this stage means loaded
 	 * but not in playing, such as the time you are facing main menu.
 	 */
-	GAME_WANDERING(H1.TOKEN_WANDERING),
+	GAME_WANDERING(SectionHandler.HANDLER_WANDERING),
 	
 	/**
 	 * The playing stage.
 	 */
-	GAME_PLAYING(H1.TOKEN_PLAYING);
+	GAME_PLAYING(SectionHandler.HANDLER_PLAYING);
 	
-	private final H1 handler;
+	private final SectionHandler handler;
 	
-	private GameSection(H1 h) {
+	private GameSection(SectionHandler h) {
 		this.handler = h;
 	}
 	
@@ -92,12 +92,12 @@ public enum GameSection {
 	 * 		state of {@code this}
 	 */
 	public void block(@Nonnull Consumer<SectionState> action) {
-		Lock rlock = this.handler.lock.readLock();
+		Lock rlock = this.handler.getLock();
 		
 		rlock.lock();
 		
 		try {
-			action.accept(this.handler.state);
+			action.accept(this.handler.getState());
 		} finally {
 			rlock.unlock();
 		}

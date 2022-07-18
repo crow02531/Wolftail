@@ -9,7 +9,7 @@ import net.minecraft.server.MinecraftServer;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.core.ExtCoreMinecraftServer;
 
 /**
  * Similar to {@link net.minecraft.server.management.PlayerList PlayerList}, except
@@ -72,6 +72,6 @@ public interface RootPlayContextManager {
 	
 	@Nonnull
 	static RootPlayContextManager instanceFor(@Nonnull MinecraftServer server) {
-		return SharedImpls.as(server).wolftail_getRootManager();
+		return ((ExtCoreMinecraftServer) server).wolftail_getRootManager();
 	}
 }

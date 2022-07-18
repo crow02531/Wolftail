@@ -3,24 +3,13 @@ package net.wolftail.util.tracker;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.netty.buffer.ByteBuf;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.ImplCD;
-import net.wolftail.impl.SharedImpls.H4;
 
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
 public interface ContentDiff {
-	
-	/**
-	 * The orders regarding the changes.
-	 * 
-	 * @return a non-empty immutable set
-	 */
-	@Nonnull ImmutableSet<ContentOrder> orders();
 	
 	/**
 	 * Transfer the whole content diff into a newly created
@@ -31,11 +20,11 @@ public interface ContentDiff {
 	@Nonnull ByteBuf toByteBuf();
 	
 	/**
-	 * Apply the content diff to the given partial universe.
+	 * Make the given visitor visit this content diff.
 	 * 
-	 * @see #apply(ByteBuf, SlaveUniverse)
+	 * @see #apply(ByteBuf, DiffVisitor)
 	 */
-	void apply(@Nonnull SlaveUniverse dst);
+	void apply(@Nonnull DiffVisitor visitor);
 	
 	int hashCode();
 	
@@ -44,36 +33,22 @@ public interface ContentDiff {
 	/**
 	 * Create a new content diff from the buf's all readable bytes.
 	 * 
-	 * @return the content diff
+	 * @return the new content diff
 	 */
 	@Nonnull
 	public static ContentDiff from(@Nonnull ByteBuf buf) {
 		buf = buf.copy().asReadOnly();
 		
-		ContentType types[] = ContentType.values();
-		ImmutableSet.Builder<ContentOrder> orders = ImmutableSet.builder();
-		
-		while(buf.isReadable()) orders.add(types[H4.readVarInt(buf)].check(buf));
-		
-		return new ImplCD(orders.build(), buf.readerIndex(0));
+		return null;
 	}
 	
 	/**
-	 * Similar to {@code from(buf).apply(dst)}, except this method analyzes the
+	 * Similar to {@code from(buf).apply(visitor)}, except this method analyzes the
 	 * {@code buf} directly without any copy and extra operation. Thus it has
 	 * higher performance. It's highly recommended to use this rather than invoke
 	 * {@code from(buf)}.
 	 */
-	public static void apply(@Nonnull ByteBuf buf, @Nonnull SlaveUniverse dst) {
-		synchronized(dst.LOCK_OBJECT) {
-			dst.jzBegin();
-			
-			try {
-				while(buf.isReadable())
-					ContentType.values()[H4.readVarInt(buf)].apply(buf, dst);
-			} finally {
-				dst.jzEnd();
-			}
-		}
+	public static void apply(@Nonnull ByteBuf buf, @Nonnull DiffVisitor visitor) {
+		
 	}
 }

@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 
 import org.lwjgl.opengl.GL11;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -12,8 +13,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.ExtensionsFontRenderer;
-import net.wolftail.impl.SharedImpls;
+import net.wolftail.impl.renderer.ExtRendererFontRenderer;
 
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public final class CmdUnit extends UIUnit {
@@ -75,7 +75,7 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	private void updateTmp(CharSequence s) {
-		ExtensionsFontRenderer fr = SharedImpls.get_fr_as();
+		ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
 		int vw = this.param_width - 9;
 		
 		for(int i = 0, l = s.length(); i < l; ++i) {
@@ -199,7 +199,7 @@ public final class CmdUnit extends UIUnit {
 		
 		if(l == 0) return;
 		
-		ExtensionsFontRenderer fr = SharedImpls.get_fr_as();
+		ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
 		float vw = this.param_width;
 		float vh = this.param_height;
 		
@@ -275,7 +275,7 @@ public final class CmdUnit extends UIUnit {
 		return 'A' <= codepoint && codepoint <= 'Z' ? codepoint + ('a' - 'A') : codepoint;
 	}
 	
-	private static void setColor(ExtensionsFontRenderer fr, Style s) {
+	private static void setColor(ExtRendererFontRenderer fr, Style s) {
 		int color = fr.wolftail_codeToColor(s.colorCode);
 		
 		GlStateManager.color((float) (color >> 16) / 255.0F, (float) (color >> 8 & 255) / 255.0F, (float) (color & 255) / 255.0F, 1.0F);
