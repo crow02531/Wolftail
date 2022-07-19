@@ -169,7 +169,7 @@ public class SmallLong2ObjectMap<V> extends AbstractLong2ObjectMap<V> implements
 		
 		return oldIndex < 0 ? this.defRetValue : this.rem(oldIndex);
 	}
-	//TODO SmallLong2ObjectMap: entrySet, keySet, values
+	//TODO make SmallLong2ObjectMap support entrySet, keySet, values
 	@Override
 	public ObjectSet<Entry<V>> long2ObjectEntrySet() {
 		throw new UnsupportedOperationException();

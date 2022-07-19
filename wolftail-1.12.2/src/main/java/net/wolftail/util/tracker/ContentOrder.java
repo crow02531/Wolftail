@@ -33,29 +33,29 @@ public abstract class ContentOrder {
 	 * @param acceptor	the change acceptor
 	 * @param timing	the timing
 	 * 
-	 * @return true if {@code acceptor} hasn't subscribed before, two
-	 * 		acceptors {@code a} and {@code b} are regarded the same if
+	 * @return true if {@code acceptor} hasn't tracked {@code this} before
+	 * 		, two acceptors {@code a} and {@code b} are regarded the same if
 	 * 		and only if {@code a == b}
 	 * 
 	 * @throws IllegalStateException	when called during assemble stage
 	 */
 	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
-	public abstract boolean subscribe(@Nonnull MinecraftServer server, @Nonnull DiffVisitor acceptor, @Nonnull Timing timing);
+	public abstract boolean track(@Nonnull MinecraftServer server, @Nonnull DiffVisitor acceptor, @Nonnull Timing timing);
 	
 	/**
-	 * Cancel the subscribe.
+	 * Cancel the track request.
 	 * 
 	 * @param server	the server
 	 * @param acceptor	the acceptor
 	 * 
-	 * @return true if {@code acceptor} has subscribed before, two
-	 * 		acceptors {@code a} and {@code b} are regarded the same if
-	 * 		and only if {@code a == b}
+	 * @return true if {@code acceptor} has tracked {@code this} before
+	 * 		, two acceptors {@code a} and {@code b} are regarded the same
+	 * 		if and only if {@code a == b}
 	 * 
 	 * @throws IllegalStateException	when called during assemble stage
 	 */
 	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
-	public abstract boolean unsubscribe(@Nonnull MinecraftServer server, @Nonnull DiffVisitor acceptor);
+	public abstract boolean untrack(@Nonnull MinecraftServer server, @Nonnull DiffVisitor acceptor);
 	
 	@Override
 	public abstract int hashCode();

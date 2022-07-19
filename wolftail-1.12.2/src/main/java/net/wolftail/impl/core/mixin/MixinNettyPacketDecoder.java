@@ -75,6 +75,7 @@ public abstract class MixinNettyPacketDecoder {
 			throw new IOException("Unexpected packet " + state + ":" + id + " , expecting WPS packet");
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Unique
 	private void onWPSChannel(PacketBuffer wrapper, List<Object> list) throws IOException {
 		checkMaxload(wrapper.readableBytes(), this.direction == EnumPacketDirection.CLIENTBOUND ? 1048576 : 32767);

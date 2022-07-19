@@ -6,6 +6,7 @@ import javax.annotation.concurrent.Immutable;
 import io.netty.buffer.ByteBuf;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
+import net.wolftail.impl.tracker.ImplCD;
 
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
@@ -37,18 +38,16 @@ public interface ContentDiff {
 	 */
 	@Nonnull
 	public static ContentDiff from(@Nonnull ByteBuf buf) {
-		buf = buf.copy().asReadOnly();
+		ImplCD.apply(buf = buf.copy().asReadOnly(), new NoopVisitor(), false);
 		
-		return null;
+		return new ImplCD(buf.readerIndex(0));
 	}
 	
 	/**
 	 * Similar to {@code from(buf).apply(visitor)}, except this method analyzes the
-	 * {@code buf} directly without any copy and extra operation. Thus it has
-	 * higher performance. It's highly recommended to use this rather than invoke
-	 * {@code from(buf)}.
+	 * {@code buf} directly without any copy.
 	 */
 	public static void apply(@Nonnull ByteBuf buf, @Nonnull DiffVisitor visitor) {
-		
+		ImplCD.apply(buf, visitor, false);
 	}
 }
