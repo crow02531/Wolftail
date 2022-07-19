@@ -45,6 +45,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             arg '-torg.spongepowered.asm.launch.MixinTweaker'
+            arg '-username=Steve001'
         }
 
         server {
