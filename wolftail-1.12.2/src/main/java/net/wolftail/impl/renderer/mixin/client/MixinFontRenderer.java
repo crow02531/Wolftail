@@ -18,25 +18,25 @@ public abstract class MixinFontRenderer implements ExtRendererFontRenderer {
 	
 	@Final
 	@Shadow
-	private int[] colorCode;
+	public int[] colorCode;
 	
 	@Shadow
-	protected float posX;
+	public float posX;
 	
 	@Shadow
-	protected float posY;
+	public float posY;
 	
 	@Shadow
-	private boolean underlineStyle;
+	public boolean underlineStyle;
 	
 	@Shadow
-	private boolean strikethroughStyle;
+	public boolean strikethroughStyle;
 	
 	@Shadow
-	protected abstract float renderChar(char ch, boolean italic);
+	public abstract float renderChar(char ch, boolean italic);
 	
 	@Shadow
-	protected abstract void doDraw(float f);
+	public abstract void doDraw(float f);
 	
 	@Shadow
 	public abstract int getCharWidth(char character);

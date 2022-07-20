@@ -32,20 +32,20 @@ import net.minecraft.network.play.server.SPacketCustomPayload;
 @Mixin(NettyPacketDecoder.class)
 public abstract class MixinNettyPacketDecoder {
 	
+	@Final
+	@Shadow
+	public static Logger LOGGER;
+	
+	@Final
+	@Shadow
+	public static Marker RECEIVED_PACKET_MARKER;
+	
+	@Final
+	@Shadow
+	public EnumPacketDirection direction; //current logic side
+	
 	@Unique
 	private static final Logger logger = LogManager.getLogger("wolftail/network");
-	
-	@Final
-	@Shadow
-	private static Logger LOGGER;
-	
-	@Final
-	@Shadow
-	private static Marker RECEIVED_PACKET_MARKER;
-	
-	@Final
-	@Shadow
-	private EnumPacketDirection direction; //current logic side
 	
 	@Unique
 	private Packet<?> wild_packet;

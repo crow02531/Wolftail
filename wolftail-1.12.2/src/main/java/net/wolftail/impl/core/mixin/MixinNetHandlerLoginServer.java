@@ -27,14 +27,14 @@ public abstract class MixinNetHandlerLoginServer {
 	
 	@Final
 	@Shadow
-	private MinecraftServer server;
+	public MinecraftServer server;
 	
 	@Final
 	@Shadow
     public NetworkManager networkManager;
 	
 	@Shadow
-	private GameProfile loginGameProfile;
+	public GameProfile loginGameProfile;
 	
 	@Inject(method = "tryAcceptPlayer", at = @At(value = "INVOKE", target = "sendPacket(Lnet/minecraft/network/Packet;)V", shift = Shift.AFTER), cancellable = true)
 	private void onTryAcceptPlayer(CallbackInfo info) throws InterruptedException {

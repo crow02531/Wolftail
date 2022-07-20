@@ -2,10 +2,9 @@ package net.wolftail.util.tracker;
 
 import javax.annotation.Nonnull;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.DimensionType;
-import net.minecraft.world.chunk.BlockStateContainer;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
@@ -104,11 +103,18 @@ public interface DiffVisitor {
 	 * target chunk to {@code buf}. Must have bounden to a chunk
 	 * before.
 	 * 
-	 * @param index				the index of the section, between 0 and 15
-	 * @param blockStateLayer	the block state layer of the section, null
-	 * 		indicates empty, caller is responsible of making a copy
+	 * <p>
+	 * This method should only perform read operations over {@code buf}'s readable
+	 * bytes.
+	 * </p>
+	 * 
+	 * @param index	the index of the section, between 0 and 15
+	 * @param buf	a buf whose all readable bytes composing the raw data of one block
+	 * 		state layer (in the form of
+	 * 		{@link net.minecraft.world.chunk.BlockStateContainer read&write})
+	 * 		, null indicates empty section.
 	 */
-	void jzSetSection(int index, BlockStateContainer blockStateLayer);
+	void jzSetSection(int index, ByteBuf buf);
 	
 	/**
 	 * Set the block state of target block. Must have bounden to a block
@@ -122,8 +128,15 @@ public interface DiffVisitor {
 	 * Set the tile entity of target block. Must have bounden to a block
 	 * before.
 	 * 
-	 * @param serialized	the serialized data of the tile entity, null
-	 * 		indicates no tile entity, caller is responsible of making a copy
+	 * <p>
+	 * This method should only perform read operations over {@code buf}'s readable
+	 * bytes.
+	 * </p>
+	 * 
+	 * @param buf	a buf whose all readable bytes composing the raw data of one compound
+	 * 		tag(in the form of
+	 * 		{@link net.minecraft.nbt.CompressedStreamTools uncompressed read&write})
+	 * 		, null indicates no tile entity in target block
 	 */
-	void jzSetTileEntity(NBTTagCompound serialized);
+	void jzSetTileEntity(ByteBuf buf);
 }

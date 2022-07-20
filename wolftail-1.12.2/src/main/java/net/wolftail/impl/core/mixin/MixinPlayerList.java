@@ -19,7 +19,7 @@ public abstract class MixinPlayerList {
 	
 	@Final
 	@Shadow
-	private MinecraftServer mcServer;
+	public MinecraftServer mcServer;
 	
 	@Redirect(method = "allowUserToConnect", at = @At(value = "INVOKE", target = "size()I"))
 	private int sizeProxy(List<EntityPlayerMP> list) {

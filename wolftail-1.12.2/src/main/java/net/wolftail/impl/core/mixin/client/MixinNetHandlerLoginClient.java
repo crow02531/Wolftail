@@ -20,7 +20,7 @@ public abstract class MixinNetHandlerLoginClient implements ExtCoreNetHandlerLog
 	
 	@Final
 	@Shadow
-	private NetworkManager networkManager;
+	public NetworkManager networkManager;
 	
 	@Unique
 	private SPacketLoginSuccess stored_ls_packet;

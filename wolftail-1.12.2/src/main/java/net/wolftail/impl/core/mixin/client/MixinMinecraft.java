@@ -51,7 +51,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	
 	@Final
 	@Shadow
-	private static Logger LOGGER;
+	public static Logger LOGGER;
 	
 	@Final
 	@Shadow
@@ -66,40 +66,40 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	
 	@Final
 	@Shadow
-	private Timer timer;
+	public Timer timer;
 	
 	@Final
 	@Shadow
-	private Queue<FutureTask<?>> scheduledTasks;
+	public Queue<FutureTask<?>> scheduledTasks;
 	
 	@Final
 	@Shadow
-	private Snooper usageSnooper;
+	public Snooper usageSnooper;
 	
 	@Shadow
-	private NetworkManager myNetworkManager;
+	public NetworkManager myNetworkManager;
 	
 	@Shadow
-	static int debugFPS;
+	public static int debugFPS;
 	
 	@Shadow
 	public String debug;
 	
 	@Shadow
-	private int fpsCounter;
+	public int fpsCounter;
 	
 	@Shadow
-	private long debugUpdateTime;
+	public long debugUpdateTime;
 	
 	@Shadow
-	long startNanoTime;
+	public long startNanoTime;
 	
 	@Final
 	@Shadow
-	private Session session;
+	public Session session;
 	
 	@Shadow
-	private Framebuffer framebufferMc;
+	public Framebuffer framebufferMc;
 	
 	@Shadow
 	public int displayWidth;
@@ -123,7 +123,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	public abstract void displayGuiScreen(GuiScreen screen);
 	
 	@Shadow
-	private void checkGLError(String message) {}
+	public void checkGLError(String message) {}
 	
 	//---------------------------------SHADOW END---------------------------------
 	

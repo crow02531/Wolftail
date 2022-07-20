@@ -26,7 +26,7 @@ public abstract class ContentOrder {
 	 * 
 	 * <p>
 	 * The changes MUST be sent by logic server during the assemble stage
-	 * of the tick.
+	 * of the tick. The first data {@code acceptor} received is the content itself.
 	 * </p>
 	 * 
 	 * @param server	the server

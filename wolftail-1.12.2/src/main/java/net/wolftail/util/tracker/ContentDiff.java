@@ -23,7 +23,7 @@ public interface ContentDiff {
 	/**
 	 * Make the given visitor visit this content diff.
 	 * 
-	 * @see #apply(ByteBuf, DiffVisitor)
+	 * @param visitor	the diff visitor
 	 */
 	void apply(@Nonnull DiffVisitor visitor);
 	
@@ -32,22 +32,44 @@ public interface ContentDiff {
 	boolean equals(Object o);
 	
 	/**
-	 * Create a new content diff from the buf's all readable bytes.
+	 * Check if all readable bytes of {@code buf} make up a valid content diff.
+	 * It will read all readable bytes.
 	 * 
-	 * @return the new content diff
+	 * @param buf	a non-null suspicious byte buf
+	 * 
+	 * @throws IllegalArgumentException	thrown when the check fails
+	 */
+	public static void check(@Nonnull ByteBuf buf) {
+		try {
+			ImplCD.apply(buf, new ComplementaryCheckVisitor());
+		} catch(Throwable e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
+	
+	/**
+	 * Create a new content diff from the buf's all readable bytes. It will
+	 * read all readable bytes.
+	 * 
+	 * @param buf	a buf whose all readable bytes composing one content diff
+	 * 
+	 * @return the content diff
 	 */
 	@Nonnull
 	public static ContentDiff from(@Nonnull ByteBuf buf) {
-		ImplCD.apply(buf = buf.copy().asReadOnly(), new NoopVisitor(), false);
-		
-		return new ImplCD(buf.readerIndex(0));
+		return new ImplCD(buf.readBytes(buf.readableBytes()).asReadOnly());
 	}
 	
 	/**
 	 * Similar to {@code from(buf).apply(visitor)}, except this method analyzes the
-	 * {@code buf} directly without any copy.
+	 * {@code buf} directly without any copy. It will read all readable bytes.
+	 * 
+	 * @param buf		a buf whose all readable bytes composing one content diff
+	 * @param visitor	the diff visitor
+	 * 
+	 * @see #apply(DiffVisitor)
 	 */
 	public static void apply(@Nonnull ByteBuf buf, @Nonnull DiffVisitor visitor) {
-		ImplCD.apply(buf, visitor, false);
+		ImplCD.apply(buf, visitor);
 	}
 }

@@ -28,20 +28,20 @@ import net.minecraft.network.play.server.SPacketCustomPayload;
 @Mixin(NettyPacketEncoder.class)
 public abstract class MixinNettyPacketEncoder {
 	
+	@Final
+	@Shadow
+	public static Logger LOGGER;
+	
+	@Final
+	@Shadow
+	public static Marker RECEIVED_PACKET_MARKER;
+	
+	@Final
+	@Shadow
+	public EnumPacketDirection direction; //target logic side
+	
 	@Unique
 	private static final Logger logger = LogManager.getLogger("wolftail/network");
-	
-	@Final
-	@Shadow
-	private static Logger LOGGER;
-	
-	@Final
-	@Shadow
-	private static Marker RECEIVED_PACKET_MARKER;
-	
-	@Final
-	@Shadow
-	private EnumPacketDirection direction; //target logic side
 	
 	@Inject(method = "encode", at = @At(value = "INVOKE", target = "isDebugEnabled()Z"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
 	private void onEncode(ChannelHandlerContext ctx, Packet<?> pkt, ByteBuf buf, CallbackInfo info, EnumConnectionState state, Integer pid) throws IOException {

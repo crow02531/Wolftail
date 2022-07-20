@@ -31,14 +31,14 @@ public abstract class MixinNetworkManager implements ExtCoreNetworkManager {
 	
 	@Final
 	@Shadow
-	private static Logger LOGGER;
+	public static Logger LOGGER;
 	
 	@Final
 	@Shadow
-	private EnumPacketDirection direction; //you will found that this isn't the 'packet direction' but the side where the connection instance is
+	public EnumPacketDirection direction; //you will found that this isn't the 'packet direction' but the side where the connection instance is
 	
 	@Shadow
-	private INetHandler packetListener;
+	public INetHandler packetListener;
 	
 	@Shadow
 	public abstract boolean isLocalChannel();

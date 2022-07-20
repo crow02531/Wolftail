@@ -1,16 +1,12 @@
 package net.wolftail.impl.tracker;
 
-import static net.wolftail.impl.tracker.Insncodes.writeTag;
-import static net.wolftail.impl.tracker.Insncodes.writeVarInt;
+import static net.wolftail.impl.util.ByteBufs.writeVarInt;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.DimensionType;
-import net.minecraft.world.chunk.BlockStateContainer;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.DiffVisitor;
 
@@ -95,20 +91,17 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	
 	@Override
 	public void jzUnbindWorld() {
-		bind_world = null;
-		bind_chunk = null;
-		bind_block = -1;
+		//NOOP
 	}
 	
 	@Override
 	public void jzUnbindChunk() {
-		bind_chunk = null;
-		bind_block = -1;
+		//NOOP
 	}
 	
 	@Override
 	public void jzUnbindBlock() {
-		bind_block = -1;
+		//NOOP
 	}
 	
 	@Override
@@ -125,14 +118,15 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	}
 	
 	@Override
-	public void jzSetSection(int index, BlockStateContainer blockStateLayer) {
+	public void jzSetSection(int index, ByteBuf src) {
 		buf.writeByte(SET_SECTION);
 		
-		if(blockStateLayer == null)
+		if(src == null)
 			buf.writeByte(index);
 		else {
 			buf.writeByte(0x10 | index);
-			blockStateLayer.write(new PacketBuffer(buf));
+			writeVarInt(src.readableBytes(), buf);
+			buf.writeBytes(src);
 		}
 	}
 	
@@ -144,14 +138,14 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	}
 	
 	@Override
-	public void jzSetTileEntity(NBTTagCompound serialized) {
+	public void jzSetTileEntity(ByteBuf src) {
 		buf.writeByte(SET_TILEENTITY);
 		
-		if(serialized == null)
-			buf.writeBoolean(false);
+		if(src == null)
+			buf.writeByte(0); //the varint 0
 		else {
-			buf.writeBoolean(true);
-			writeTag(serialized, buf);
+			writeVarInt(src.readableBytes(), buf); //readableBytes can't be 0
+			buf.writeBytes(src);
 		}
 	}
 	

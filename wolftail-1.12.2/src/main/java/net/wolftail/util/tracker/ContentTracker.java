@@ -45,9 +45,13 @@ public final class ContentTracker {
 	/**
 	 * Subscribe a specific content(represented as {@code order} in server. The
 	 * change will be sent, if necessary, to {@code subscriber} when {@code timing}
-	 * is met. The change will be sent only by logic server during the assemble
+	 * is met. Notice that it will be sent only by logic server during the assemble
 	 * stage of the tick. If one subscriber subscribes more than one content, it
 	 * will still get at most one content diff when {@code timing} is met.
+	 * 
+	 * <p>
+	 * The first content diff {@code subscriber} received is the content itself.
+	 * </p>
 	 * 
 	 * @param order			the request
 	 * @param subscriber	the subscriber

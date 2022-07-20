@@ -15,7 +15,7 @@ import net.wolftail.impl.core.SectionHandler;
 public abstract class MixinMinecraftServer {
 	
 	@Shadow
-	private Thread serverThread;
+	public Thread serverThread;
 	
 	@Inject(method = "startServerThread", at = @At(value = "INVOKE", target = "start()V"))
 	private void onStartServerThread(CallbackInfo info) {
