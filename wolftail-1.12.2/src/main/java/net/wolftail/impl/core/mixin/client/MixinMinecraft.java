@@ -137,7 +137,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	private FutureTask<Void> specialTask;
 	
 	@Inject(method = "init", at = @At("RETURN"))
-	private void onInit(CallbackInfo info) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	private void onInit(CallbackInfo info) {
 		SectionHandler.finish_loading(false);
 	}
 	

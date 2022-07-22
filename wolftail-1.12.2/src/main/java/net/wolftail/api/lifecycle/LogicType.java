@@ -7,11 +7,11 @@ import net.wolftail.impl.core.SectionHandler;
 /**
  * There are many threads running in Minecraft. In
  * {@link PhysicalType#INTEGRATED_CLIENT INTEGRATED_CLIENT}, there is a thread
- * responsible of registering game content, doing game loop. This thread is
+ * responsible of registering game data, doing game loop. This thread is
  * {@link #LOGIC_CLIENT}. When you are in singleplayer, the thread running
  * {@link IntegratedServer} is called {@link #LOGIC_SERVER}. And in
  * {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}, there isn't logic client
- * , the thread that registers game content and ticking the server is logic server.
+ * , the thread that registers game data and ticking the server is logic server.
  * 
  * <p>
  * If a thread is found logic client(or logic server), then the thread is logic
@@ -72,28 +72,5 @@ public enum LogicType {
 	public void ensure() {
 		if(!this.in())
 			throw new IllegalStateException("Not in " + this);
-	}
-	
-	/**
-	 * In {@link PhysicalType#INTEGRATED_CLIENT INTEGRATED_CLIENT}, the host thread
-	 * is {@link #LOGIC_CLIENT}. And in {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}
-	 * , {@link #LOGIC_SERVER}.
-	 * 
-	 * @return true if the current thread is the host thread
-	 */
-	public static boolean inHost() {
-		return PhysicalType.INTEGRATED_CLIENT.is() ? LOGIC_CLIENT.in() : LOGIC_SERVER.in();
-	}
-	
-	/**
-	 * Ensure {@code inHost()} return true.
-	 * 
-	 * @throws IllegalStateException	when the current thread is not the host thread
-	 * 
-	 * @see #inHost()
-	 */
-	public static void ensureHost() {
-		if(!inHost())
-			throw new IllegalStateException("Not in " + PhysicalType.currentType() + "'s host thread");
 	}
 }

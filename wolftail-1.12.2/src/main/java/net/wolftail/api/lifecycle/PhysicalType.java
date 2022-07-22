@@ -6,7 +6,7 @@ import org.spongepowered.asm.service.MixinService;
 import org.spongepowered.asm.util.Constants;
 
 /**
- * It's obvious Minecraft has two kind of programs, {@link #INTEGRATED_CLIENT} and
+ * It's obvious Minecraft has two distributions, {@link #INTEGRATED_CLIENT} and
  * {@link #DEDICATED_SERVER}.
  */
 public enum PhysicalType {
