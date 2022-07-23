@@ -55,10 +55,21 @@ public interface PlayContext {
 	void setNetHandler(INetHandler handler);
 	
 	/**
+	 * Get the net handler of the connection.
+	 * 
+	 * @return current net handler
+	 * 
+	 * @throws UnsupportedOperationException	if this is a
+	 * 		{@link UniversalPlayerType#TYPE_PLAYER TYPE_PLAYER}
+	 */
+	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_HOST)
+	INetHandler getNetHandler();
+	
+	/**
 	 * Disconnect and wait until it actually disconnects. Have no effects if the
 	 * connection has already disconnected.
 	 */
-	void disconnect();
+	void disconnect(); //TODO consider adding disconnect reason
 	
 	boolean isConnected();
 }

@@ -3,12 +3,11 @@ package net.wolftail.impl.core;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.wolftail.api.INetHandler;
 import net.wolftail.api.PlayContext;
+import net.wolftail.impl.core.network.NptPacketListener;
 
 public sealed abstract class ImplPC implements PlayContext permits ImplPCC, ImplPCS {
 	
@@ -24,6 +23,10 @@ public sealed abstract class ImplPC implements PlayContext permits ImplPCC, Impl
 		this.connection = connect;
 	}
 	
+	public Connection getConnection() {
+		return this.connection;
+	}
+	
 	@Override
 	public PacketFlow side() {
 		return this.connection.getReceiving();
@@ -34,7 +37,7 @@ public sealed abstract class ImplPC implements PlayContext permits ImplPCC, Impl
 	
 	@Override
 	public UUID playId() {
-		return null;
+		return this.identifier;
 	}
 
 	@Override
@@ -48,19 +51,17 @@ public sealed abstract class ImplPC implements PlayContext permits ImplPCC, Impl
 	}
 	
 	@Override
-	public void sendPacket(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
-		if(this.playType().isPlayerType())
-			throw new UnsupportedOperationException();
+	public void setNetHandler(INetHandler handler) {
+		this.ensureNonPlayerType();
 		
-		
+		((NptPacketListener) this.connection.getPacketListener()).setNetHandler(handler);
 	}
 	
 	@Override
-	public void setNetHandler(INetHandler handler) {
-		if(this.playType().isPlayerType())
-			throw new UnsupportedOperationException();
+	public INetHandler getNetHandler() {
+		this.ensureNonPlayerType();
 		
-		
+		return ((NptPacketListener) this.connection.getPacketListener()).getNetHandler();
 	}
 	
 	@Override
@@ -71,5 +72,10 @@ public sealed abstract class ImplPC implements PlayContext permits ImplPCC, Impl
 	@Override
 	public boolean isConnected() {
 		return this.connection.isConnected();
+	}
+	
+	protected final void ensureNonPlayerType() {
+		if(this.playType().isPlayerType())
+			throw new UnsupportedOperationException();
 	}
 }

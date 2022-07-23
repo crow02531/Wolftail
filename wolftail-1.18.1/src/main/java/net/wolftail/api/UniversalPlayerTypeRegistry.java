@@ -18,8 +18,8 @@ public interface UniversalPlayerTypeRegistry {
 	
 	@SideWith(section = GameSection.GAME_LOADING, thread = LogicType.LOGIC_HOST)
 	@Nonnull UniversalPlayerType register(@Nonnull ResourceLocation id,
-			IEntryPoint serverEntryPoint,
-			IEntryPoint clientEntryPoint);
+			IServerListener serverListener,
+			IClientListener clientListener);
 	
 	@SideWith(section = GameSection.GAME_PREPARED)
 	ResourceLocation idFor(UniversalPlayerType type);

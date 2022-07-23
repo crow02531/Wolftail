@@ -7,7 +7,8 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 
 import net.minecraft.resources.ResourceLocation;
-import net.wolftail.api.IEntryPoint;
+import net.wolftail.api.IClientListener;
+import net.wolftail.api.IServerListener;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.api.UniversalPlayerTypeRegistry;
 
@@ -22,7 +23,7 @@ public final class ImplUPTR implements UniversalPlayerTypeRegistry {
 	}
 	
 	@Override
-	public UniversalPlayerType register(ResourceLocation id, IEntryPoint s, IEntryPoint c) {
+	public UniversalPlayerType register(ResourceLocation id, IServerListener s, IClientListener c) {
 		ImplUPT r = new ImplUPT(s, c);
 		
 		if(this.underlying.putIfAbsent(id, r) != null)

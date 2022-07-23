@@ -21,6 +21,7 @@ import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.login.ClientboundCustomQueryPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.api.UniversalPlayerTypeRegistry;
 import net.wolftail.impl.core.ExtCoreMinecraft;
 import net.wolftail.impl.core.ImplUPT;
@@ -43,9 +44,9 @@ public abstract class MixinClientHandshakePacketListenerImpl {
 	@Unique
 	private ImplUPT type;
 	
-	@Inject(method = "handleCustomQuery", at = @At(value = "INVOKE", target = "accept(Lnet/minecraft/network/chat/Component;)V", shift = Shift.AFTER), cancellable = true)
+	@Inject(method = "handleCustomQuery", at = @At(value = "INVOKE", target = "accept(Ljava/lang/Object;)V", shift = Shift.AFTER), cancellable = true)
 	private void on_handleCustomQuery_invokeAfter_accept(ClientboundCustomQueryPacket packet, CallbackInfo ci) throws IOException {
-		if(packet.getIdentifier().equals(Constants.CHANNEL_TYPE_NOTIFY)) {
+		if(packet.getIdentifier().equals(Constants.CHANNEL_LOGIN_TYPE_NOTIFY)) {
 			ci.cancel();
 			
 			ResourceLocation typeId = packet.getData().readResourceLocation();
@@ -61,9 +62,9 @@ public abstract class MixinClientHandshakePacketListenerImpl {
 	@Inject(method = "handleGameProfile", at = @At(value = "INVOKE", target = "setListener(Lnet/minecraft/network/PacketListener;)V"), cancellable = true)
 	private void on_handleGameProfile_invoke_setListener(CallbackInfo ci) throws InterruptedException, ExecutionException {
 		if(this.type == null) {
-			logger.warn("Expecting a type notify packet before receiving game profile packet, maybe the server dosen't install wolftail.");
+			logger.warn("Expecting a type notify packet before receiving game profile packet, maybe the server dosen't install wolftail. Assume using 'minecraft:player'.");
 			
-			return;
+			this.type = (ImplUPT) UniversalPlayerType.TYPE_PLAYER;
 		}
 		
 		//we now should in netty thread

@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.server.MinecraftServer;
 import net.wolftail.impl.core.ExtCoreMinecraftServer;
@@ -25,7 +26,7 @@ public abstract class MixinMinecraftServer implements ExtCoreMinecraftServer {
 	}
 	
 	@Inject(method = "saveAllChunks", at = @At("HEAD"))
-	private void on_saveAllChunks_head(CallbackInfo ci) throws IOException {
+	private void on_saveAllChunks_head(CallbackInfoReturnable<Boolean> cir) throws IOException {
 		this.root.saveDat();
 	}
 	

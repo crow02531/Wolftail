@@ -2,7 +2,12 @@ package net.wolftail.impl.core;
 
 import java.util.UUID;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.wolftail.impl.core.network.Constants;
 
 public final class ImplPCS extends ImplPC {
 	
@@ -17,6 +22,13 @@ public final class ImplPCS extends ImplPC {
 	@Override
 	public ImplUPT playType() {
 		return this.subManager.type;
+	}
+	
+	@Override
+	public void sendPacket(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
+		this.ensureNonPlayerType();
+		
+		this.connection.send(new ClientboundCustomPayloadPacket(Constants.CHANNEL_PLAY_PAYLOAD, Constants.newOrReturn(buf)), listener);
 	}
 	
 	public ImplMPCS subManager() {

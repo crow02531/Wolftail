@@ -13,7 +13,7 @@ import net.minecraft.server.MinecraftServer;
 import net.wolftail.api.lifecycle.PhysicalType;
 import net.wolftail.impl.core.SectionHandler;
 
-//SH server side: finish_loading, capture dedicatedServerRegularThread
+//SH: finish_loading, capture dedicatedServerRegularThread
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
 	

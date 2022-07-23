@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 
+//MC BUG FIX: reduce copy
 @Mixin(ServerboundCustomPayloadPacket.class)
 public abstract class MixinServerboundCustomPayloadPacket {
 	

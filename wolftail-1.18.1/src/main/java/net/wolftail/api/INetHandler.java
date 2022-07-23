@@ -24,13 +24,7 @@ public interface INetHandler {
 	void handle(@Nonnull ByteBuf buf);
 	
 	/**
-	 * Called when the connection is dead.
-	 */
-	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_HOST)
-	void onDisconnect();
-	
-	/**
-	 * Called every tick.
+	 * Called every (network) tick.
 	 */
 	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_HOST)
 	default void tick() {}

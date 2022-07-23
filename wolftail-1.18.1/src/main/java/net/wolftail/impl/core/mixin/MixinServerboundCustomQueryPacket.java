@@ -2,18 +2,19 @@ package net.wolftail.impl.core.mixin;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.login.ServerboundCustomQueryPacket;
 
-//MC BUG FIX: reduce copy
-@Mixin(ClientboundCustomPayloadPacket.class)
-public abstract class MixinClientboundCustomPayloadPacket {
+//MC BUG FIX: reduce copy; prevent memory leak
+@Mixin(ServerboundCustomQueryPacket.class)
+public abstract class MixinServerboundCustomQueryPacket {
 	
 	@Final
 	@Shadow
@@ -29,8 +30,9 @@ public abstract class MixinClientboundCustomPayloadPacket {
 		return buf;
 	}
 	
-	@Overwrite
-	public FriendlyByteBuf getData() {
-		return this.data;
+	@Inject(method = "handle", at = @At("RETURN"))
+	private void on_handle_return(CallbackInfo ci) {
+		if(this.data != null)
+			this.data.release();
 	}
 }

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.server.Main;
 import net.wolftail.impl.core.SectionHandler;
 
-//SH server side: finish_preparing
+//SH: finish_preparing
 @Mixin(Main.class)
 public abstract class MixinMain {
 	
