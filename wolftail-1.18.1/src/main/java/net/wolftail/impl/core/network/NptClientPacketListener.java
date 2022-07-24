@@ -23,7 +23,6 @@ extends NptPacketListener implements ClientGamePacketListener {
 		check0(var1.getIdentifier());
 		
 		this.handlePayload(var1.getData());
-		var1.getData().release();
 	}
 	
 	@Override

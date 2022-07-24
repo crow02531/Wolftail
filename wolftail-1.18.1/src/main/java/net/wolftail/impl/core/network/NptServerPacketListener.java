@@ -50,13 +50,15 @@ import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.network.protocol.game.ServerboundTeleportToEntityPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.wolftail.impl.core.ImplMPCR;
 import net.wolftail.impl.core.ImplPCS;
 
 public final class NptServerPacketListener
 extends NptPacketListener implements ServerGamePacketListener {
 	
-	private static final Logger logger = LogManager.getLogger();
+	private static final Logger logger0 = LogManager.getLogger("Wolftail/User");
+	private static final Logger logger1 = LogManager.getLogger(ServerGamePacketListenerImpl.class);
 	
 	private final ImplPCS context;
 	
@@ -69,13 +71,13 @@ extends NptPacketListener implements ServerGamePacketListener {
 		ImplPCS pc = this.context;
 		ImplMPCR rm = pc.subManager().rootManager();
 		
-		logger.info("{} lost connection: {}", pc.playName(), var1.getString());
+		logger0.info("{} lost connection: {}", pc.playName(), var1.getString());
 		
 		pc.playType().callServerLeave(pc);
 		rm.logout(pc);
 		
 		if(pc.getConnection().isMemoryConnection()) {
-			logger.info("Stopping singleplayer server as player logged out");
+			logger1.info("Stopping singleplayer server as player logged out");
 			
 			rm.server().halt(false);
 		}

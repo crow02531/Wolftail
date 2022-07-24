@@ -33,9 +33,9 @@ public final class ImplUPT implements UniversalPlayerType {
 			this.listener_client.onEnter(arg);
 	}
 	
-	public void callClientRender() {
+	public void callClientFrame() {
 		if(this.listener_client != null)
-			this.listener_client.onRender();
+			this.listener_client.onFrame();
 	}
 	
 	public void callClientLeave() {

@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
@@ -28,7 +29,9 @@ public interface PlayContext {
 	 * 
 	 * @see #sendPacket(ByteBuf, GenericFutureListener)
 	 */
-	void sendPacket(@Nonnull ByteBuf buf);
+	default void sendPacket(@Nonnull ByteBuf buf) {
+		this.sendPacket(buf, null);
+	}
 	
 	/**
 	 * Plan to send a packet. Notice that the packet may still in outbound pipeline
@@ -66,10 +69,23 @@ public interface PlayContext {
 	INetHandler getNetHandler();
 	
 	/**
+	 * Identical to {@code disconnect(null)}. Disconnect normally, such as
+	 * quitting game.
+	 * 
+	 * @see #disconnect(Component)
+	 */
+	default void disconnect() {
+		this.disconnect(null);
+	}
+	
+	/**
 	 * Disconnect and wait until it actually disconnects. Have no effects if the
 	 * connection has already disconnected.
+	 * 
+	 * @param reason	the disconnected reason, null indicates disconnecting
+	 * 		normally
 	 */
-	void disconnect(); //TODO consider adding disconnect reason
+	void disconnect(Component reason);
 	
 	boolean isConnected();
 }

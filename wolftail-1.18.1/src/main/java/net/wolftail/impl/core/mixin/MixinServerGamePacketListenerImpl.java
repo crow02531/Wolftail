@@ -1,10 +1,15 @@
 package net.wolftail.impl.core.mixin;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.server.MinecraftServer;
@@ -24,10 +29,18 @@ public abstract class MixinServerGamePacketListenerImpl {
 	@Shadow
 	public ServerPlayer player;
 	
+	@Unique
+	private static final Logger logger = LogManager.getLogger("Wolftail/User");
+	
 	@Inject(method = "onDisconnect", at = @At(value = "INVOKE", target = "isSingleplayerOwner()Z"))
 	private void on_onDisconnect_invoke_isSingleplayerOwner(CallbackInfo ci) {
 		ImplMPCR root = ((ExtCoreMinecraftServer) this.server).wolftail_getRootManager();
 		
 		root.logout(root.contextFor(this.player.getGameProfile().getId()));
+	}
+	
+	@Redirect(method = "onDisconnect", at = @At(value = "FIELD", target = "LOGGER", opcode = Opcodes.GETSTATIC, ordinal = 0))
+	private Logger proxy_onDisconnect_getStatic_LOGGER_0() {
+		return logger;
 	}
 }

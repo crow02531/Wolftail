@@ -7,18 +7,16 @@
     "MixinServerLoginPacketListenerImpl",
     "MixinServerGamePacketListenerImpl",
     "MixinConnection",
-    "MixinPlayerList",
-    "MixinClientboundCustomPayloadPacket",
-    "MixinServerboundCustomPayloadPacket",
-    "MixinClientboundCustomQueryPacket",
-    "MixinServerboundCustomQueryPacket"
+    "MixinPlayerList"
   ],
   "client": [
     "client.MixinMain",
     "client.MixinTitleScreen",
     "client.MixinClientHandshakePacketListenerImpl",
     "client.MixinMinecraft",
-    "client.MixinClientPacketListener"
+    "client.MixinIntegratedServer",
+    "client.MixinMouseHandler",
+    "client.MixinPauseScreen"
   ],
   "server": [
     "server.MixinMain",

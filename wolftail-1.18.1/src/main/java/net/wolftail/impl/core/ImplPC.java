@@ -2,7 +2,6 @@ package net.wolftail.impl.core;
 
 import java.util.UUID;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.wolftail.api.INetHandler;
@@ -46,11 +45,6 @@ public sealed abstract class ImplPC implements PlayContext permits ImplPCC, Impl
 	}
 	
 	@Override
-	public void sendPacket(ByteBuf buf) {
-		this.sendPacket(buf, null);
-	}
-	
-	@Override
 	public void setNetHandler(INetHandler handler) {
 		this.ensureNonPlayerType();
 		
@@ -62,11 +56,6 @@ public sealed abstract class ImplPC implements PlayContext permits ImplPCC, Impl
 		this.ensureNonPlayerType();
 		
 		return ((NptPacketListener) this.connection.getPacketListener()).getNetHandler();
-	}
-	
-	@Override
-	public void disconnect() {
-		this.connection.disconnect(null);
 	}
 	
 	@Override

@@ -19,10 +19,11 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      
+      "ExampleMod"
     ]
   },
   "mixins": [
+    "mixins.wolftail.bugfix.json",
     "mixins.wolftail.core.json"
   ],
 

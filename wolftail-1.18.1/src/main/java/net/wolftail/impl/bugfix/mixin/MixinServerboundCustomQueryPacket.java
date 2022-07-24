@@ -1,20 +1,21 @@
-package net.wolftail.impl.core.mixin;
+package net.wolftail.impl.bugfix.mixin;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.login.ClientboundCustomQueryPacket;
+import net.minecraft.network.protocol.login.ServerLoginPacketListener;
+import net.minecraft.network.protocol.login.ServerboundCustomQueryPacket;
+import net.minecraft.server.RunningOnDifferentThreadException;
 
-//MC BUG FIX: reduce copy; prevent memory leak
-@Mixin(ClientboundCustomQueryPacket.class)
-public abstract class MixinClientboundCustomQueryPacket {
+//MC BUG FIX: reduce copy, prevent memory leak
+@Mixin(ServerboundCustomQueryPacket.class)
+public abstract class MixinServerboundCustomQueryPacket {
 	
 	@Final
 	@Shadow
@@ -30,8 +31,17 @@ public abstract class MixinClientboundCustomQueryPacket {
 		return buf;
 	}
 	
-	@Inject(method = "handle", at = @At("RETURN"))
-	private void on_handle_return(CallbackInfo ci) {
-		this.data.release();
+	@Overwrite
+	public void handle(ServerLoginPacketListener serverLoginPacketListener) {
+		try {
+			serverLoginPacketListener.handleCustomQueryPacket((ServerboundCustomQueryPacket) (Object) this);
+		} catch(RunningOnDifferentThreadException e) {
+			throw e;
+		} catch(Throwable e) {
+			if(this.data != null)
+				this.data.release();
+			
+			throw e;
+		}
 	}
 }

@@ -19,7 +19,7 @@ public interface IClientListener {
 	/**
 	 * Called every game loop.
 	 */
-	void onRender();
+	void onFrame();
 	
 	/**
 	 * Called when game section changes from PLAYING to WANDERING.
