@@ -29,7 +29,7 @@ public final class ImplPCC extends ImplPC {
 	public void sendPacket(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
 		this.ensureNonPlayerType();
 		
-		this.connection.send(new ServerboundCustomPayloadPacket(Constants.CHANNEL_PLAY_PAYLOAD, Constants.newOrReturn(buf)), listener);
+		this.connection.send(new ServerboundCustomPayloadPacket(Constants.CHANNEL_PLAY_PAYLOAD, newOrReturn(buf)), listener);
 	}
 	
 	@Override

@@ -1,6 +1,5 @@
 package net.wolftail.impl.core.mixin.client;
 
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -16,19 +15,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.GlConst;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 
-import net.minecraft.CrashReport;
-import net.minecraft.CrashReportCategory;
-import net.minecraft.ReportedException;
 import net.minecraft.Util;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -126,9 +118,6 @@ public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnabl
 	@Shadow
 	public abstract void setScreen(Screen screen);
 	
-	@Shadow
-	public abstract float getDeltaFrameTime();
-	
 	//---------------------------------SHADOW END---------------------------------
 	
 	@Unique
@@ -174,25 +163,6 @@ public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnabl
 		}
 	}
 	
-	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-	private void on_setScreen_head(Screen s, CallbackInfo ci) {
-		if(ExtCoreMinecraft.isNptPlaying()) {
-			ci.cancel();
-			
-			if(this.screen != null)
-				this.screen.removed();
-			
-			this.screen = s;
-			BufferUploader.reset();
-			
-			if(s != null) {
-				this.mouseHandler.releaseMouse();
-				KeyMapping.releaseAll();
-				s.init(Minecraft.getInstance(), this.window.getGuiScaledWidth(), this.window.getGuiScaledHeight());
-			}
-		}
-	}
-	
 	@Unique
 	private void doGameLoop(ImplPCC context) {
 		this.window.setErrorSection("Pre render");
@@ -206,7 +176,7 @@ public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnabl
 		
 		//run scheduled executables
 		this.profiler.push("scheduledExecutables");
-		this.runAllTasks(); //process mouse&keyboard events, network packets .etc.
+		this.runAllTasks();
 		this.profiler.pop();
 		
 		boolean lostContext = false;
@@ -221,30 +191,23 @@ public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnabl
 			Connection connect = context.getConnection();
 			
 			if(!lostContext) {
-				this.profiler.push("gameMode");
 				connect.tick();
-				this.profiler.pop();
-				
-				if(this.screen != null)
-					Screen.wrapScreenError(() -> this.screen.tick(), "Ticking screen", this.screen.getClass().getCanonicalName());
 				
 				if(!connect.isConnected()) {
 					lostContext = true;
 					
 					context.playType().callClientLeave();
 					this.unloadContext(); //non player type quit game
+					
+					this.keyboardHandler.setup(this.window.getWindow());
+					this.mouseHandler.setup(this.window.getWindow());
 					this.setQuitScreen(connect.getDisconnectedReason(), connect.isMemoryConnection());
 				}
 			}
 			
-			this.profiler.push("textures");
 			this.textureManager.tick();
-			this.profiler.pop();
-			
 			this.musicManager.tick();
 			this.soundManager.tick(false);
-			
-			this.keyboardHandler.tick(); //trigger manual crash
 		}
 		
 		this.profiler.pop();
@@ -264,17 +227,6 @@ public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnabl
 		//do frame
 		if(!lostContext) {
 			context.playType().callClientFrame();
-			
-			if(this.screen != null) {
-				RenderSystem.clear(GlConst.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
-				RenderSystem.setProjectionMatrix(Matrix4f.orthographic(0, (float) ((double) this.window.getWidth() / this.window.getGuiScale()), 0, (float) ((double) this.window.getHeight() / this.window.getGuiScale()), 1000, 3000));
-				poseStack.setIdentity();
-				poseStack.translate(0.0, 0.0, -2000.0);
-				RenderSystem.applyModelViewMatrix();
-				Lighting.setupFor3DItems();
-				
-				callScreen(this.screen, this.mouseHandler.xpos(), this.mouseHandler.ypos(), this.getDeltaFrameTime(), this.window);
-			}
 		}
 		
 		this.mainRenderTarget.unbindWrite(); //unbind framebuffer
@@ -306,33 +258,6 @@ public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnabl
 			this.lastTime += 1000L;
 			this.frames = 0;
 		}
-	}
-	
-	@Unique
-	private static void callScreen(Screen s, double xpos, double ypos, float f, Window w) {
-		int i = (int) (xpos * (double) w.getGuiScaledWidth() / (double) w.getScreenWidth());
-		int j = (int) (ypos * (double) w.getGuiScaledHeight() / (double) w.getScreenHeight());
-		
-		try {
-			s.render(new PoseStack(), i, j, f);
-		} catch(Throwable e) {
-			CrashReport crashReport = CrashReport.forThrowable(e, "Rendering screen");
-			CrashReportCategory crashReportCategory = crashReport.addCategory("Screen render details");
-			crashReportCategory.setDetail("Screen name", () -> s.getClass().getCanonicalName());
-			crashReportCategory.setDetail("Mouse location", () -> String.format(Locale.ROOT, "Scaled: (%d, %d). Absolute: (%f, %f)", i, j, xpos, ypos));
-			crashReportCategory.setDetail("Screen size", () -> String.format(Locale.ROOT, "Scaled: (%d, %d). Absolute: (%d, %d). Scale factor of %f", w.getGuiScaledWidth(), w.getGuiScaledHeight(), w.getWidth(), w.getHeight(), w.getGuiScale()));
-			
-			throw new ReportedException(crashReport);
-        }
-		
-		try {
-			s.handleDelayedNarration();
-        } catch(Throwable e) {
-        	CrashReport crashReport = CrashReport.forThrowable(e, "Narrating screen");
-        	crashReport.addCategory("Screen details").setDetail("Screen name", () -> s.getClass().getCanonicalName());
-        	
-        	throw new ReportedException(crashReport);
-        }
 	}
 	
 	@Unique
@@ -368,16 +293,13 @@ public abstract class MixinMinecraft extends ReentrantBlockableEventLoop<Runnabl
 			if(!type.isPlayerType()) {
 				screen.removed();
 				screen = null;
-				BufferUploader.reset();
+				
+				InputConstants.setupKeyboardCallbacks(window.getWindow(), null, null);
+				InputConstants.setupMouseCallbacks(window.getWindow(), null, null, null, null);
 				
 				connect.setListener(new NptClientPacketListener(connect));
 				type.callClientEnter(context);
 			}
 		}, null)).get();
-	}
-	
-	@Override
-	public ImplPCC wolftail_getContext() {
-		return this.playContext;
 	}
 }

@@ -3,7 +3,9 @@ package net.wolftail.impl.core.network;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ServerGamePacketListener;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 import net.minecraft.network.protocol.game.ServerboundBlockEntityTagQuery;
@@ -62,8 +64,25 @@ extends NptPacketListener implements ServerGamePacketListener {
 	
 	private final ImplPCS context;
 	
+	private long keepAliveTimer;
+	
 	public NptServerPacketListener(ImplPCS context) {
 		this.context = context;
+	}
+	
+	@Override
+	public void tick() {
+		super.tick();
+		
+		if(!this.context.getConnection().isMemoryConnection()) {
+			long ct = Util.getMillis();
+			
+			if(ct > this.keepAliveTimer + 15000L) {
+				this.keepAliveTimer = ct;
+				
+				this.context.getConnection().send(new ClientboundKeepAlivePacket(0));
+			}
+		}
 	}
 	
 	@Override
@@ -84,15 +103,15 @@ extends NptPacketListener implements ServerGamePacketListener {
 	}
 	
 	@Override
-	public void handleKeepAlive(ServerboundKeepAlivePacket var1) {
-		//TODO KEEPALIVE server
-	}
-	
-	@Override
 	public void handleCustomPayload(ServerboundCustomPayloadPacket var1) {
 		check0(var1.getIdentifier());
 		
 		this.handlePayload(var1.getData());
+	}
+	
+	@Override
+	public void handleKeepAlive(ServerboundKeepAlivePacket var1) {
+		throw0();
 	}
 	
 	@Override

@@ -32,7 +32,7 @@ extends NptPacketListener implements ClientGamePacketListener {
 	
 	@Override
 	public void handleKeepAlive(ClientboundKeepAlivePacket var1) {
-		//TODO KEEPALIVE client
+		//NOOP
 	}
 	
 	@Override

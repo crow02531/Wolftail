@@ -7,6 +7,7 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ClientboundDisconnectPacket;
 import net.wolftail.impl.core.network.Constants;
@@ -30,12 +31,14 @@ public final class ImplPCS extends ImplPC {
 	public void sendPacket(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
 		this.ensureNonPlayerType();
 		
-		this.connection.send(new ClientboundCustomPayloadPacket(Constants.CHANNEL_PLAY_PAYLOAD, Constants.newOrReturn(buf)), listener);
+		this.connection.send(new ClientboundCustomPayloadPacket(Constants.CHANNEL_PLAY_PAYLOAD, newOrReturn(buf)), listener);
 	}
 	
 	@Override
 	public void disconnect(Component reason) {
-		this.connection.send(new ClientboundDisconnectPacket(reason), f -> this.connection.disconnect(reason));
+		final Component r = reason == null ? new TranslatableComponent("multiplayer.disconnect.generic") : reason;
+		
+		this.connection.send(new ClientboundDisconnectPacket(r), f -> this.connection.disconnect(r));
 		this.connection.setReadOnly();
 	}
 	

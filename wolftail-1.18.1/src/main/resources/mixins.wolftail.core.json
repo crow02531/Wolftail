@@ -14,9 +14,7 @@
     "client.MixinTitleScreen",
     "client.MixinClientHandshakePacketListenerImpl",
     "client.MixinMinecraft",
-    "client.MixinIntegratedServer",
-    "client.MixinMouseHandler",
-    "client.MixinPauseScreen"
+    "client.MixinIntegratedServer"
   ],
   "server": [
     "server.MixinMain",

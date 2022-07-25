@@ -2,7 +2,9 @@ package net.wolftail.impl.core;
 
 import java.util.UUID;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.network.Connection;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.PacketFlow;
 import net.wolftail.api.INetHandler;
 import net.wolftail.api.PlayContext;
@@ -63,8 +65,12 @@ public sealed abstract class ImplPC implements PlayContext permits ImplPCC, Impl
 		return this.connection.isConnected();
 	}
 	
-	protected final void ensureNonPlayerType() {
+	final void ensureNonPlayerType() {
 		if(this.playType().isPlayerType())
 			throw new UnsupportedOperationException();
+	}
+	
+	static FriendlyByteBuf newOrReturn(ByteBuf buf) {
+		return buf instanceof FriendlyByteBuf ? (FriendlyByteBuf) buf : new FriendlyByteBuf(buf);
 	}
 }
