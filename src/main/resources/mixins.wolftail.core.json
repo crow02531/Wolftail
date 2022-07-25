@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_17",
+  "package": "net.wolftail.impl.core.mixin",
+  "mixins": [
+    "MixinMinecraftServer",
+    "MixinServerLoginPacketListenerImpl",
+    "MixinServerGamePacketListenerImpl",
+    "MixinConnection",
+    "MixinPlayerList"
+  ],
+  "client": [
+    "client.MixinMain",
+    "client.MixinTitleScreen",
+    "client.MixinClientHandshakePacketListenerImpl",
+    "client.MixinMinecraft",
+    "client.MixinIntegratedServer"
+  ],
+  "server": [
+    "server.MixinMain",
+    "server.MixinMinecraftServer"
+  ]
+}
