@@ -11,10 +11,26 @@ import io.netty.handler.codec.DecoderException;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 
 public final class ByteBufs {
 	
 	private ByteBufs() {}
+	
+	public static PacketBuffer wrap(ByteBuf buf) {
+		if(buf == null) return null;
+		
+		return buf instanceof PacketBuffer ? (PacketBuffer) buf : new PacketBuffer(buf);
+	}
+	
+	public static ByteBuf unwrap(PacketBuffer buf) {
+		if(buf == null) return null;
+		
+		ByteBuf r = buf.retain();
+		r.release();
+		
+		return r;
+	}
 	
 	public static int readVarInt(ByteBuf src) {
 		int i = 0;
@@ -53,9 +69,9 @@ public final class ByteBufs {
 		}
 	}
 	
-	public static void writeTag(NBTTagCompound src, ByteBuf dst) {
+	public static void writeTag(NBTTagCompound tag, ByteBuf dst) {
 		try {
-			CompressedStreamTools.write(src, new ByteBufOutputStream(dst));
+			CompressedStreamTools.write(tag, new ByteBufOutputStream(dst));
 		} catch(IOException e) {
 			Throwables.rethrow(e);
 		}

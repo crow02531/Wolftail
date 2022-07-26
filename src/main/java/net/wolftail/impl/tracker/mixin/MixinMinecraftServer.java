@@ -11,17 +11,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.server.MinecraftServer;
-import net.wolftail.impl.tracker.ExtTrackerMinecraftServer;
 import net.wolftail.impl.tracker.SubscriberWrapper;
 import net.wolftail.util.tracker.ContentDiff;
+import net.wolftail.util.tracker.ContentOrder;
 import net.wolftail.util.tracker.ContentTracker;
+import net.wolftail.util.tracker.Timing;
 
 //anchor of content tracker
 @Mixin(MinecraftServer.class)
-public abstract class MixinMinecraftServer implements ExtTrackerMinecraftServer {
-	
-	@Unique
-	private ContentTracker tracker;
+public abstract class MixinMinecraftServer implements ContentTracker {
 	
 	@Unique
 	private IdentityHashMap<Consumer<ContentDiff>, SubscriberWrapper> wrappers = new IdentityHashMap<>();
@@ -43,22 +41,36 @@ public abstract class MixinMinecraftServer implements ExtTrackerMinecraftServer 
 	}
 	
 	@Override
-	public void wolftail_setTracker(ContentTracker ct) {
-		this.tracker = ct;
+	public boolean subscribe(ContentOrder order, Consumer<ContentDiff> subscriber, Timing timing) {
+		SubscriberWrapper w = this.wrappers.get(subscriber);
+		if(w == null) w = new SubscriberWrapper(subscriber);
+		
+		if(order.track((MinecraftServer) (Object) this, w.getWriter(), timing)) {
+			this.wrappers.put(subscriber, w);
+			w.onSubscribe();
+			
+			return true;
+		}
+		
+		return false;
 	}
 	
 	@Override
-	public ContentTracker wolftail_getTracker() {
-		return this.tracker;
+	public boolean unsubscribe(ContentOrder order, Consumer<ContentDiff> subscriber) {
+		SubscriberWrapper w = this.wrappers.get(subscriber);
+		
+		if(w != null && order.untrack((MinecraftServer) (Object) this, w.getWriter())) {
+			if(w.onUnsubscribe())
+				this.wrappers.remove(subscriber);
+			
+			return true;
+		}
+		
+		return false;
 	}
 	
 	@Override
-	public IdentityHashMap<Consumer<ContentDiff>, SubscriberWrapper> wolftail_wrappers() {
-		return this.wrappers;
-	}
-	
-	@Override
-	public boolean wolftail_duringAssemble() {
+	public boolean inAssemble() {
 		return this.assembling;
 	}
 }

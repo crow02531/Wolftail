@@ -1,43 +1,45 @@
 package net.wolftail.impl.core;
 
-import net.wolftail.api.IClientEntryPoint;
-import net.wolftail.api.IClientFrameCallback;
-import net.wolftail.api.IServerEntryPoint;
+import net.wolftail.api.IClientHandler;
+import net.wolftail.api.IServerHandler;
 import net.wolftail.api.UniversalPlayerType;
 
 public final class ImplUPT implements UniversalPlayerType {
 	
-	private final IServerEntryPoint entrypoint_server;
-	private final IClientEntryPoint entrypoint_client;
-	
-	private final IClientFrameCallback callback_client_frame;
+	private final IServerHandler handler_server;
+	private final IClientHandler handler_client;
 	
 	public ImplUPT() {
-		this(null, null, null);
+		this(null, null);
 	}
 	
-	public ImplUPT(IServerEntryPoint arg0, IClientEntryPoint arg1, IClientFrameCallback arg2) {
-		this.entrypoint_server = arg0;
-		this.entrypoint_client = arg1;
-		
-		this.callback_client_frame = arg2;
+	public ImplUPT(IServerHandler s, IClientHandler c) {
+		this.handler_server = s;
+		this.handler_client = c;
 	}
 	
-	public void callServerEnter(ImplPC.Server arg) {
-		IServerEntryPoint ep = this.entrypoint_server;
-		
-		if(ep != null) ep.onEnter(arg);
+	public void callServerEnter(ImplPC arg) {
+		if(this.handler_server != null)
+			this.handler_server.handleEnter(arg);
 	}
 	
-	public void callClientEnter(ImplPC.Client arg) {
-		IClientEntryPoint ep = this.entrypoint_client;
-		
-		if(ep != null) ep.onEnter(arg);
+	public void callServerLeave(ImplPC arg) {
+		if(this.handler_server != null)
+			this.handler_server.handleLeave(arg);
 	}
 	
-	public void callClientFrame(ImplPC.Client arg) {
-		IClientFrameCallback cb = this.callback_client_frame;
-		
-		if(cb != null) cb.onFrame(arg);
+	public void callClientEnter(ImplPC arg) {
+		if(this.handler_client != null)
+			this.handler_client.handleEnter(arg);
+	}
+	
+	public void callClientFrame() {
+		if(this.handler_client != null)
+			this.handler_client.handleFrame();
+	}
+	
+	public void callClientLeave() {
+		if(this.handler_client != null)
+			this.handler_client.handleLeave();
 	}
 }

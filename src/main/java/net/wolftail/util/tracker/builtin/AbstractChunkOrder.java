@@ -22,8 +22,8 @@ public abstract class AbstractChunkOrder extends ContentOrder {
 	 * Construct an abstract chunk order.
 	 * 
 	 * @param dim	the dimension
-	 * @param x		chunkX, must satisfy -1875000 <= x < 1875000
-	 * @param z		chunkZ, must satisfy -1875000 <= z < 1875000
+	 * @param x		chunkX, {@code -1875000 <= x < 1875000}
+	 * @param z		chunkZ, {@code -1875000 <= z < 1875000}
 	 */
 	public AbstractChunkOrder(@Nonnull DimensionType dim, int x, int z) {
 		this.dimension = dim;

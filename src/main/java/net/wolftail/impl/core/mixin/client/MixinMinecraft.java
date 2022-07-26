@@ -1,6 +1,5 @@
 package net.wolftail.impl.core.mixin.client;
 
-import java.io.IOException;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -8,10 +7,7 @@ import java.util.concurrent.FutureTask;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.util.Throwables;
-import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,29 +17,30 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.MusicTicker;
+import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.util.FrameTimer;
-import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
 import net.minecraft.util.Util;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.wolftail.api.UniversalPlayerType;
+import net.minecraft.util.text.ITextComponent;
 import net.wolftail.impl.core.ExtCoreMinecraft;
-import net.wolftail.impl.core.ExtCoreNetworkManager;
-import net.wolftail.impl.core.ImplPC;
+import net.wolftail.impl.core.ImplPCC;
 import net.wolftail.impl.core.ImplUPT;
 import net.wolftail.impl.core.SectionHandler;
-import net.wolftail.impl.core.network.NoopNetHandler;
+import net.wolftail.impl.core.network.NptClientPacketListener;
 
-//SectionHandler.on_client_playing_change, finish_loading; new game loop
+//SH: on_client_playing_change, finish_loading
+//inject play context; intercept game loop for non player type
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	
@@ -77,9 +74,6 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	public Snooper usageSnooper;
 	
 	@Shadow
-	public NetworkManager myNetworkManager;
-	
-	@Shadow
 	public static int debugFPS;
 	
 	@Shadow
@@ -94,12 +88,11 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	@Shadow
 	public long startNanoTime;
 	
-	@Final
-	@Shadow
-	public Session session;
-	
 	@Shadow
 	public Framebuffer framebufferMc;
+	
+	@Shadow
+	public GameSettings gameSettings;
 	
 	@Shadow
 	public int displayWidth;
@@ -108,140 +101,142 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	public int displayHeight;
 	
 	@Shadow
+	public TextureManager renderEngine;
+	
+	@Shadow
+	public SoundHandler mcSoundHandler;
+	
+	@Shadow
+	public MusicTicker mcMusicTicker;
+	
+	@Shadow
 	public abstract void shutdown();
 	
 	@Shadow
 	public abstract void updateDisplay();
 	
 	@Shadow
-	public abstract int getLimitFramerate();
-	
-	@Shadow
-	public abstract boolean isFramerateLimitBelowMax();
-	
-	@Shadow
 	public abstract void displayGuiScreen(GuiScreen screen);
 	
 	@Shadow
-	public void checkGLError(String message) {}
+	public abstract void checkGLError(String message);
 	
 	//---------------------------------SHADOW END---------------------------------
 	
 	@Unique
-	private static final Logger logger = LogManager.getLogger("wolftail/user");
+	private static final Logger logger = LogManager.getLogger("Wolftail/User");
 	
 	@Unique
-	private ImplPC.Client play_context;
+	private FutureTask<Void> loadContextTask;
 	
 	@Unique
-	private FutureTask<Void> specialTask;
+	private ImplPCC playContext;
 	
 	@Inject(method = "init", at = @At("RETURN"))
-	private void onInit(CallbackInfo info) {
+	private void on_init_return(CallbackInfo ci) {
 		SectionHandler.finish_loading(false);
 	}
 	
 	@Inject(method = "runTick", at = @At(value = "INVOKE_STRING", target = "endStartSection(Ljava/lang/String;)V", args = { "ldc=textures" }))
-	private void onRunTick(CallbackInfo info) {
-		ImplPC.Client context = this.play_context;
+	private void on_runTick_invoke_endStartSection_0(CallbackInfo ci) {
+		ImplPCC context = this.playContext;
 		
-		if(context != null && !context.getConnection().isChannelOpen())
-			this.unloadPlayContext();
+		if(context != null && !context.isConnected())
+			this.unloadContext(); //steve quit game
+	}
+	
+	@Inject(method = "run", at = @At(value = "INVOKE", target = "displayGuiScreen"))
+	private void on_run_invoke_displayGuiScreen(CallbackInfo ci) {
+		this.unloadContext();
 	}
 	
 	@Inject(method = "runGameLoop", at = @At("HEAD"), cancellable = true)
-	private void onRunGameLoop(CallbackInfo info) throws LWJGLException, IOException {
-		FutureTask<Void> task = this.specialTask;
+	private void on_runGameLoop_head(CallbackInfo ci) {
+		FutureTask<Void> task = this.loadContextTask;
 		if(task != null) {
 			task.run();
 			
-			this.specialTask = null;
+			this.loadContextTask = null;
 		}
 		
-		ImplPC.Client context = this.play_context;
-		ImplUPT type;
+		ImplPCC context = this.playContext;
 		
-		if(context != null && (type = (ImplUPT) context.playType()) != UniversalPlayerType.TYPE_PLAYER) {
-			info.cancel();
+		if(context != null && !context.playType().isPlayerType()) {
+			ci.cancel();
 			
-			try {
-				this.doGameLoop(context, type);
-			} catch(OutOfMemoryError e) {
-				this.unloadPlayContext();
-				
-				throw e;
-			}
+			this.doGameLoop(context);
 		}
 	}
 	
 	@Unique
-	private void doGameLoop(ImplPC.Client context, ImplUPT type) throws LWJGLException, IOException {
+	private void doGameLoop(ImplPCC context) {
 		Profiler profiler = this.mcProfiler;
-		
 		profiler.startSection("root");
 		
+		//check close
 		if(Display.isCreated() && Display.isCloseRequested())
 			this.shutdown();
+		
+		//update timer
 		this.timer.updateTimer();
+		int i = Math.min(10, this.timer.elapsedTicks);
 		
 		profiler.startSection("scheduledExecutables");
 		runQueuedTasks(this.scheduledTasks); //here we will apply all packets received
-		profiler.endSection(); //scheduledExecutables
-		
-		//---------------------------------------start our section-----------------------------
-		profiler.startSection("wolftailSection");
+		profiler.endSection();
 		
 		boolean lostContext = false;
 		
-		//do tick
+		//---------------------------------Tick Start---------------------------------
 		profiler.startSection("tick");
 		
 		//ticking part, notice that the code below dosen't always run every game loop
-		for(int i = 0, l = Math.min(10, this.timer.elapsedTicks); i < l; ++i) {
-			NetworkManager connection = context.getConnection();
+		for(; i-- != 0;) {
+			NetworkManager connect = context.getConnection();
 			
-			if(connection.isChannelOpen())
-				connection.processReceivedPackets();
+			if(connect.isChannelOpen())
+				connect.processReceivedPackets();
 			
-			//re-check connection state
-			if(!connection.isChannelOpen()) {
-				connection.checkDisconnected();
+			if(!connect.isChannelOpen()) {
+				connect.checkDisconnected();
 				
-				this.unloadPlayContext();
-				this.myNetworkManager = null;
-				this.displayGuiScreen(connection.isLocalChannel() ? new GuiMainMenu() : new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", new TextComponentTranslation("disconnect.genericReason")));
+				context.playType().callClientLeave();
+				this.unloadContext(); //non player type quit game
+				this.displayQuitScreen(connect.getExitMessage(), connect.isLocalChannel());
+				
 				lostContext = true;
-				
 				break;
 			}
+			
+			this.renderEngine.tick();
+			this.mcMusicTicker.update();
+			this.mcSoundHandler.update();
 		}
 		
-		profiler.endSection(); //tick
+		profiler.endSection();
+		//----------------------------------Tick End----------------------------------
 		
-		//do pre frame
-		profiler.startSection("frame");
 		this.checkGLError("Pre render");
-		this.framebufferMc.bindFramebuffer(true); //so that the results of render operations in the custom part would fall here
 		
-		//call custom frame
+		//--------------------------------Render Start--------------------------------
+		profiler.startSection("render");
+		
+		this.framebufferMc.bindFramebuffer(true); //bind framebuffer & set viewport
+		
+		//do frame
 		if(!lostContext)
-			type.callClientFrame(context);
-		else {
-			GlStateManager.clearColor(0, 0, 0, 0);
-			GlStateManager.clearDepth(1);
-			GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		}
+			context.playType().callClientFrame();
 		
-		//do post frame
-		this.framebufferMc.unbindFramebuffer(); //bind to the default
-		this.framebufferMc.framebufferRender(this.displayWidth, this.displayHeight); //transport our color buffer to the default's
+		this.framebufferMc.unbindFramebuffer(); //unbind framebuffer
+		this.framebufferMc.framebufferRender(this.displayWidth, this.displayHeight); //blit to screen
+		
+		profiler.endSection();
+		//---------------------------------Render End---------------------------------
+		
 		this.updateDisplay();
 		Thread.yield();
-		this.checkGLError("Post render");
-		profiler.endSection(); //frame
 		
-		profiler.endSection(); //wolftailSection
-		//---------------------------------------end our section-------------------------------
+		this.checkGLError("Post render");
 		
 		this.fpsCounter++; //call this every game loop
 		this.updateFrameTimer();
@@ -257,10 +252,10 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 			this.usageSnooper.startSnooper(); //this will check isSnooperRunning()Z itself
 		}
 		
-		if(this.isFramerateLimitBelowMax()) {
+		if((i = this.gameSettings.limitFramerate) < GameSettings.Options.FRAMERATE_LIMIT.getValueMax()) {
 			profiler.startSection("fpslimit_wait");
-			Display.sync(this.getLimitFramerate());
-			profiler.endSection(); //fpslimit_wait
+			Display.sync(i);
+			profiler.endSection();
 		}
 		
 		profiler.endSection(); //root
@@ -274,47 +269,46 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	}
 	
 	@Unique
+	private void displayQuitScreen(ITextComponent reason, boolean isLocal) {
+		GuiMainMenu main = new GuiMainMenu();
+		GuiScreen s = isLocal ? main : new GuiMultiplayer(main);
+		
+		this.displayGuiScreen(reason == null ? s : new GuiDisconnected(s, "disconnect.lost", reason));
+	}
+	
+	@Unique
 	private static void runQueuedTasks(Queue<FutureTask<?>> the_queue) {
 		synchronized(the_queue) {
 			while(!the_queue.isEmpty()) Util.runTask(the_queue.poll(), LOGGER);
 		}
 	}
 	
+	@Unique
+	private void unloadContext() {
+		SectionHandler.on_client_playing_change();
+		
+		this.playContext = null;
+	}
+	
 	@Override
-	public void wolftail_loginSuccess(ImplUPT type, UUID id, NetworkManager connect) {
+	public void wolftail_loadContext(ImplUPT type, UUID id, String name, NetworkManager connect) {
 		try {
-			(this.specialTask = new FutureTask<Void>(() -> {
-				ImplPC.Client context = this.play_context = new ImplPC.Client(type, id, this.session.getUsername(), connect);
-				((ExtCoreNetworkManager) connect).wolftail_setPlayContext(context);
-				
+			(this.loadContextTask = new FutureTask<Void>(() -> {
+				ImplPCC context = playContext = new ImplPCC(type, id, name, connect);
 				SectionHandler.on_client_playing_change();
 				
 				logger.info("The universal player type in use is {}", type.registeringId());
 				
-				if(type != UniversalPlayerType.TYPE_PLAYER) {
-					GuiScreen gs = this.currentScreen;
+				if(!type.isPlayerType()) {
+					currentScreen.onGuiClosed();
+					currentScreen = null;
 					
-					if(gs != null) {
-						gs.onGuiClosed();
-						
-						this.currentScreen = null;
-					}
-					
-					connect.setNetHandler(new NoopNetHandler());
+					connect.setNetHandler(new NptClientPacketListener(connect));
 					type.callClientEnter(context);
 				}
-				
-				return null;
-			})).get();
+			}, null)).get();
 		} catch(InterruptedException | ExecutionException e) {
-			Throwables.rethrow(e);
+			throw new RuntimeException(e);
 		}
-	}
-	
-	@Unique
-	private void unloadPlayContext() {
-		SectionHandler.on_client_playing_change();
-		
-		this.play_context = null;
 	}
 }

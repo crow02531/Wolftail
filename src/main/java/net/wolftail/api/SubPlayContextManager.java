@@ -1,6 +1,5 @@
 package net.wolftail.api;
 
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -21,15 +20,7 @@ public interface SubPlayContextManager {
 	
 	@Nonnull UniversalPlayerType type();
 	
-	ServerPlayContext contextFor(UUID playId);
+	PlayContext contextFor(UUID playId);
 	
 	int currentLoad();
-	
-	/**
-	 * View the manager as a set of playing contexts.
-	 * 
-	 * @return an unmodifiable set, changes in the manager
-	 * 		are reflected
-	 */
-	@Nonnull Set<ServerPlayContext> asSet();
 }

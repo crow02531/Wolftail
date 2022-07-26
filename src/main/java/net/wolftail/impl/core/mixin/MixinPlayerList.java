@@ -22,7 +22,7 @@ public abstract class MixinPlayerList {
 	public MinecraftServer mcServer;
 	
 	@Redirect(method = "allowUserToConnect", at = @At(value = "INVOKE", target = "size()I"))
-	private int sizeProxy(List<EntityPlayerMP> list) {
+	private int proxy_allowUserToConnect_size(List<EntityPlayerMP> list) {
 		return ((ExtCoreMinecraftServer) this.mcServer).wolftail_getRootManager().currentLoad();
 	}
 }

@@ -8,12 +8,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.main.Main;
 import net.wolftail.impl.core.SectionHandler;
 
-//SectionHandler.finish_preparing
+//SH: finish_preparing
 @Mixin(Main.class)
 public abstract class MixinMain {
 	
 	@Inject(method = "main", at = @At("HEAD"))
-	private static void onMain(CallbackInfo info) {
+	private static void on_main_head(CallbackInfo info) {
 		SectionHandler.finish_preparing();
 	}
 }

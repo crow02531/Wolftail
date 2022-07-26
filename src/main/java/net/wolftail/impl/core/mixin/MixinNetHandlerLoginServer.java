@@ -3,6 +3,7 @@ package net.wolftail.impl.core.mixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -10,18 +11,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.authlib.GameProfile;
 
+import io.netty.buffer.Unpooled;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.play.server.SPacketCustomPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.NetHandlerLoginServer;
-import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.impl.core.ExtCoreMinecraftServer;
-import net.wolftail.impl.core.ExtCoreNetworkManager;
-import net.wolftail.impl.core.ImplPC;
+import net.wolftail.impl.core.ImplPCS;
 import net.wolftail.impl.core.ImplUPT;
-import net.wolftail.impl.core.network.NoopNetHandler;
-import net.wolftail.impl.core.network.S2CPacketTypeNotify;
+import net.wolftail.impl.core.network.NptServerPacketListener;
 
-//server side accept uniplayer
+//accept uniplayer in server side
 @Mixin(NetHandlerLoginServer.class)
 public abstract class MixinNetHandlerLoginServer {
 	
@@ -37,25 +38,32 @@ public abstract class MixinNetHandlerLoginServer {
 	public GameProfile loginGameProfile;
 	
 	@Inject(method = "tryAcceptPlayer", at = @At(value = "INVOKE", target = "sendPacket(Lnet/minecraft/network/Packet;)V", shift = Shift.AFTER), cancellable = true)
-	private void onTryAcceptPlayer(CallbackInfo info) throws InterruptedException {
+	private void on_tryAcceptPlayer_invokeAfter_sendPacket_1(CallbackInfo ci) {
 		GameProfile profile = this.loginGameProfile;
 		NetworkManager connect = this.networkManager;
 		
-		//now it was EnumConnectionState.LOGIN state and vanilla connection has just set up
+		//now it was LOGIN state and vanilla connection has just set up
 		//we should in LOGIC_SERVER thread
 		
-		ImplPC.Server context = ((ExtCoreMinecraftServer) this.server).wolftail_getRootManager().login(connect, profile.getId(), profile.getName());
+		ImplPCS context = ((ExtCoreMinecraftServer) this.server).wolftail_getRootManager().login(connect, profile.getId(), profile.getName());
 		ImplUPT type = context.playType();
 		
-		((ExtCoreNetworkManager) connect).wolftail_setPlayContext(context);
 		//the connection state setting action will be executed in netty's event loop thread, it will be set to PLAY
-		connect.sendPacket(new S2CPacketTypeNotify(type));
+		connect.sendPacket(newTypeNotifyPacket(type));
 		
-		if(type != UniversalPlayerType.TYPE_PLAYER) {
-			info.cancel();
+		if(!type.isPlayerType()) {
+			ci.cancel();
 			
-			connect.setNetHandler(new NoopNetHandler());
+			connect.setNetHandler(new NptServerPacketListener(context));
 			type.callServerEnter(context);
 		}
+	}
+	
+	@Unique
+	private static SPacketCustomPayload newTypeNotifyPacket(ImplUPT type) {
+		PacketBuffer buf = new PacketBuffer(Unpooled.buffer());
+		buf.writeResourceLocation(type.registeringId());
+		
+		return new SPacketCustomPayload("WT|TN", buf);
 	}
 }

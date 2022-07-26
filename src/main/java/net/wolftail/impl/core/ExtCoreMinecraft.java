@@ -6,5 +6,6 @@ import net.minecraft.network.NetworkManager;
 
 public interface ExtCoreMinecraft {
 	
-	void wolftail_loginSuccess(ImplUPT type, UUID id, NetworkManager connect); //called by netty thread
+	//called by netty thread, ask logic client to load play context and wait until it has done
+	void wolftail_loadContext(ImplUPT type, UUID id, String name, NetworkManager connect);
 }

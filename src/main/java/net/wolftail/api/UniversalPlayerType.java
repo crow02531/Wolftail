@@ -20,4 +20,8 @@ public interface UniversalPlayerType {
 	default ResourceLocation registeringId() {
 		return UniversalPlayerTypeRegistry.INSTANCE.idFor(this);
 	}
+	
+	default boolean isPlayerType() {
+		return this == TYPE_PLAYER;
+	}
 }

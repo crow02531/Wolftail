@@ -12,7 +12,7 @@ public enum SectionState {
 	BEFORE {
 		
 		@Override
-		public SectionState advance() {
+		public SectionState getNext() {
 			return ACTIVE;
 		}
 	},
@@ -20,7 +20,7 @@ public enum SectionState {
 	ACTIVE {
 		
 		@Override
-		public SectionState advance() {
+		public SectionState getNext() {
 			return IDLE;
 		}
 	},
@@ -28,11 +28,11 @@ public enum SectionState {
 	IDLE {
 		
 		@Override
-		public SectionState advance() {
+		public SectionState getNext() {
 			return ACTIVE;
 		}
 	};
 	
 	@Nonnull
-	public abstract SectionState advance();
+	public abstract SectionState getNext();
 }

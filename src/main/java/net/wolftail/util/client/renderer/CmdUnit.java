@@ -1,7 +1,5 @@
 package net.wolftail.util.client.renderer;
 
-import javax.annotation.Nonnull;
-
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -167,12 +165,6 @@ public final class CmdUnit extends UIUnit {
 	
 	public float pScrollEnd() {
 		return this.scroll = this.pMaxScroll();
-	}
-	
-	@Nonnull
-	@Override
-	public UnitType type() {
-		return UnitType.CMD;
 	}
 	
 	@Override

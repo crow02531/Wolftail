@@ -35,7 +35,8 @@ import net.wolftail.impl.core.SectionHandler;
 public enum GameSection {
 	
 	/**
-	 * The very early stage, during which lunchwrapper initializes tweakers.
+	 * The very early stage, during which lunchwrapper or modlauncher initializes.
+	 * Also known as pre-init.
 	 */
 	GAME_PREPARING(SectionHandler.HANDLER_PREPARING),
 	

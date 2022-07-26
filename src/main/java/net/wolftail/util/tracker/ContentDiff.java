@@ -32,7 +32,7 @@ public interface ContentDiff {
 	boolean equals(Object o);
 	
 	/**
-	 * Check if all readable bytes of {@code buf} make up a valid content diff.
+	 * Check if all readable bytes of {@code buf} make up a content diff.
 	 * It will read all readable bytes.
 	 * 
 	 * @param buf	a non-null suspicious byte buf

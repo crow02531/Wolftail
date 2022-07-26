@@ -199,9 +199,6 @@ public abstract class UIUnit {
 		Preconditions.checkState(this.available());
 	}
 	
-	@Nonnull
-	public abstract UnitType type();
-	
 	public void resize(int width, int height) {
 		this.check();
 		

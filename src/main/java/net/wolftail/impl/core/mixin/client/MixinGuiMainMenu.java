@@ -13,7 +13,7 @@ import net.minecraft.client.gui.GuiScreen;
 public abstract class MixinGuiMainMenu extends GuiScreen {
 	
 	@Inject(method = "drawScreen", at = @At("RETURN"))
-	private void onDrawScreen(CallbackInfo info) {
+	private void on_drawScreen_return(CallbackInfo info) {
 		this.drawString(this.fontRenderer, "Wolftail Installed", 2, 2, -1);
 	}
 }

@@ -142,7 +142,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print("Set the block state layer of section ");
 		pw.print(index);
 		pw.print(" to: ");
-		printBlockStateLayer(pw, buf);
+		pw.print(buf == null ? "EMPTY" : buf); //TODO print detailed block state layer
 		pw.println();
 		
 		if(dv != null)
@@ -165,9 +165,5 @@ public final class TraceVisitor implements DiffVisitor {
 		
 		if(dv != null)
 			dv.jzSetTileEntity(buf);
-	}
-	
-	private static void printBlockStateLayer(PrintWriter pw, ByteBuf buf) {
-		pw.print(buf == null ? "EMPTY" : buf); //TODO print detailed block state layer
 	}
 }

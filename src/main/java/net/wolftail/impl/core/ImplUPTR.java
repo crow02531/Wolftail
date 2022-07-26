@@ -7,9 +7,8 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 
 import net.minecraft.util.ResourceLocation;
-import net.wolftail.api.IClientEntryPoint;
-import net.wolftail.api.IClientFrameCallback;
-import net.wolftail.api.IServerEntryPoint;
+import net.wolftail.api.IClientHandler;
+import net.wolftail.api.IServerHandler;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.api.UniversalPlayerTypeRegistry;
 
@@ -24,8 +23,8 @@ public final class ImplUPTR implements UniversalPlayerTypeRegistry {
 	}
 	
 	@Override
-	public UniversalPlayerType register(ResourceLocation id, IServerEntryPoint arg0, IClientEntryPoint arg1, IClientFrameCallback arg2) {
-		UniversalPlayerType r = new ImplUPT(arg0, arg1, arg2);
+	public UniversalPlayerType register(ResourceLocation id, IServerHandler s, IClientHandler c) {
+		ImplUPT r = new ImplUPT(s, c);
 		
 		if(this.underlying.putIfAbsent(id, r) != null)
 			throw new IllegalStateException("The ID " + id + " had been registered");
@@ -34,13 +33,13 @@ public final class ImplUPTR implements UniversalPlayerTypeRegistry {
 	}
 	
 	@Override
-	public UniversalPlayerType registeredAt(ResourceLocation id) {
-		return this.underlying.get(id);
+	public ResourceLocation idFor(UniversalPlayerType type) {
+		return this.underlying.inverse().get(type);
 	}
 	
 	@Override
-	public ResourceLocation idFor(UniversalPlayerType type) {
-		return this.underlying.inverse().get(type);
+	public UniversalPlayerType byId(ResourceLocation id) {
+		return this.underlying.get(id);
 	}
 	
 	@Override

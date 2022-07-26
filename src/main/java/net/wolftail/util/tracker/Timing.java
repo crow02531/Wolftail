@@ -59,7 +59,7 @@ public final class Timing {
 		return interval <= CACHE_AMOUNT ? TIMING_CACHE[interval - 1] : new Timing(0, interval);
 	}
 	
-	private static final int CACHE_AMOUNT = 40;
+	private static final int CACHE_AMOUNT = 20;
 	private static final Timing[] TIMING_CACHE = new Timing[CACHE_AMOUNT];
 	
 	static {

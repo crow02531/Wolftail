@@ -1,25 +1,29 @@
 package net.wolftail.api.lifecycle;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.wolftail.impl.core.SectionHandler;
 
 /**
  * There are many threads running in Minecraft. In
  * {@link PhysicalType#INTEGRATED_CLIENT INTEGRATED_CLIENT}, there is a thread
- * responsible of registering game data, doing game loop. This thread is
- * {@link #LOGIC_CLIENT}. When you are in singleplayer, the thread running
+ * responsible of registering game data(items, blocks, etc.), doing game loop.
+ * This thread is {@link #LOGIC_CLIENT}. When you are in singleplayer, the thread running
  * {@link IntegratedServer} is called {@link #LOGIC_SERVER}. And in
  * {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}, there isn't logic client
  * , the thread that registers game data and ticking the server is logic server.
  * 
  * <p>
- * If a thread is found logic client(or logic server), then the thread is logic
- * client(or logic server) till its death. There is only one logic server thread at
- * a time. However in two distinct time, the logic server thread could be different.
- * Think about leaving a singleplayer and start a new singleplayer. And in dedicated
- * server the thread registering game content and the thread ticking the server is
- * different. See {@link net.minecraft.server.MinecraftServer#main(String[])}.
+ * There is only one logic server thread at a time. However in two distinct time, the logic
+ * server thread could be different. Think about in singleplayer you leave a world and rejoin
+ * it. In dedicated server the thread registering game data and the thread ticking the server
+ * are different. See {@link MinecraftServer#main(String[])}. The job of 'logic server'
+ * transfers from the old thread to a new one in {@link MinecraftServer#startServerThread()}.
+ * </p>
+ * 
+ * <p>
+ * Contrary to logic server, there's only one logic client.
  * </p>
  * 
  * @see PhysicalType
@@ -54,6 +58,18 @@ public enum LogicType {
 				
 				return false;
 			}
+		}
+	},
+	
+	/**
+	 * In client, logic host thread is the logic client thread, and in
+	 * dedicated server, the logic server thread.
+	 */
+	LOGIC_HOST {
+		
+		@Override
+		public boolean in() {
+			return PhysicalType.INTEGRATED_CLIENT.is() ? LOGIC_CLIENT.in() : LOGIC_SERVER.in();
 		}
 	};
 	

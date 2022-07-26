@@ -37,7 +37,7 @@ public final class SectionHandler {
 	}
 	
 	private void doAdvance() {
-		this.state = this.state.advance();
+		this.state = this.state.getNext();
 	}
 	
 	private void doUnlock() {
@@ -53,7 +53,7 @@ public final class SectionHandler {
 		return this.lock.readLock();
 	}
 	
-	private static final Logger logger = LogManager.getLogger("wolftail/lifecycle");
+	private static final Logger logger = LogManager.getLogger("Wolftail/Lifecycle");
 	
 	public static Thread dedicatedServerRegularThread;
 	

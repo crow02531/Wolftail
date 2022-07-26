@@ -10,7 +10,7 @@ import net.minecraft.server.MinecraftServer;
 import net.wolftail.api.lifecycle.PhysicalType;
 import net.wolftail.impl.core.SectionHandler;
 
-//SectionHandler.finish_preparing; SectionHandler.dedicatedServerRegularThread
+//SH: finish_preparing, capture dedicatedServerRegularThread
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
 	
@@ -18,7 +18,7 @@ public abstract class MixinMinecraftServer {
 	public Thread serverThread;
 	
 	@Inject(method = "startServerThread", at = @At(value = "INVOKE", target = "start()V"))
-	private void onStartServerThread(CallbackInfo info) {
+	private void on_startServerThread_invoke_start(CallbackInfo ci) {
 		if(PhysicalType.DEDICATED_SERVER.is()) {
 			//invoked by the 'zero' thread, transfer the host to the now unstarted serverThread
 			
@@ -27,7 +27,7 @@ public abstract class MixinMinecraftServer {
 	}
 	
 	@Inject(method = "main", at = @At("HEAD"))
-	private static void onMain(CallbackInfo info) {
+	private static void on_main_head(CallbackInfo ci) {
 		SectionHandler.finish_preparing();
 	}
 }

@@ -46,8 +46,8 @@ public interface DiffVisitor {
 	 * target world. It will unbind target block. Before bind
 	 * to a chunk a world must be bound first.
 	 * 
-	 * @param chunkX	-1875000 <= chunkX < 1875000
-	 * @param chunkZ	-1875000 <= chunkZ < 1875000
+	 * @param chunkX	{@code -1875000 <= chunkX < 1875000}
+	 * @param chunkZ	{@code -1875000 <= chunkZ < 1875000}
 	 */
 	void jzBindChunk(int chunkX, int chunkZ);
 	
@@ -110,9 +110,7 @@ public interface DiffVisitor {
 	 * 
 	 * @param index	the index of the section, between 0 and 15
 	 * @param buf	a buf whose all readable bytes composing the raw data of one block
-	 * 		state layer (in the form of
-	 * 		{@link net.minecraft.world.chunk.BlockStateContainer read&write})
-	 * 		, null indicates empty section.
+	 * 		state layer, null indicates empty section.
 	 */
 	void jzSetSection(int index, ByteBuf buf);
 	
@@ -134,9 +132,7 @@ public interface DiffVisitor {
 	 * </p>
 	 * 
 	 * @param buf	a buf whose all readable bytes composing the raw data of one compound
-	 * 		tag(in the form of
-	 * 		{@link net.minecraft.nbt.CompressedStreamTools uncompressed read&write})
-	 * 		, null indicates no tile entity in target block
+	 * 		tag, null indicates no tile entity in target block
 	 */
 	void jzSetTileEntity(ByteBuf buf);
 }

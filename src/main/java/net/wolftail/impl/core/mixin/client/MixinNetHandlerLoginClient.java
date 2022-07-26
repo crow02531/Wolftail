@@ -12,44 +12,30 @@ import net.minecraft.client.network.NetHandlerLoginClient;
 import net.minecraft.network.EnumConnectionState;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.login.server.SPacketLoginSuccess;
-import net.wolftail.impl.core.ExtCoreNetHandlerLoginClient;
+import net.wolftail.impl.core.network.TransientPacketListener;
 
 //intercept login success packet
 @Mixin(NetHandlerLoginClient.class)
-public abstract class MixinNetHandlerLoginClient implements ExtCoreNetHandlerLoginClient {
+public abstract class MixinNetHandlerLoginClient {
 	
 	@Final
 	@Shadow
 	public NetworkManager networkManager;
 	
 	@Unique
-	private SPacketLoginSuccess stored_ls_packet;
+	private boolean waitForTypeNotify;
 	
 	@Inject(method = "handleLoginSuccess", at = @At("HEAD"), cancellable = true)
-	private void onHandleLoginSuccess(SPacketLoginSuccess packetIn, CallbackInfo info) {
-		if(this.stored_ls_packet == null) {
-			info.cancel();
+	private void on_handleLoginSuccess_head(SPacketLoginSuccess packetIn, CallbackInfo ci) {
+		if(!this.waitForTypeNotify) {
+			ci.cancel();
 			
-			//when receiving SPacketLoginSuccess, client will store it and wait
-			//for SPacketTypeNotify
+			NetworkManager conn = this.networkManager;
 			
-			this.stored_ls_packet = packetIn;
-			this.networkManager.setConnectionState(EnumConnectionState.PLAY); //set it so that WPS enabled
+			conn.setConnectionState(EnumConnectionState.PLAY);
+			conn.setNetHandler(new TransientPacketListener(conn, (NetHandlerLoginClient) (Object) this, packetIn));
+			
+			this.waitForTypeNotify = true;
 		}
-	}
-	
-	@Override
-	public SPacketLoginSuccess wolftail_getStoredLoginSuccessPacket() {
-		return this.stored_ls_packet;
-	}
-	
-	@Override
-	public NetworkManager wolftail_getConnection() {
-		return this.networkManager;
-	}
-	
-	@Override
-	public void wolftail_clearStoredPacketRef() {
-		this.stored_ls_packet = null;
 	}
 }

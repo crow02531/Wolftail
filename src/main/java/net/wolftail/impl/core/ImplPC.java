@@ -2,15 +2,11 @@ package net.wolftail.impl.core;
 
 import java.util.UUID;
 
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
-import net.minecraft.network.INetHandler;
+import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
-import net.wolftail.api.ClientPlayContext;
+import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
-import net.wolftail.api.ServerPlayContext;
-import net.wolftail.impl.core.network.BidiPacketKeepAlive;
+import net.wolftail.impl.core.network.NptPacketListener;
 
 public abstract class ImplPC implements PlayContext {
 	
@@ -19,16 +15,24 @@ public abstract class ImplPC implements PlayContext {
 	
 	final NetworkManager connection;
 	
-	//only used for non-steves
-	public volatile Packet<?> keepAlive_receivedPkt;
-	public long keepAlive_timer;
-	
-	private ImplPC(UUID arg0, String arg1, NetworkManager arg2) {
-		this.identifier = arg0;
-		this.name = arg1;
+	ImplPC(UUID id, String name, NetworkManager connect) {
+		this.identifier = id;
+		this.name = name;
 		
-		this.connection = arg2;
+		this.connection = connect;
 	}
+	
+	public NetworkManager getConnection() {
+		return this.connection;
+	}
+	
+	@Override
+	public EnumPacketDirection side() {
+		return this.connection.getDirection();
+	}
+	
+	@Override
+	public abstract ImplUPT playType();
 	
 	@Override
 	public UUID playId() {
@@ -41,66 +45,26 @@ public abstract class ImplPC implements PlayContext {
 	}
 	
 	@Override
-	public void sendPacket(Packet<?> packetIn) {
-		this.connection.sendPacket(packetIn);
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public void sendPacket(Packet<?> packetIn, GenericFutureListener<? extends Future<? super Void>> listener) {
-		this.connection.sendPacket(packetIn, listener);
+	public void setHandler(INetworkHandler handler) {
+		this.ensureNonPlayerType();
+		
+		((NptPacketListener) this.connection.getNetHandler()).setNetHandler(handler);
 	}
 	
 	@Override
-	public void disconnect() {
-		this.connection.closeChannel(null);
+	public INetworkHandler getHandler() {
+		this.ensureNonPlayerType();
+		
+		return ((NptPacketListener) this.connection.getNetHandler()).getNetHandler();
 	}
 	
 	@Override
-	public void setNetHandler(INetHandler handler) {
-		this.connection.setNetHandler(handler);
+	public boolean isConnected() {
+		return this.connection.isChannelOpen();
 	}
 	
-	public static final class Client extends ImplPC implements ClientPlayContext {
-		
-		final ImplUPT type;
-		
-		public Client(ImplUPT arg0, UUID arg1, String arg2, NetworkManager arg3) {
-			super(arg1, arg2, arg3);
-			
-			this.type = arg0;
-		}
-		
-		@Override
-		public ImplUPT playType() {
-			return this.type;
-		}
-		
-		public NetworkManager getConnection() {
-			return this.connection;
-		}
-	}
-	
-	public static final class Server extends ImplPC implements ServerPlayContext {
-
-		final ImplMPCS manager;
-		
-		public Server(ImplMPCS arg0, UUID arg1, String arg2, NetworkManager arg3) {
-			super(arg1, arg2, arg3);
-			
-			this.keepAlive_receivedPkt = new BidiPacketKeepAlive();
-			
-			this.manager = arg0;
-		}
-		
-		@Override
-		public ImplUPT playType() {
-			return this.manager.type;
-		}
-		
-		@Override
-		public ImplMPCS manager() {
-			return this.manager;
-		}
+	final void ensureNonPlayerType() {
+		if(this.playType().isPlayerType())
+			throw new UnsupportedOperationException();
 	}
 }
