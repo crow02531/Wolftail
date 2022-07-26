@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+TweakClass: org.spongepowered.asm.launch.MixinTweaker
+TweakOrder: 0
+MixinConfigs: mixins.wolftail.core.json, mixins.wolftail.tracker.json, mixins.wolftail.renderer.json
