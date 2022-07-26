@@ -19,7 +19,6 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "ExampleMod"
     ]
   },
   "mixins": [

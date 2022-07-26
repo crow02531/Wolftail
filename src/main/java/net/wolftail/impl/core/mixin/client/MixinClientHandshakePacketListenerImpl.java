@@ -54,7 +54,7 @@ public abstract class MixinClientHandshakePacketListenerImpl {
 			if(packet.getData().isReadable())
 				throw new IOException();
 			
-			if((this.type = (ImplUPT) UniversalPlayerTypeRegistry.INSTANCE.registeredAt(typeId)) == null)
+			if((this.type = (ImplUPT) UniversalPlayerTypeRegistry.INSTANCE.byId(typeId)) == null)
 				throw new IllegalStateException("Unknow universal player type " + typeId);
 		}
 	}

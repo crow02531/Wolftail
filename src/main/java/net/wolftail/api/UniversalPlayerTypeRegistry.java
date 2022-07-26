@@ -25,7 +25,7 @@ public interface UniversalPlayerTypeRegistry {
 	ResourceLocation idFor(UniversalPlayerType type);
 	
 	@SideWith(section = GameSection.GAME_LOADED)
-	UniversalPlayerType registeredAt(ResourceLocation id);
+	UniversalPlayerType byId(ResourceLocation id);
 	
 	@SideWith(section = GameSection.GAME_LOADED)
 	@Nonnull UniversalPlayerType getRandomType(Random rnd);

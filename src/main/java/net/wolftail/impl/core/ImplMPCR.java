@@ -115,7 +115,7 @@ public final class ImplMPCR implements RootPlayContextManager {
 		Tag tag = data.get(name = id.toString());
 		
 		if(tag != null && tag.getId() == Tag.TAG_STRING)
-			type = UniversalPlayerTypeRegistry.INSTANCE.registeredAt(new ResourceLocation(tag.getAsString()));
+			type = UniversalPlayerTypeRegistry.INSTANCE.byId(new ResourceLocation(tag.getAsString()));
 		
 		if(type == null) {
 			type = UniversalPlayerTypeRegistry.INSTANCE.getRandomType(this.rnd);

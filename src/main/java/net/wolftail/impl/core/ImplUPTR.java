@@ -33,7 +33,7 @@ public final class ImplUPTR implements UniversalPlayerTypeRegistry {
 	}
 	
 	@Override
-	public UniversalPlayerType registeredAt(ResourceLocation id) {
+	public UniversalPlayerType byId(ResourceLocation id) {
 		return this.underlying.get(id);
 	}
 	
