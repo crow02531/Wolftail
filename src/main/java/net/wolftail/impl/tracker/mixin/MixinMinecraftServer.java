@@ -5,12 +5,15 @@ import java.util.function.Consumer;
 
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.WorldServer;
+import net.wolftail.impl.tracker.ExtTrackerWorldServer;
 import net.wolftail.impl.tracker.SubscriberWrapper;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.ContentOrder;
@@ -21,6 +24,12 @@ import net.wolftail.util.tracker.Timing;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer implements ContentTracker {
 	
+	@Shadow
+	public WorldServer[] worlds;
+	
+	@Shadow
+	public int tickCounter;
+	
 	@Unique
 	private IdentityHashMap<Consumer<ContentDiff>, SubscriberWrapper> wrappers = new IdentityHashMap<>();
 	
@@ -28,11 +37,12 @@ public abstract class MixinMinecraftServer implements ContentTracker {
 	private boolean assembling;
 	
 	@Inject(method = "tick", at = @At(value = "FIELD", target = "tickCounter:I", opcode = Opcodes.PUTFIELD))
-	private void onTick(CallbackInfo info) {
+	private void on_tick_putField_tickCounter(CallbackInfo info) {
 		this.assembling = true;
 		
 		//assemble
-		
+		for(WorldServer w : this.worlds)
+			((ExtTrackerWorldServer) w).wolftail_assemble(this.tickCounter);
 		
 		//dispatch
 		this.wrappers.values().forEach(SubscriberWrapper::dispatch);

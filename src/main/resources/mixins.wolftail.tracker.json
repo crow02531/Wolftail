@@ -3,6 +3,9 @@
   "compatibilityLevel": "JAVA_8",
   "package": "net.wolftail.impl.tracker.mixin",
   "mixins": [
-    "MixinMinecraftServer"
+    "MixinMinecraftServer",
+    "MixinWorldServer",
+    "MixinChunk",
+    "MixinChunkProviderServer"
   ]
 }

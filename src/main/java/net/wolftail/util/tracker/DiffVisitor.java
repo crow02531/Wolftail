@@ -105,7 +105,8 @@ public interface DiffVisitor {
 	 * 
 	 * <p>
 	 * This method should only perform read operations over {@code buf}'s readable
-	 * bytes.
+	 * bytes. But it's not necessary to read till unreadable. Callers are responsible
+	 * of making all {@code buf}'s readable bytes unchanged before the method returns.
 	 * </p>
 	 * 
 	 * @param index	the index of the section, between 0 and 15
@@ -128,7 +129,8 @@ public interface DiffVisitor {
 	 * 
 	 * <p>
 	 * This method should only perform read operations over {@code buf}'s readable
-	 * bytes.
+	 * bytes. But it's not necessary to read till unreadable. Callers are responsible
+	 * of making all {@code buf}'s readable bytes unchanged before the method returns.
 	 * </p>
 	 * 
 	 * @param buf	a buf whose all readable bytes composing the raw data of one compound

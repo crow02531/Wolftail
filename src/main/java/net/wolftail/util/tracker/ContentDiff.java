@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.tracker.ImplCD;
@@ -57,7 +58,7 @@ public interface ContentDiff {
 	 */
 	@Nonnull
 	public static ContentDiff from(@Nonnull ByteBuf buf) {
-		return new ImplCD(buf.readBytes(buf.readableBytes()).asReadOnly());
+		return new ImplCD(Unpooled.copiedBuffer(buf).asReadOnly());
 	}
 	
 	/**
