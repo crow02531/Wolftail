@@ -3,6 +3,7 @@ package net.wolftail.impl.tracker;
 import java.util.function.Consumer;
 
 import net.wolftail.util.tracker.ContentDiff;
+import net.wolftail.util.tracker.DiffWriter;
 
 public final class SubscriberWrapper {
 	

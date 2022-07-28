@@ -9,18 +9,13 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.chunk.BlockStateContainer;
-import net.wolftail.impl.util.ByteBufs;
+import net.wolftail.impl.util.MoreByteBuf;
 
 final class ComplementaryCheckVisitor implements DiffVisitor {
 	
 	private boolean bind_world;
 	private boolean bind_chunk;
 	private boolean bind_block;
-	
-	@Override
-	public Object lockObject() {
-		return this;
-	}
 	
 	@Override
 	public void jzBegin() {
@@ -102,7 +97,7 @@ final class ComplementaryCheckVisitor implements DiffVisitor {
 		checkState(bind_block);
 		
 		if(buf != null) {
-			ByteBufs.readTag(buf);
+			MoreByteBuf.readTag(buf);
 			checkArgument(!buf.isReadable());
 		}
 	}

@@ -12,19 +12,8 @@ import net.wolftail.api.lifecycle.SideWith;
 public interface DiffVisitor {
 	
 	/**
-	 * The lock object for this diff visitor. It should always return the
-	 * same value.
-	 * 
-	 * @return the lock object
-	 */
-	@Nonnull Object lockObject();
-	
-	/**
 	 * Mark a new begin of visiting a content diff. During this process
-	 * only a single thread should be involved, and this thread must hold
-	 * the lock object of this diff visitor.
-	 * 
-	 * @see #lockObject()
+	 * only a single thread should be involved.
 	 */
 	void jzBegin();
 	

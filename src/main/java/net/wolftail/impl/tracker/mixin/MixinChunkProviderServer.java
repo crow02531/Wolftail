@@ -9,7 +9,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.wolftail.impl.tracker.ExtTrackerChunk;
 
-//prevent unload chunk
+//prevent unloading chunks
 @Mixin(ChunkProviderServer.class)
 public abstract class MixinChunkProviderServer {
 	

@@ -10,13 +10,11 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.util.ByteBufs;
+import net.wolftail.impl.util.MoreByteBuf;
 import net.wolftail.util.tracker.DiffVisitor;
 
 @SideWith(section = GameSection.GAME_PLAYING)
 public final class TraceVisitor implements DiffVisitor {
-	
-	private final Object lock;
 	
 	private final PrintWriter pw;
 	
@@ -27,16 +25,8 @@ public final class TraceVisitor implements DiffVisitor {
 	}
 	
 	public TraceVisitor(@Nonnull PrintWriter pw, DiffVisitor dv) {
-		this.lock = new Object();
-		
 		this.pw = pw;
 		this.dv = dv;
-	}
-	
-	@Nonnull
-	@Override
-	public Object lockObject() {
-		return lock;
 	}
 	
 	@Override
@@ -161,7 +151,7 @@ public final class TraceVisitor implements DiffVisitor {
 	@Override
 	public void jzSetTileEntity(ByteBuf buf) {
 		pw.print("Set the tile entity to: ");
-		pw.println(buf == null ? "EMPTY" : ByteBufs.readTag(buf.duplicate()));
+		pw.println(buf == null ? "EMPTY" : MoreByteBuf.readTag(buf.duplicate()));
 		
 		if(dv != null)
 			dv.jzSetTileEntity(buf);

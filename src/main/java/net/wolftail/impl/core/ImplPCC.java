@@ -8,7 +8,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.client.CPacketCustomPayload;
 import net.minecraft.util.text.ITextComponent;
-import net.wolftail.impl.util.ByteBufs;
+import net.wolftail.impl.util.MoreByteBuf;
 
 public final class ImplPCC extends ImplPC {
 	
@@ -27,10 +27,10 @@ public final class ImplPCC extends ImplPC {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void sendPacket(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
+	public void send(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
 		this.ensureNonPlayerType();
 		
-		this.connection.sendPacket(new CPacketCustomPayload("WT|PL", ByteBufs.wrap(buf)), listener);
+		this.connection.sendPacket(new CPacketCustomPayload("WT|PL", MoreByteBuf.wrap(buf)), listener);
 	}
 	
 	@Override

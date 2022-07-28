@@ -10,7 +10,6 @@ import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.util.text.ITextComponent;
 import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
 
 @SideWith(section = GameSection.GAME_PLAYING)
@@ -27,10 +26,10 @@ public interface PlayContext {
 	/**
 	 * Identical to {@code sendPacket(buf, null)}.
 	 * 
-	 * @see #sendPacket(ByteBuf, GenericFutureListener)
+	 * @see #send(ByteBuf, GenericFutureListener)
 	 */
-	default void sendPacket(@Nonnull ByteBuf buf) {
-		this.sendPacket(buf, null);
+	default void send(@Nonnull ByteBuf buf) {
+		this.send(buf, null);
 	}
 	
 	/**
@@ -44,28 +43,38 @@ public interface PlayContext {
 	 * @throws UnsupportedOperationException	if this is a
 	 * 		{@link UniversalPlayerType#TYPE_PLAYER TYPE_PLAYER}
 	 */
-	void sendPacket(@Nonnull ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener);
+	void send(@Nonnull ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener);
 	
 	/**
 	 * Set the network handler of the connection.
 	 * 
-	 * @param handler	the net handler
+	 * <p>
+	 * If it was a server side play context, then the only
+	 * thread allowed to invoke this method is logic server;
+	 * The same applies to client side play context.
+	 * </p>
+	 * 
+	 * @param handler	the network handler
 	 * 
 	 * @throws UnsupportedOperationException	if this is a
 	 * 		{@link UniversalPlayerType#TYPE_PLAYER TYPE_PLAYER}
 	 */
-	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_HOST)
 	void setHandler(INetworkHandler handler);
 	
 	/**
 	 * Get the network handler of the connection.
 	 * 
-	 * @return current net handler
+	 * <p>
+	 * If it was a server side play context, then the only
+	 * thread allowed to invoke this method is logic server;
+	 * The same applies to client side play context.
+	 * </p>
+	 * 
+	 * @return current network handler
 	 * 
 	 * @throws UnsupportedOperationException	if this is a
 	 * 		{@link UniversalPlayerType#TYPE_PLAYER TYPE_PLAYER}
 	 */
-	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_HOST)
 	INetworkHandler getHandler();
 	
 	/**

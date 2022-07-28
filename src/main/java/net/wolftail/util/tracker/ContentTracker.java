@@ -18,23 +18,7 @@ import net.wolftail.api.lifecycle.SideWith;
 public interface ContentTracker {
 	
 	/**
-	 * Shortcut for {@code subscribe(order, subscriber, EVERY_TICK)}.
-	 * 
-	 * @param order			the request
-	 * @param subscriber	the subscriber
-	 * 
-	 * @return true if {@code subscriber} hasn't subscribe {@code order} before
-	 * 
-	 * @throws IllegalStateException	when called during assemble stage
-	 * 
-	 * @see #subscribe(ContentOrder, Consumer, Timing)
-	 */
-	default void subscribe(@Nonnull ContentOrder order, @Nonnull Consumer<ContentDiff> subscriber) {
-		this.subscribe(order, subscriber, Timing.EVERY_TICK);
-	}
-	
-	/**
-	 * Subscribe a specific content(represented as {@code order} in server. The
+	 * Subscribe a specific content(represented as {@code order}) in server. The
 	 * change will be sent, if necessary, to {@code subscriber} when {@code timing}
 	 * is met. Notice that it will be sent only by logic server during the assemble
 	 * stage of the tick. If one subscriber subscribes more than one content, it
@@ -48,7 +32,9 @@ public interface ContentTracker {
 	 * @param subscriber	the subscriber
 	 * @param timing		the timing
 	 * 
-	 * @return true if {@code subscriber} hasn't subscribe {@code order} before
+	 * @return true if {@code subscriber} hasn't subscribe {@code order} before,
+	 * 		two subscribers {@code a} and {@code b} are regarded the same if and
+	 * 		only if {@code a == b}
 	 * 
 	 * @throws IllegalStateException	when called during assemble stage
 	 */
@@ -60,7 +46,9 @@ public interface ContentTracker {
 	 * @param order			the request
 	 * @param subscriber	the subscriber
 	 * 
-	 * @return true if {@code subscriber} has subscribed {@code order} before
+	 * @return true if {@code subscriber} has subscribed {@code order} before,
+	 * 		two subscribers {@code a} and {@code b} are regarded the same if and
+	 * 		only if {@code a == b}
 	 * 
 	 * @throws IllegalStateException	when called during assemble stage
 	 */

@@ -9,12 +9,19 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.tracker.ImplCD;
 
+/**
+ * Represents a change of context or the content itself. A content
+ * diff is essentially a list of instructions(or instruction array).
+ * You can use a diff visitor to visit these instructions.
+ * 
+ * @see DiffVisitor
+ */
 @Immutable
 @SideWith(section = GameSection.GAME_PLAYING)
 public interface ContentDiff {
 	
 	/**
-	 * Transfer the whole content diff into a newly created
+	 * Transfers the whole content diff into a newly created
 	 * read-only byte buf. Don't worry about its performance.
 	 * 
 	 * @return a newly created read-only buf
@@ -22,14 +29,32 @@ public interface ContentDiff {
 	@Nonnull ByteBuf toByteBuf();
 	
 	/**
-	 * Make the given visitor visit this content diff.
+	 * Makes the given visitor visit this content diff.
+	 * 
+	 * <p>
+	 * The current thread will read instruction in this content
+	 * diff one by one and visit jz* methods in {@code visitor}.
+	 * </p>
 	 * 
 	 * @param visitor	the diff visitor
 	 */
 	void apply(@Nonnull DiffVisitor visitor);
 	
+	/**
+	 * Returns a hash code based on the instruction array of the
+	 * content diff.
+	 */
 	int hashCode();
 	
+	/**
+	 * Determines if the instruction array of the given content diff is
+	 * identical to this content diff's.
+	 * 
+	 * <p>
+	 * The 'identical' here only means two instruction array has the same
+	 * size and every single instruction of the two arrays are the same.
+	 * </p>
+	 */
 	boolean equals(Object o);
 	
 	/**

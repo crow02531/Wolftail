@@ -1,6 +1,6 @@
 package net.wolftail.impl.tracker;
 
-import static net.wolftail.impl.util.ByteBufs.readVarInt;
+import static net.wolftail.impl.util.MoreByteBuf.readVarInt;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
@@ -13,7 +13,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 	
 	private final ByteBuf buf;
 	
-	//caller is responsible of making the buf safe
+	//callers are responsible of making the buf safe
 	public ImplCD(ByteBuf buf) {
 		this.buf = buf;
 	}
@@ -42,82 +42,80 @@ public final class ImplCD implements ContentDiff, Insncodes {
 	}
 	
 	public static void apply(ByteBuf buf, DiffVisitor visitor) {
-		synchronized(visitor.lockObject()) {
-			visitor.jzBegin();
-			
-			while(buf.isReadable()) {
-				switch(buf.readByte()) {
-				case BIND_WORLD:
-					visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
-					
-					break;
-				case BAS_WORLD_DAYTIME:
-					visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
-					visitor.jzSetDaytime(buf.readLong());
-					
-					break;
-				case BAS_WORLD_WEATHER:
-					visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
-					visitor.jzSetWeather(buf.readFloat(), buf.readFloat());
-					
-					break;
-				case SET_DAYTIME:
-					visitor.jzSetDaytime(buf.readLong());
-					
-					break;
-				case SET_WEATHER:
-					visitor.jzSetWeather(buf.readFloat(), buf.readFloat());
-					
-					break;
-				case BIND_CHUNK:
-					bind_chunk(buf, visitor);
-					
-					break;
-				case SET_SECTION:
-					set_section(buf, visitor);
-					
-					break;
-				case BULK_SET_SECTION:
-					bulk_set_section(buf, visitor);
-					
-					break;
-				case BIND_BLOCK:
-					visitor.jzBindBlock(buf.readShort());
-					
-					break;
-				case BAS_BLOCK_STATE:
-					visitor.jzBindBlock(buf.readShort());
-					visitor.jzSetState(readBS(buf));
-					
-					break;
-				case BAS_BLOCK_TILEENTITY:
-					visitor.jzBindBlock(buf.readShort());
-					set_tileentity(buf, visitor);
-					
-					break;
-				case SET_STATE:
-					visitor.jzSetState(readBS(buf));
-					
-					break;
-				case SET_TILEENTITY:
-					set_tileentity(buf, visitor);
-					
-					break;
-				case BULK_BAS_BLOCK_STATE:
-					bulk_bas_block_state(buf, visitor);
-					
-					break;
-				case BULK_BAS_BLOCK_TILEENTITY:
-					bulk_bas_block_tileentity(buf, visitor);
-					
-					break;
-				default:
-					throw new Error();
-				}
+		visitor.jzBegin();
+		
+		while(buf.isReadable()) {
+			switch(buf.readByte()) {
+			case BIND_WORLD:
+				visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
+				
+				break;
+			case BAS_WORLD_DAYTIME:
+				visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
+				visitor.jzSetDaytime(buf.readLong());
+				
+				break;
+			case BAS_WORLD_WEATHER:
+				visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
+				visitor.jzSetWeather(buf.readFloat(), buf.readFloat());
+				
+				break;
+			case SET_DAYTIME:
+				visitor.jzSetDaytime(buf.readLong());
+				
+				break;
+			case SET_WEATHER:
+				visitor.jzSetWeather(buf.readFloat(), buf.readFloat());
+				
+				break;
+			case BIND_CHUNK:
+				bind_chunk(buf, visitor);
+				
+				break;
+			case SET_SECTION:
+				set_section(buf, visitor);
+				
+				break;
+			case BULK_SET_SECTION:
+				bulk_set_section(buf, visitor);
+				
+				break;
+			case BIND_BLOCK:
+				visitor.jzBindBlock(buf.readShort());
+				
+				break;
+			case BAS_BLOCK_STATE:
+				visitor.jzBindBlock(buf.readShort());
+				visitor.jzSetState(readBlockState(buf));
+				
+				break;
+			case BAS_BLOCK_TILEENTITY:
+				visitor.jzBindBlock(buf.readShort());
+				set_tileentity(buf, visitor);
+				
+				break;
+			case SET_STATE:
+				visitor.jzSetState(readBlockState(buf));
+				
+				break;
+			case SET_TILEENTITY:
+				set_tileentity(buf, visitor);
+				
+				break;
+			case BULK_BAS_BLOCK_STATE:
+				bulk_bas_block_state(buf, visitor);
+				
+				break;
+			case BULK_BAS_BLOCK_TILEENTITY:
+				bulk_bas_block_tileentity(buf, visitor);
+				
+				break;
+			default:
+				throw new Error();
 			}
-			
-			visitor.jzEnd();
 		}
+		
+		visitor.jzEnd();
 	}
 	
 	private static void bind_chunk(ByteBuf buf, DiffVisitor v) {
@@ -150,7 +148,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 	private static void bulk_bas_block_state(ByteBuf buf, DiffVisitor v) {
 		for(int num = buf.readUnsignedShort() + 1; num-- != 0;) {
 			v.jzBindBlock(buf.readShort());
-			v.jzSetState(readBS(buf));
+			v.jzSetState(readBlockState(buf));
 		}
 	}
 	
@@ -162,7 +160,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 	}
 	
 	@SuppressWarnings("deprecation")
-	private static IBlockState readBS(ByteBuf buf) {
+	private static IBlockState readBlockState(ByteBuf buf) {
 		return Block.BLOCK_STATE_IDS.getByValue(readVarInt(buf));
 	}
 }

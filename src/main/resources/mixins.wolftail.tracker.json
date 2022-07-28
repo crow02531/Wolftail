@@ -6,6 +6,7 @@
     "MixinMinecraftServer",
     "MixinWorldServer",
     "MixinChunk",
-    "MixinChunkProviderServer"
+    "MixinChunkProviderServer",
+    "MixinWorld"
   ]
 }

@@ -2,20 +2,19 @@ package net.wolftail.impl.util;
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.core.util.Throwables;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
-public final class ByteBufs {
+public final class MoreByteBuf {
 	
-	private ByteBufs() {}
+	private MoreByteBuf() {}
 	
 	public static PacketBuffer wrap(ByteBuf buf) {
 		if(buf == null) return null;
@@ -50,30 +49,32 @@ public final class ByteBufs {
 		return i;
 	}
 	
-	public static void writeVarInt(int i, ByteBuf dst) {
+	public static <T extends ByteBuf> T writeVarInt(int i, T dst) {
 		while((i & -128) != 0) {
 			dst.writeByte(i & 127 | 128);
 			i >>>= 7;
 		}
 		
 		dst.writeByte(i);
+		
+		return dst;
 	}
 	
 	public static NBTTagCompound readTag(ByteBuf src) {
 		try {
 			return CompressedStreamTools.read(new ByteBufInputStream(src), NBTSizeTracker.INFINITE);
 		} catch(IOException e) {
-			Throwables.rethrow(e);
-			
-			return null;
+			throw new DecoderException(e);
 		}
 	}
 	
-	public static void writeTag(NBTTagCompound tag, ByteBuf dst) {
+	public static <T extends ByteBuf> T writeTag(NBTTagCompound tag, T dst) {
 		try {
 			CompressedStreamTools.write(tag, new ByteBufOutputStream(dst));
 		} catch(IOException e) {
-			Throwables.rethrow(e);
+			throw new EncoderException(e);
 		}
+		
+		return dst;
 	}
 }
