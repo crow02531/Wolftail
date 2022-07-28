@@ -20,7 +20,7 @@ public abstract class AbstractBlockOrder extends ContentOrder {
 	protected final BlockPos position;
 	
 	/**
-	 * Construct an abstract block order.
+	 * Constructs an abstract block order.
 	 * 
 	 * @param dim	the dimension
 	 * @param pos	the block position, must within buildable area

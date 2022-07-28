@@ -1,6 +1,7 @@
 package net.wolftail.impl.tracker;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -19,12 +20,16 @@ public final class TrackContainer<A> {
 	
 	private final Object2ObjectMap<Timing, Row> rows;
 	
+	private final Supplier<A> factory;
+	
 	public TrackContainer() {
-		this(1);
+		this(1, null);
 	}
 	
-	public TrackContainer(int capacity) {
+	public TrackContainer(int capacity, Supplier<A> factory) {
 		this.rows = new Object2ObjectArrayMap<>(capacity);
+		
+		this.factory = factory == null ? () -> null : factory;
 	}
 	
 	public boolean add(Timing t, DiffVisitor dv) {
@@ -61,6 +66,10 @@ public final class TrackContainer<A> {
 		return false;
 	}
 	
+	public boolean isEmpty() {
+		return this.rows.isEmpty();
+	}
+	
 	public void forEach(Consumer<Row> consumer) {
 		this.rows.values().forEach(consumer);
 	}
@@ -78,7 +87,9 @@ public final class TrackContainer<A> {
 		
 		public A attachment;
 		
-		private Row() {}
+		private Row() {
+			this.resetAttachment();
+		}
 		
 		public DiffVisitor getMultiA() {
 			return this.set_a;
@@ -104,6 +115,10 @@ public final class TrackContainer<A> {
 			else this.set_a.visitors.addAll(this.set_b.visitors);
 			
 			this.set_b = null;
+		}
+		
+		public void resetAttachment() {
+			this.attachment = TrackContainer.this.factory.get();
 		}
 		
 		private boolean contains(DiffVisitor dv) {

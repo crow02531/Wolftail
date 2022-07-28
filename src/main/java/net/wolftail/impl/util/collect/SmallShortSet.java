@@ -44,7 +44,7 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 		this(limit, Math.min(limit, 16));
 	}
 	
-	public SmallShortSet(int limit, int capacity) {
+	public SmallShortSet(int capacity, int limit) {
 		if((limit = this.limit = Math.min(limit, 65536)) < 0)
 			throw new IllegalArgumentException("limit");
 		

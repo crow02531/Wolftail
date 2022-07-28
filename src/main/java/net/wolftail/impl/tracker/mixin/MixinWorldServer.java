@@ -26,7 +26,7 @@ import net.wolftail.util.tracker.Timing;
 public abstract class MixinWorldServer extends World implements ExtTrackerWorldServer {
 
 	@Unique
-	private final TrackContainer<Void> wdt = new TrackContainer<>(3);
+	private final TrackContainer<Void> wdt = new TrackContainer<>(3, null);
 	
 	@Unique
 	private final LinkedObjectCollection<Chunk> chunks = new LinkedObjectCollection<>();

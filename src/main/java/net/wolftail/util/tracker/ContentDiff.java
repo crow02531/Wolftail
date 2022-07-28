@@ -32,8 +32,10 @@ public interface ContentDiff {
 	 * Makes the given visitor visit this content diff.
 	 * 
 	 * <p>
-	 * The current thread will read instruction in this content
-	 * diff one by one and visit jz* methods in {@code visitor}.
+	 * The current thread will read all instructions in this content
+	 * diff one by one and visit {@code jz*} methods in {@code visitor}.
+	 * A {@code jz*} invoke(including {@code jzBegin} and {@code jzEnd})
+	 * corresponds to an instruction in content diff.
 	 * </p>
 	 * 
 	 * @param visitor	the diff visitor

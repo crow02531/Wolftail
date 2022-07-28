@@ -19,7 +19,7 @@ public abstract class AbstractChunkOrder extends ContentOrder {
 	protected final int chunkZ;
 	
 	/**
-	 * Construct an abstract chunk order.
+	 * Constructs an abstract chunk order.
 	 * 
 	 * @param dim	the dimension
 	 * @param x		chunkX, {@code -1875000 <= x < 1875000}
