@@ -13,6 +13,7 @@ public abstract class MixinIntegratedServer {
 	
 	@Redirect(method = "shareToLAN", at = @At(value = "INVOKE", target = "setPermissionLevel"))
 	private void proxy_shareToLAN_setPermissionLevel(EntityPlayerSP sp, int i) {
-		if(sp != null) sp.setPermissionLevel(i);
+		if (sp != null)
+			sp.setPermissionLevel(i);
 	}
 }

@@ -9,17 +9,20 @@ import net.wolftail.impl.core.SectionHandler;
  * There are many threads running in Minecraft. In
  * {@link PhysicalType#INTEGRATED_CLIENT INTEGRATED_CLIENT}, there is a thread
  * responsible of registering game data(items, blocks, etc.), doing game loop.
- * This thread is {@link #LOGIC_CLIENT}. When you are in singleplayer, the thread running
- * {@link IntegratedServer} is called {@link #LOGIC_SERVER}. And in
- * {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}, there isn't logic client
- * , the thread that registers game data and ticking the server is logic server.
+ * This thread is {@link #LOGIC_CLIENT}. When you are in singleplayer, the
+ * thread running {@link IntegratedServer} is called {@link #LOGIC_SERVER}. And
+ * in {@link PhysicalType#DEDICATED_SERVER DEDICATED_SERVER}, there isn't logic
+ * client , the thread that registers game data and ticking the server is logic
+ * server.
  * 
  * <p>
- * There is only one logic server thread at a time. However in two distinct time, the logic
- * server thread could be different. Think about in singleplayer you leave a world and rejoin
- * it. In dedicated server the thread registering game data and the thread ticking the server
- * are different. See {@link MinecraftServer#main(String[])}. The job of 'logic server'
- * transfers from the old thread to a new one in {@link MinecraftServer#startServerThread()}.
+ * There is only one logic server thread at a time. However in two distinct
+ * time, the logic server thread could be different. Think about in singleplayer
+ * you leave a world and rejoin it. In dedicated server the thread registering
+ * game data and the thread ticking the server are different. See
+ * {@link MinecraftServer#main(String[])}. The job of 'logic server' transfers
+ * from the old thread to a new one in
+ * {@link MinecraftServer#startServerThread()}.
  * </p>
  * 
  * <p>
@@ -42,8 +45,8 @@ public enum LogicType {
 		
 		@Override
 		public boolean in() {
-			if(PhysicalType.INTEGRATED_CLIENT.is()) {
-				if(SectionHandler.HANDLER_PREPARED.getState() != SectionState.ACTIVE)
+			if (PhysicalType.INTEGRATED_CLIENT.is()) {
+				if (SectionHandler.HANDLER_PREPARED.getState() != SectionState.ACTIVE)
 					return false;
 				
 				IntegratedServer server = Minecraft.getMinecraft().getIntegratedServer();
@@ -53,8 +56,10 @@ public enum LogicType {
 				Thread regular = SectionHandler.dedicatedServerRegularThread;
 				Thread current = Thread.currentThread();
 				
-				if(current == regular) return true;
-				if(regular == null && current.getId() == 1) return true;
+				if (current == regular)
+					return true;
+				if (regular == null && current.getId() == 1)
+					return true;
 				
 				return false;
 			}
@@ -62,8 +67,8 @@ public enum LogicType {
 	},
 	
 	/**
-	 * In client, logic host thread is the logic client thread, and in
-	 * dedicated server, the logic server thread.
+	 * In client, logic host thread is the logic client thread, and in dedicated
+	 * server, the logic server thread.
 	 */
 	LOGIC_HOST {
 		
@@ -81,12 +86,12 @@ public enum LogicType {
 	/**
 	 * Ensure {@code in()} return true.
 	 * 
-	 * @throws IllegalStateException	when the current thread is not the desiring one
+	 * @throws IllegalStateException when the current thread is not the desiring one
 	 * 
 	 * @see #in()
 	 */
 	public void ensure() {
-		if(!this.in())
+		if (!this.in())
 			throw new IllegalStateException("Not in " + this);
 	}
 }

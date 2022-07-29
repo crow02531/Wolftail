@@ -81,8 +81,7 @@ import net.minecraft.network.play.server.SPacketWindowProperty;
 import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.util.text.ITextComponent;
 
-public final class NptClientPacketListener
-extends NptPacketListener implements INetHandlerPlayClient {
+public final class NptClientPacketListener extends NptPacketListener implements INetHandlerPlayClient {
 	
 	private final NetworkManager connection;
 	
@@ -92,7 +91,7 @@ extends NptPacketListener implements INetHandlerPlayClient {
 	
 	@Override
 	public void onDisconnect(ITextComponent reason) {
-		//NOOP - see MixinMinecraft.doGameLoop
+		// NOOP - see MixinMinecraft.doGameLoop
 	}
 	
 	@Override
@@ -109,7 +108,7 @@ extends NptPacketListener implements INetHandlerPlayClient {
 	
 	@Override
 	public void handleKeepAlive(SPacketKeepAlive packetIn) {
-		//NOOP
+		// NOOP
 	}
 	
 	@Override

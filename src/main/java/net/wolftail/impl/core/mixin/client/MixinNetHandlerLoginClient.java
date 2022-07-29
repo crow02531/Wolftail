@@ -27,7 +27,7 @@ public abstract class MixinNetHandlerLoginClient {
 	
 	@Inject(method = "handleLoginSuccess", at = @At("HEAD"), cancellable = true)
 	private void on_handleLoginSuccess_head(SPacketLoginSuccess packetIn, CallbackInfo ci) {
-		if(!this.waitForTypeNotify) {
+		if (!this.waitForTypeNotify) {
 			ci.cancel();
 			
 			NetworkManager conn = this.networkManager;

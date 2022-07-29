@@ -12,14 +12,14 @@ public interface IServerHandler {
 	/**
 	 * Called when a play context just setup.
 	 * 
-	 * @param context	the new play context
+	 * @param context the new play context
 	 */
 	void handleEnter(@Nonnull PlayContext context);
 	
 	/**
 	 * Called when a play context leave the game.
 	 * 
-	 * @param context	the leaving play context
+	 * @param context the leaving play context
 	 */
 	void handleLeave(@Nonnull PlayContext context);
 }

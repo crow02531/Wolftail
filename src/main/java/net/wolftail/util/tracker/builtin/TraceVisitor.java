@@ -8,12 +8,9 @@ import javax.annotation.Nonnull;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
-import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.util.MoreByteBuf;
 import net.wolftail.util.tracker.DiffVisitor;
 
-@SideWith(section = GameSection.GAME_PLAYING)
 public final class TraceVisitor implements DiffVisitor {
 	
 	private final PrintWriter pw;
@@ -35,7 +32,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print("Processing Thread: ");
 		pw.println(Thread.currentThread());
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzBegin();
 	}
 	
@@ -43,7 +40,7 @@ public final class TraceVisitor implements DiffVisitor {
 	public void jzEnd() {
 		pw.println("-------------------End-------------------");
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzEnd();
 	}
 	
@@ -52,7 +49,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print("Bind target world to: ");
 		pw.println(dim);
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzBindWorld(dim);
 	}
 	
@@ -64,7 +61,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print(chunkZ);
 		pw.println(")");
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzBindChunk(chunkX, chunkZ);
 	}
 	
@@ -78,7 +75,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print(index >> 8 & 0xF);
 		pw.println(")");
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzBindBlock(index);
 	}
 	
@@ -86,7 +83,7 @@ public final class TraceVisitor implements DiffVisitor {
 	public void jzUnbindWorld() {
 		pw.print("Unbind target world");
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzUnbindWorld();
 	}
 	
@@ -94,7 +91,7 @@ public final class TraceVisitor implements DiffVisitor {
 	public void jzUnbindChunk() {
 		pw.print("Unbind target chunk");
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzUnbindChunk();
 	}
 	
@@ -102,7 +99,7 @@ public final class TraceVisitor implements DiffVisitor {
 	public void jzUnbindBlock() {
 		pw.print("Unbind target block");
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzUnbindBlock();
 	}
 	
@@ -111,7 +108,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print("Set the daytime to: ");
 		pw.println(daytime);
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzSetDaytime(daytime);
 	}
 	
@@ -123,7 +120,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print(thunderStr);
 		pw.println(")");
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzSetWeather(rainStr, thunderStr);
 	}
 	
@@ -132,10 +129,10 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print("Set the block state layer of section ");
 		pw.print(index);
 		pw.print(" to: ");
-		pw.print(buf == null ? "EMPTY" : buf); //TODO print detailed block state layer
+		pw.print(buf == null ? "EMPTY" : buf); // TODO print detailed block state layer
 		pw.println();
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzSetSection(index, buf);
 	}
 	
@@ -144,7 +141,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print("Set the block state to: ");
 		pw.println(state);
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzSetState(state);
 	}
 	
@@ -153,7 +150,7 @@ public final class TraceVisitor implements DiffVisitor {
 		pw.print("Set the tile entity to: ");
 		pw.println(buf == null ? "EMPTY" : MoreByteBuf.readTag(buf.duplicate()));
 		
-		if(dv != null)
+		if (dv != null)
 			dv.jzSetTileEntity(buf);
 	}
 }

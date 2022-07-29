@@ -7,6 +7,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import net.minecraft.server.MinecraftServer;
 import net.wolftail.api.lifecycle.SectionState;
 
 public final class SectionHandler {
@@ -44,7 +45,7 @@ public final class SectionHandler {
 		this.lock.writeLock().unlock();
 	}
 	
-	//caller are responsible of checking lock state
+	// caller are responsible of checking lock state
 	public SectionState getState() {
 		return this.state;
 	}
@@ -56,6 +57,8 @@ public final class SectionHandler {
 	private static final Logger logger = LogManager.getLogger("Wolftail/Lifecycle");
 	
 	public static Thread dedicatedServerRegularThread;
+	
+	public static MinecraftServer dedicatedServer;
 	
 	public static void finish_preparing() {
 		SectionHandler preparing = HANDLER_PREPARING;
@@ -96,7 +99,7 @@ public final class SectionHandler {
 		loaded.doUnlock();
 		wandering.doUnlock();
 		
-		if(isServer) {
+		if (isServer) {
 			SectionHandler playing = HANDLER_PLAYING;
 			
 			wandering.doLock();
@@ -122,7 +125,7 @@ public final class SectionHandler {
 		wandering.doAdvance();
 		playing.doAdvance();
 		
-		if(wandering.state == SectionState.ACTIVE)
+		if (wandering.state == SectionState.ACTIVE)
 			logger.info("Section PLAYING end and WANDERING start");
 		else
 			logger.info("Section WANDERING end and PLAYING start");

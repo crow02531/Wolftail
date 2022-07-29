@@ -51,13 +51,14 @@ public abstract class MixinChunk implements ExtTrackerChunk {
 	
 	@Override
 	public void wolftail_blockChanged(short index) {
-		if(this.cbs != null) {
+		if (this.cbs != null) {
 			this.cbs.forEach(r -> {
-				if(r.getMultiB() == null) return;
+				if (r.getMultiB() == null)
+					return;
 				
 				SmallShortSet set = r.attachment;
 				
-				if(set.add(index) && set.isFull()) {
+				if (set.add(index) && set.isFull()) {
 					r.transferB2A();
 					r.resetAttachment();
 				}
@@ -72,7 +73,7 @@ public abstract class MixinChunk implements ExtTrackerChunk {
 	
 	@Override
 	public boolean wolftail_cbs_track(DiffVisitor acceptor, Timing timing) {
-		if(this.cbs == null) {
+		if (this.cbs == null) {
 			this.cbs = new TrackContainer<>(1, () -> new SmallShortSet(64));
 			this.node = ((ExtTrackerWorldServer) this.world).wolftail_join((Chunk) (Object) this);
 			
@@ -86,10 +87,11 @@ public abstract class MixinChunk implements ExtTrackerChunk {
 	
 	@Override
 	public boolean wolftail_cbs_untrack(DiffVisitor acceptor) {
-		if(this.cbs == null) return false;
+		if (this.cbs == null)
+			return false;
 		
-		if(this.cbs.remove(acceptor)) {
-			if(this.cbs.isEmpty()) {
+		if (this.cbs.remove(acceptor)) {
+			if (this.cbs.isEmpty()) {
 				this.cbs = null;
 				
 				this.node.unlink();
@@ -103,40 +105,42 @@ public abstract class MixinChunk implements ExtTrackerChunk {
 	}
 	
 	@Override
-	public void wolftail_assemble(int tick) {
-		if(this.cbs == null) return;
+	public void wolftail_cbs_assemble(int tick) {
+		if (this.cbs == null)
+			return;
 		
 		this.cbs.forEach(tick, r -> {
 			DiffVisitor v;
 			
-			if((v = r.getMultiA()) != null) {
+			if ((v = r.getMultiA()) != null) {
 				v.jzBegin();
 				v.jzBindWorld(this.world.provider.getDimensionType());
 				v.jzBindChunk(this.x, this.z);
 				
 				PacketBuffer buf = new PacketBuffer(Unpooled.buffer());
 				
-				for(int i = 0; i < 16; ++i) {
-					if(this.storageArrays[i] == null) v.jzSetSection(i, null);
+				for (int i = 0; i < 16; ++i) {
+					if (this.storageArrays[i] == null)
+						v.jzSetSection(i, null);
 					else {
 						this.storageArrays[i].getData().write(buf);
 						
 						v.jzSetSection(i, buf);
-						buf.readerIndex(0).writerIndex(0);
+						buf.clear();
 					}
 				}
 				
 				v.jzEnd();
 			}
 			
-			if((v = r.getMultiB()) != null) {
+			if ((v = r.getMultiB()) != null) {
 				v.jzBegin();
 				v.jzBindWorld(this.world.provider.getDimensionType());
 				v.jzBindChunk(this.x, this.z);
 				
 				SmallShortSet set = r.attachment;
 				
-				for(int i = set.size(); i-- != 0;) {
+				for (int i = set.size(); i-- != 0;) {
 					short s = set.get(i);
 					
 					v.jzBindBlock(s);

@@ -35,15 +35,15 @@ public final class TrackContainer<A> {
 	public boolean add(Timing t, DiffVisitor dv) {
 		Row r = null;
 		
-		for(Entry<Timing, Row> e : this.rows.object2ObjectEntrySet()) {
-			if(e.getValue().contains(dv))
+		for (Entry<Timing, Row> e : this.rows.object2ObjectEntrySet()) {
+			if (e.getValue().contains(dv))
 				return false;
 			
-			if(e.getKey().equals(t))
+			if (e.getKey().equals(t))
 				r = e.getValue();
 		}
 		
-		if(r == null)
+		if (r == null)
 			this.rows.put(t, r = new Row());
 		
 		r.join(dv);
@@ -53,11 +53,12 @@ public final class TrackContainer<A> {
 	public boolean remove(DiffVisitor dv) {
 		ObjectIterator<Entry<Timing, Row>> iter = this.rows.object2ObjectEntrySet().iterator();
 		
-		while(iter.hasNext()) {
+		while (iter.hasNext()) {
 			Row r = iter.next().getValue();
 			
-			if(r.tryLeave(dv)) {
-				if(r.set_a == null && r.set_b == null) iter.remove();
+			if (r.tryLeave(dv)) {
+				if (r.set_a == null && r.set_b == null)
+					iter.remove();
 				
 				return true;
 			}
@@ -76,7 +77,8 @@ public final class TrackContainer<A> {
 	
 	public void forEach(int tick, Consumer<Row> consumer) {
 		this.rows.object2ObjectEntrySet().forEach(e -> {
-			if(e.getKey().match(tick)) consumer.accept(e.getValue());
+			if (e.getKey().match(tick))
+				consumer.accept(e.getValue());
 		});
 	}
 	
@@ -100,19 +102,25 @@ public final class TrackContainer<A> {
 		}
 		
 		public void transferA2B() {
-			if(this.set_a == null) return;
+			if (this.set_a == null)
+				return;
 			
-			if(this.set_b == null) this.set_b = this.set_a;
-			else this.set_b.visitors.addAll(this.set_a.visitors);
+			if (this.set_b == null)
+				this.set_b = this.set_a;
+			else
+				this.set_b.visitors.addAll(this.set_a.visitors);
 			
 			this.set_a = null;
 		}
 		
 		public void transferB2A() {
-			if(this.set_b == null) return;
+			if (this.set_b == null)
+				return;
 			
-			if(this.set_a == null) this.set_a = this.set_b;
-			else this.set_a.visitors.addAll(this.set_b.visitors);
+			if (this.set_a == null)
+				this.set_a = this.set_b;
+			else
+				this.set_a.visitors.addAll(this.set_b.visitors);
 			
 			this.set_b = null;
 		}
@@ -122,16 +130,16 @@ public final class TrackContainer<A> {
 		}
 		
 		private boolean contains(DiffVisitor dv) {
-			if(this.set_a != null && this.set_a.visitors.contains(dv))
+			if (this.set_a != null && this.set_a.visitors.contains(dv))
 				return true;
-			if(this.set_b != null && this.set_b.visitors.contains(dv))
+			if (this.set_b != null && this.set_b.visitors.contains(dv))
 				return true;
 			
 			return false;
 		}
 		
 		private void join(DiffVisitor dv) {
-			if(this.set_a == null)
+			if (this.set_a == null)
 				this.set_a = new MultiVisitor();
 			
 			this.set_a.visitors.add(dv);
@@ -140,14 +148,16 @@ public final class TrackContainer<A> {
 		private boolean tryLeave(DiffVisitor dv) {
 			ObjectSet<DiffVisitor> vs;
 			
-			if(this.set_a != null && (vs = this.set_a.visitors).remove(dv)) {
-				if(vs.isEmpty()) this.set_a = null;
+			if (this.set_a != null && (vs = this.set_a.visitors).remove(dv)) {
+				if (vs.isEmpty())
+					this.set_a = null;
 				
 				return true;
 			}
 			
-			if(this.set_b != null && (vs = this.set_b.visitors).remove(dv)) {
-				if(vs.isEmpty()) this.set_b = null;
+			if (this.set_b != null && (vs = this.set_b.visitors).remove(dv)) {
+				if (vs.isEmpty())
+					this.set_b = null;
 				
 				return true;
 			}
@@ -194,7 +204,7 @@ public final class TrackContainer<A> {
 		public void jzUnbindChunk() {
 			this.visitors.forEach(DiffVisitor::jzUnbindChunk);
 		}
-
+		
 		@Override
 		public void jzUnbindBlock() {
 			this.visitors.forEach(DiffVisitor::jzUnbindBlock);

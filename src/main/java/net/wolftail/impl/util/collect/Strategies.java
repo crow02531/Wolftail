@@ -4,7 +4,8 @@ import it.unimi.dsi.fastutil.Hash.Strategy;
 
 public final class Strategies {
 	
-	private Strategies() {}
+	private Strategies() {
+	}
 	
 	@SuppressWarnings("unchecked")
 	public static <T> Strategy<T> identity() {

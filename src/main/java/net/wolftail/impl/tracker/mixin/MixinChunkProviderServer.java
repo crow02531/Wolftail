@@ -15,7 +15,7 @@ public abstract class MixinChunkProviderServer {
 	
 	@Inject(method = "queueUnload", at = @At("HEAD"), cancellable = true)
 	private void on_queueUnload_head(Chunk chunkIn, CallbackInfo ci) {
-		if(((ExtTrackerChunk) chunkIn).wolftail_preventUnload())
+		if (((ExtTrackerChunk) chunkIn).wolftail_preventUnload())
 			ci.cancel();
 	}
 }

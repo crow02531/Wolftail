@@ -1,12 +1,15 @@
 package net.wolftail.impl.tracker.mixin;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.profiler.Profiler;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
@@ -24,14 +27,18 @@ import net.wolftail.util.tracker.Timing;
 //anchor of WDT; arrange subscribed chunks
 @Mixin(WorldServer.class)
 public abstract class MixinWorldServer extends World implements ExtTrackerWorldServer {
-
+	
+	@Final
+	@Shadow
+	public MinecraftServer mcServer;
+	
 	@Unique
 	private final TrackContainer<Void> wdt = new TrackContainer<>(3, null);
 	
 	@Unique
 	private final LinkedObjectCollection<Chunk> chunks = new LinkedObjectCollection<>();
 	
-	//unused
+	// unused
 	protected MixinWorldServer(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn,
 			Profiler profilerIn, boolean client) {
 		super(saveHandlerIn, info, providerIn, profilerIn, client);
@@ -53,8 +60,8 @@ public abstract class MixinWorldServer extends World implements ExtTrackerWorldS
 	}
 	
 	@Override
-	public void wolftail_assemble(int tick) {
-		this.wdt.forEach(tick, r -> {
+	public void wolftail_wdt_assemble() {
+		this.wdt.forEach(this.mcServer.getTickCounter(), r -> {
 			DiffVisitor v = r.getMultiA();
 			
 			v.jzBegin();
@@ -62,8 +69,11 @@ public abstract class MixinWorldServer extends World implements ExtTrackerWorldS
 			v.jzSetDaytime(this.worldInfo.getWorldTime());
 			v.jzEnd();
 		});
-		
-		this.chunks.forEach(c -> ((ExtTrackerChunk) c).wolftail_assemble(tick));
+	}
+	
+	@Override
+	public void wolftail_cbs_assemble() {
+		this.chunks.forEach(c -> ((ExtTrackerChunk) c).wolftail_cbs_assemble(this.mcServer.getTickCounter()));
 	}
 	
 	@Override

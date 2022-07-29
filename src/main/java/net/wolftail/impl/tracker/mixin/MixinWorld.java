@@ -28,7 +28,7 @@ public abstract class MixinWorld {
 	
 	@Inject(method = "addTileEntity", at = @At("RETURN"))
 	private void on_addTileEntity_return(TileEntity tile, CallbackInfoReturnable<Boolean> cir) {
-		if(cir.getReturnValueZ())
+		if (cir.getReturnValueZ())
 			this.on_removeTileEntity_return(tile.getPos(), null);
 	}
 	

@@ -14,7 +14,7 @@ public final class WorldServerListener implements IWorldEventListener {
 	
 	@Override
 	public void notifyBlockUpdate(World worldIn, BlockPos pos, IBlockState oldState, IBlockState newState, int flags) {
-		if(oldState != newState)
+		if (oldState != newState)
 			((ExtTrackerChunk) worldIn.getChunkFromBlockCoords(pos)).wolftail_blockChanged(MoreBlockPos.toIndex(pos));
 	}
 	

@@ -4,100 +4,97 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.SideWith;
+import io.netty.buffer.ByteBufUtil;
+import net.wolftail.api.lifecycle.Sealed;
 import net.wolftail.impl.tracker.ImplCD;
 
 /**
- * Represents a change of context or the content itself. A content
- * diff is essentially a list of instructions(or instruction array).
- * You can use a diff visitor to visit these instructions.
+ * Represents a change of content or the content itself. A content diff is
+ * essentially a list of instructions(or instruction array). You can use a diff
+ * visitor to visit these instructions.
  * 
  * @see DiffVisitor
  */
+@Sealed
 @Immutable
-@SideWith(section = GameSection.GAME_PLAYING)
 public interface ContentDiff {
-	
-	/**
-	 * Transfers the whole content diff into a newly created
-	 * read-only byte buf. Don't worry about its performance.
-	 * 
-	 * @return a newly created read-only buf
-	 */
-	@Nonnull ByteBuf toByteBuf();
 	
 	/**
 	 * Makes the given visitor visit this content diff.
 	 * 
 	 * <p>
-	 * The current thread will read all instructions in this content
-	 * diff one by one and visit {@code jz*} methods in {@code visitor}.
-	 * A {@code jz*} invoke(including {@code jzBegin} and {@code jzEnd})
-	 * corresponds to an instruction in content diff.
+	 * The current thread will read all instructions in this content diff one by one
+	 * and visit corresponding {@code jz*} methods in {@code visitor}. A {@code jz*}
+	 * invoke(including {@code jzBegin} and {@code jzEnd}) corresponds to an
+	 * instruction in the diff.
 	 * </p>
 	 * 
-	 * @param visitor	the diff visitor
+	 * @param visitor the diff visitor
 	 */
 	void apply(@Nonnull DiffVisitor visitor);
 	
 	/**
-	 * Returns a hash code based on the instruction array of the
-	 * content diff.
+	 * Transfers the whole content diff into {@code dst}.
+	 * 
+	 * <p>
+	 * The written data is a 'compressed version' of the content diff. If two
+	 * content diffs are equal, then their 'compressed version' are also equal.
+	 * </p>
+	 * 
+	 * @param dst the buffer to be written
+	 */
+	void to(@Nonnull ByteBuf dst);
+	
+	/**
+	 * Returns a hash code based on the instruction array of the content diff.
 	 */
 	int hashCode();
 	
 	/**
-	 * Determines if the instruction array of the given content diff is
-	 * identical to this content diff's.
+	 * Determines if the instruction array of the given content diff is identical to
+	 * this content diff's.
 	 * 
 	 * <p>
-	 * The 'identical' here only means two instruction array has the same
-	 * size and every single instruction of the two arrays are the same.
+	 * The 'identical' here only means two instruction array has the same size and
+	 * every single instruction of the two arrays are the same.
 	 * </p>
 	 */
 	boolean equals(Object o);
 	
 	/**
-	 * Check if all readable bytes of {@code buf} make up a content diff.
-	 * It will read all readable bytes.
+	 * Creates a new content diff from the buf's all readable bytes. It will read
+	 * all readable bytes.
 	 * 
-	 * @param buf	a non-null suspicious byte buf
-	 * 
-	 * @throws IllegalArgumentException	thrown when the check fails
-	 */
-	public static void check(@Nonnull ByteBuf buf) {
-		try {
-			ImplCD.apply(buf, new ComplementaryCheckVisitor());
-		} catch(Throwable e) {
-			throw new IllegalArgumentException(e);
-		}
-	}
-	
-	/**
-	 * Create a new content diff from the buf's all readable bytes. It will
-	 * read all readable bytes.
-	 * 
-	 * @param buf	a buf whose all readable bytes composing one content diff
+	 * @param buf a buf whose all readable bytes composing one content diff
 	 * 
 	 * @return the content diff
 	 */
 	@Nonnull
-	public static ContentDiff from(@Nonnull ByteBuf buf) {
-		return new ImplCD(Unpooled.copiedBuffer(buf).asReadOnly());
+	static ContentDiff of(@Nonnull ByteBuf buf) {
+		return new ImplCD(ByteBufUtil.getBytes(buf));
 	}
 	
 	/**
-	 * Similar to {@code from(buf).apply(visitor)}, except this method analyzes the
+	 * Similar to {@code of(buf).apply(visitor)}, except this method analyzes the
 	 * {@code buf} directly without any copy. It will read all readable bytes.
 	 * 
-	 * @param buf		a buf whose all readable bytes composing one content diff
-	 * @param visitor	the diff visitor
+	 * @param buf     a buf whose all readable bytes composing one content diff
+	 * @param visitor the diff visitor
 	 * 
 	 * @see #apply(DiffVisitor)
 	 */
-	public static void apply(@Nonnull ByteBuf buf, @Nonnull DiffVisitor visitor) {
+	static void apply(@Nonnull ByteBuf buf, @Nonnull DiffVisitor visitor) {
 		ImplCD.apply(buf, visitor);
+	}
+	
+	/**
+	 * Check if all readable bytes of {@code buf} make up a content diff.
+	 * 
+	 * @param buf a suspicious byte buf
+	 * 
+	 * @throws IllegalArgumentException thrown when the check fails
+	 */
+	static void check(@Nonnull ByteBuf buf) {
+		ImplCD.check(buf);
 	}
 }

@@ -2,7 +2,10 @@ package net.wolftail.impl.tracker;
 
 import static net.wolftail.impl.util.MoreByteBuf.readVarInt;
 
+import java.util.Arrays;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
@@ -11,41 +14,64 @@ import net.wolftail.util.tracker.DiffVisitor;
 
 public final class ImplCD implements ContentDiff, Insncodes {
 	
-	private final ByteBuf buf;
+	private final byte[] array;
 	
-	//callers are responsible of making the buf safe
-	public ImplCD(ByteBuf buf) {
-		this.buf = buf;
-	}
+	private int hash;
 	
-	@Override
-	public ByteBuf toByteBuf() {
-		return this.buf.duplicate();
+	// callers are responsible of making 'a' safe
+	public ImplCD(byte[] a) {
+		this.array = a;
 	}
 	
 	@Override
 	public void apply(DiffVisitor visitor) {
-		apply(this.toByteBuf(), visitor);
+		apply(Unpooled.wrappedBuffer(this.array), visitor);
+	}
+	
+	@Override
+	public void to(ByteBuf dst) {
+		dst.writeBytes(this.array);
 	}
 	
 	@Override
 	public int hashCode() {
-		return this.buf.hashCode();
+		if (this.hash == 0)
+			this.hash = Unpooled.wrappedBuffer(this.array).hashCode();
+		
+		return this.hash;
 	}
 	
 	@Override
 	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(o == null || !(o instanceof ImplCD)) return false;
+		if (o == this)
+			return true;
+		if (o == null || !(o instanceof ImplCD))
+			return false;
 		
-		return ((ImplCD) o).buf.equals(this.buf);
+		ImplCD o0 = (ImplCD) o;
+		
+		int h = this.hash;
+		int h0 = o0.hash;
+		
+		if (h != h0 && h != 0 && h0 != 0)
+			return false;
+		
+		return Arrays.equals(this.array, o0.array);
+	}
+	
+	public static void check(ByteBuf buf) {
+		try {
+			apply(buf.duplicate(), new ComplementaryCheckVisitor(buf));
+		} catch (Throwable e) {
+			throw new IllegalArgumentException(e);
+		}
 	}
 	
 	public static void apply(ByteBuf buf, DiffVisitor visitor) {
 		visitor.jzBegin();
 		
-		while(buf.isReadable()) {
-			switch(buf.readByte()) {
+		while (buf.isReadable()) {
+			switch (buf.readByte()) {
 			case BIND_WORLD:
 				visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
 				
@@ -86,7 +112,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 				break;
 			case BAS_BLOCK_STATE:
 				visitor.jzBindBlock(buf.readShort());
-				visitor.jzSetState(readBlockState(buf));
+				visitor.jzSetState(read_state(buf));
 				
 				break;
 			case BAS_BLOCK_TILEENTITY:
@@ -95,7 +121,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 				
 				break;
 			case SET_STATE:
-				visitor.jzSetState(readBlockState(buf));
+				visitor.jzSetState(read_state(buf));
 				
 				break;
 			case SET_TILEENTITY:
@@ -140,27 +166,27 @@ public final class ImplCD implements ContentDiff, Insncodes {
 	
 	private static void bulk_set_section(ByteBuf buf, DiffVisitor v) {
 		int availableSections = buf.readUnsignedShort();
-
-		for(int i = 0; i < 16; ++i)
+		
+		for (int i = 0; i < 16; ++i)
 			v.jzSetSection(i, (availableSections & (1 << i)) == 0 ? null : buf.readSlice(readVarInt(buf)));
 	}
 	
 	private static void bulk_bas_block_state(ByteBuf buf, DiffVisitor v) {
-		for(int num = buf.readUnsignedShort() + 1; num-- != 0;) {
+		for (int num = buf.readUnsignedShort() + 1; num-- != 0;) {
 			v.jzBindBlock(buf.readShort());
-			v.jzSetState(readBlockState(buf));
+			v.jzSetState(read_state(buf));
 		}
 	}
 	
 	private static void bulk_bas_block_tileentity(ByteBuf buf, DiffVisitor v) {
-		for(int num = buf.readUnsignedShort() + 1; num-- != 0;) {
+		for (int num = buf.readUnsignedShort() + 1; num-- != 0;) {
 			v.jzBindBlock(buf.readShort());
 			set_tileentity(buf, v);
 		}
 	}
 	
 	@SuppressWarnings("deprecation")
-	private static IBlockState readBlockState(ByteBuf buf) {
+	private static IBlockState read_state(ByteBuf buf) {
 		return Block.BLOCK_STATE_IDS.getByValue(readVarInt(buf));
 	}
 }

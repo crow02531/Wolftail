@@ -26,7 +26,7 @@ public final class ImplUPTR implements UniversalPlayerTypeRegistry {
 	public UniversalPlayerType register(ResourceLocation id, IServerHandler s, IClientHandler c) {
 		ImplUPT r = new ImplUPT(s, c);
 		
-		if(this.underlying.putIfAbsent(id, r) != null)
+		if (this.underlying.putIfAbsent(id, r) != null)
 			throw new IllegalStateException("The ID " + id + " had been registered");
 		
 		return r;
@@ -44,14 +44,15 @@ public final class ImplUPTR implements UniversalPlayerTypeRegistry {
 	
 	@Override
 	public UniversalPlayerType getRandomType(Random rnd) {
-		if(rnd == null) rnd = new Random();
+		if (rnd == null)
+			rnd = new Random();
 		
 		return this.asMap().values().asList().get(rnd.nextInt(this.underlying.size()));
 	}
 	
 	@Override
 	public ImmutableBiMap<ResourceLocation, UniversalPlayerType> asMap() {
-		if(!(this.underlying instanceof ImmutableBiMap))
+		if (!(this.underlying instanceof ImmutableBiMap))
 			this.underlying = ImmutableBiMap.copyOf(this.underlying);
 		
 		return (ImmutableBiMap<ResourceLocation, UniversalPlayerType>) this.underlying;

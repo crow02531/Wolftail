@@ -2,6 +2,7 @@ package net.wolftail.impl.core;
 
 import java.util.UUID;
 
+import io.netty.buffer.ByteBufAllocator;
 import net.minecraft.network.EnumPacketDirection;
 import net.minecraft.network.NetworkManager;
 import net.wolftail.api.INetworkHandler;
@@ -45,6 +46,11 @@ public abstract class ImplPC implements PlayContext {
 	}
 	
 	@Override
+	public ByteBufAllocator alloc() {
+		return this.connection.channel().alloc();
+	}
+	
+	@Override
 	public void setHandler(INetworkHandler handler) {
 		this.ensureNonPlayerType();
 		
@@ -64,7 +70,7 @@ public abstract class ImplPC implements PlayContext {
 	}
 	
 	final void ensureNonPlayerType() {
-		if(this.playType().isPlayerType())
+		if (this.playType().isPlayerType())
 			throw new UnsupportedOperationException();
 	}
 }

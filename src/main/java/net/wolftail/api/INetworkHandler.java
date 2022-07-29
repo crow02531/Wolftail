@@ -11,15 +11,15 @@ import net.wolftail.api.lifecycle.SideWith;
 public interface INetworkHandler {
 	
 	/**
-	 * Process a packet. Called by netty thread. You should read all
-	 * readable bytes in {@code buf} before the method returns.
+	 * Process a packet. Called by netty thread. You should read all readable bytes
+	 * in {@code buf} before the method returns.
 	 * 
 	 * <p>
-	 * Notice that {@code buf} is pooled so it's not recommended to keep
-	 * its ref too long.
+	 * Notice that {@code buf} is pooled so it's not recommended to keep its ref too
+	 * long.
 	 * </p>
 	 * 
-	 * @param buf	the data of the packet
+	 * @param buf the data of the packet
 	 */
 	void handle(@Nonnull ByteBuf buf);
 	
@@ -27,5 +27,6 @@ public interface INetworkHandler {
 	 * Called every (network) tick.
 	 */
 	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_HOST)
-	default void tick() {}
+	default void tick() {
+	}
 }

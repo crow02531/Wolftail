@@ -5,6 +5,8 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.server.MinecraftServer;
 import net.wolftail.impl.core.SectionHandler;
 
 /**
@@ -50,9 +52,9 @@ public enum GameSection {
 	GAME_LOADED(SectionHandler.HANDLER_LOADED),
 	
 	/**
-	 * In dedicated server this stage takes a very short period and the
-	 * application simply do nothing. However in client this stage means loaded
-	 * but not in playing, such as the time you are facing main menu.
+	 * In dedicated server this stage takes a very short period and the application
+	 * simply do nothing. However in client this stage means loaded but not in
+	 * playing, such as the time you are facing main menu.
 	 */
 	GAME_WANDERING(SectionHandler.HANDLER_WANDERING),
 	
@@ -68,17 +70,18 @@ public enum GameSection {
 	}
 	
 	/**
-	 * Ensure {@code this}'s state equals to {@code intended} during the {@code action}.
+	 * Ensure {@code this}'s state equals to {@code intended} during the
+	 * {@code action}.
 	 * 
-	 * @param intended	the desiring state
-	 * @param action	the action to be executed
+	 * @param intended the desiring state
+	 * @param action   the action to be executed
 	 * 
-	 * @throws IllegalStateException	when the current state of {@code this} dosen't
-	 * 		equals to {@code intended}
+	 * @throws IllegalStateException when the current state of {@code this} dosen't
+	 *                               equals to {@code intended}
 	 */
 	public void ensure(@Nonnull SectionState intended, @Nonnull Runnable action) {
 		this.block((current) -> {
-			if(intended != current)
+			if (intended != current)
 				throw new IllegalStateException("Not in " + intended + " state but " + current);
 			
 			action.run();
@@ -86,11 +89,11 @@ public enum GameSection {
 	}
 	
 	/**
-	 * Block the game section change progress so that game section remains
-	 * the same during the {@code action}.
+	 * Block the game section change progress so that game section remains the same
+	 * during the {@code action}.
 	 * 
-	 * @param action	the action to be executed, consuming the current
-	 * 		state of {@code this}
+	 * @param action the action to be executed, consuming the current state of
+	 *               {@code this}
 	 */
 	public void block(@Nonnull Consumer<SectionState> action) {
 		Lock rlock = this.handler.getLock();
@@ -102,5 +105,19 @@ public enum GameSection {
 		} finally {
 			rlock.unlock();
 		}
+	}
+	
+	/**
+	 * Get the current minecraft server instance. For dedicated server this method
+	 * always returns the same value, but for integrated client it returns the
+	 * current integrated server.
+	 * 
+	 * @return the current minecraft server instance
+	 */
+	@Nonnull
+	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
+	public static MinecraftServer serverInstance() {
+		return PhysicalType.INTEGRATED_CLIENT.is() ? Minecraft.getMinecraft().getIntegratedServer()
+				: SectionHandler.dedicatedServer;
 	}
 }

@@ -19,27 +19,27 @@ public final class ImplUPT implements UniversalPlayerType {
 	}
 	
 	public void callServerEnter(ImplPC arg) {
-		if(this.handler_server != null)
+		if (this.handler_server != null)
 			this.handler_server.handleEnter(arg);
 	}
 	
 	public void callServerLeave(ImplPC arg) {
-		if(this.handler_server != null)
+		if (this.handler_server != null)
 			this.handler_server.handleLeave(arg);
 	}
 	
 	public void callClientEnter(ImplPC arg) {
-		if(this.handler_client != null)
+		if (this.handler_client != null)
 			this.handler_client.handleEnter(arg);
 	}
 	
 	public void callClientFrame() {
-		if(this.handler_client != null)
+		if (this.handler_client != null)
 			this.handler_client.handleFrame();
 	}
 	
 	public void callClientLeave() {
-		if(this.handler_client != null)
+		if (this.handler_client != null)
 			this.handler_client.handleLeave();
 	}
 }

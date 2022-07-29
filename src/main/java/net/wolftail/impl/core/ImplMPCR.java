@@ -30,8 +30,8 @@ public final class ImplMPCR implements RootPlayContextManager {
 	final MinecraftServer server;
 	final Random rnd;
 	
-	private final Map<ImplUPT, ImplMPCS>	subs;
-	private final Map<UUID, ImplPCS>		contexts;
+	private final Map<ImplUPT, ImplMPCS> subs;
+	private final Map<UUID, ImplPCS> contexts;
 	
 	private File file_uniplayerType;
 	private NBTTagCompound data_uniplayerType;
@@ -42,7 +42,7 @@ public final class ImplMPCR implements RootPlayContextManager {
 		
 		ImmutableMap.Builder<ImplUPT, ImplMPCS> builder = ImmutableMap.builder();
 		
-		for(ImplUPT t : (Set<ImplUPT>) (Object) UniversalPlayerTypeRegistry.INSTANCE.asMap().values())
+		for (ImplUPT t : (Set<ImplUPT>) (Object) UniversalPlayerTypeRegistry.INSTANCE.asMap().values())
 			builder.put(t, new ImplMPCS(t, this));
 		
 		this.subs = builder.build();
@@ -81,11 +81,12 @@ public final class ImplMPCR implements RootPlayContextManager {
 		
 		ImplPCS context = new ImplPCS(this.subs.get(type), id, name, connection);
 		
-		if(this.contexts.putIfAbsent(id, context) != null)
+		if (this.contexts.putIfAbsent(id, context) != null)
 			throw new IllegalStateException("Duplicated join with ID " + id);
 		context.subManager.current_load++;
 		
-		logger.info("{}({}) the universal player logged in with type {} and address {}", id, name, type.registeringId(), connection.getRemoteAddress());
+		logger.info("{}({}) the universal player logged in with type {} and address {}", id, name, type.registeringId(),
+				connection.getRemoteAddress());
 		
 		return context;
 	}
@@ -98,9 +99,11 @@ public final class ImplMPCR implements RootPlayContextManager {
 	}
 	
 	public void loadDat() throws IOException {
-		if((this.file_uniplayerType = new File(this.server.worlds[0].getSaveHandler().getWorldDirectory(), "uniplayer-type.dat")).createNewFile()) {
+		if ((this.file_uniplayerType = new File(this.server.worlds[0].getSaveHandler().getWorldDirectory(),
+				"uniplayer-type.dat")).createNewFile()) {
 			this.data_uniplayerType = new NBTTagCompound();
-		} else this.data_uniplayerType = CompressedStreamTools.read(this.file_uniplayerType);
+		} else
+			this.data_uniplayerType = CompressedStreamTools.read(this.file_uniplayerType);
 	}
 	
 	public void saveDat() throws IOException {
@@ -113,10 +116,10 @@ public final class ImplMPCR implements RootPlayContextManager {
 		
 		NBTBase tag = data.getTag(name = id.toString());
 		
-		if(tag != null && tag.getId() == 8)
+		if (tag != null && tag.getId() == 8)
 			type = UniversalPlayerTypeRegistry.INSTANCE.byId(new ResourceLocation(tag.toString()));
 		
-		if(type == null) {
+		if (type == null) {
 			type = UniversalPlayerTypeRegistry.INSTANCE.getRandomType(this.rnd);
 			
 			data.setString(name, type.registeringId().toString());

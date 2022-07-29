@@ -3,66 +3,52 @@ package net.wolftail.util.tracker;
 import static net.wolftail.impl.util.MoreByteBuf.writeVarInt;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
-import net.wolftail.impl.tracker.ImplCD;
 import net.wolftail.impl.tracker.Insncodes;
 
 /**
- * A special diff visitor that could record instructions and use it
- * to produce content diffs.
+ * A special diff visitor that could record instructions and use it to produce
+ * content diff.
  * 
  * @see ContentDiff
  * @see DiffVisitor
  */
 public final class DiffWriter implements DiffVisitor, Insncodes {
-	//TODO make DiffWriter able to produce BAS and BULK codes
+	// TODO make DiffWriter able to produce BAS and BULK codes
 	
 	private ByteBuf buffer;
 	
-	private DimensionType	bind_world;
-	private int[]			bind_chunk; //length=2
-	private int				bind_block; //-1 means unbind
+	private DimensionType bind_world;
+	private int[] bind_chunk; // length=2
+	private int bind_block = -1; // -1 means unbind
 	
 	/**
-	 * Produce a content diff based on the instructions
-	 * recorded between previous call and now.
+	 * Set the output buffer.
 	 * 
 	 * <p>
-	 * Only a single thread is allowed to invoke this method
-	 * at a time.
+	 * This method shouldn't be invoked during visiting process.
 	 * </p>
 	 * 
-	 * @return the produced content diff, null indicates no
-	 * 		instructions recorded
+	 * @param buf the new output buffer
 	 */
-	public ContentDiff harvest() {
-		if(buffer != null) {
-			ImplCD r = new ImplCD(buffer.asReadOnly());
-			
-			buffer = null;
-			
-			bind_world = null;
-			bind_chunk = null;
-			bind_block = -1;
-			
-			return r;
-		}
+	public void setOutput(ByteBuf buf) {
+		this.buffer = buf;
 		
-		return null;
+		this.bind_world = null;
+		this.bind_chunk = null;
+		this.bind_block = -1;
 	}
 	
 	@Override
 	public void jzBegin() {
-		if(buffer == null)
-			buffer = Unpooled.buffer();
+		// NOOP
 	}
 	
 	@Override
 	public void jzEnd() {
-		//NOOP
+		// NOOP
 	}
 	
 	@Override
@@ -70,7 +56,7 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 		bind_chunk = null;
 		bind_block = -1;
 		
-		if(bind_world != dim) {
+		if (bind_world != dim) {
 			bind_world = dim;
 			
 			buffer.writeByte(BIND_WORLD);
@@ -84,11 +70,12 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 		
 		int[] b = bind_chunk;
 		
-		if(b == null || b[0] != chunkX || b[1] != chunkZ) {
-			if(b == null) bind_chunk = b = new int[2];
+		if (b == null || b[0] != chunkX || b[1] != chunkZ) {
+			if (b == null)
+				bind_chunk = b = new int[2];
 			
 			buffer.writeByte(BIND_CHUNK);
-			writeChunkPos(b[0] = chunkX, b[1] = chunkZ, buffer);
+			write_chunkpos(b[0] = chunkX, b[1] = chunkZ, buffer);
 		}
 	}
 	
@@ -96,7 +83,7 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	public void jzBindBlock(short index) {
 		int i = Short.toUnsignedInt(index);
 		
-		if(bind_block != i) {
+		if (bind_block != i) {
 			bind_block = i;
 			
 			buffer.writeByte(BIND_BLOCK);
@@ -106,17 +93,17 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	
 	@Override
 	public void jzUnbindWorld() {
-		//NOOP
+		// NOOP
 	}
 	
 	@Override
 	public void jzUnbindChunk() {
-		//NOOP
+		// NOOP
 	}
 	
 	@Override
 	public void jzUnbindBlock() {
-		//NOOP
+		// NOOP
 	}
 	
 	@Override
@@ -136,7 +123,7 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	public void jzSetSection(int index, ByteBuf buf) {
 		buffer.writeByte(SET_SECTION);
 		
-		if(buf == null)
+		if (buf == null)
 			buffer.writeByte(index);
 		else {
 			buffer.writeByte(0x10 | index);
@@ -148,22 +135,22 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	@Override
 	public void jzSetState(IBlockState state) {
 		buffer.writeByte(SET_STATE);
-		writeBlockState(state, buffer);
+		write_state(state, buffer);
 	}
 	
 	@Override
 	public void jzSetTileEntity(ByteBuf buf) {
 		buffer.writeByte(SET_TILEENTITY);
 		
-		if(buf == null)
-			buffer.writeByte(0); //the varint 0
+		if (buf == null)
+			buffer.writeByte(0); // the varint 0
 		else {
-			writeVarInt(buf.readableBytes(), buffer); //readableBytes can't be 0
+			writeVarInt(buf.readableBytes(), buffer); // readableBytes can't be 0
 			buffer.writeBytes(buf);
 		}
 	}
 	
-	private static void writeChunkPos(int x, int z, ByteBuf dst) {
+	private static void write_chunkpos(int x, int z, ByteBuf dst) {
 		x += 1875000;
 		z += 1875000;
 		
@@ -173,7 +160,7 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	}
 	
 	@SuppressWarnings("deprecation")
-	private static void writeBlockState(IBlockState state, ByteBuf dst) {
+	private static void write_state(IBlockState state, ByteBuf dst) {
 		writeVarInt(Block.BLOCK_STATE_IDS.get(state), dst);
 	}
 }

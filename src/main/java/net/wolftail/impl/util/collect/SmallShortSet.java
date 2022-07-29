@@ -16,8 +16,8 @@ import it.unimi.dsi.fastutil.shorts.ShortArrays;
 import it.unimi.dsi.fastutil.shorts.ShortIterator;
 
 /**
- * A simple, brute-force implementation of a short set based on a backing
- * array. Perfect for storing a relatively small number of things.
+ * A simple, brute-force implementation of a short set based on a backing array.
+ * Perfect for storing a relatively small number of things.
  * 
  * <p>
  * Notice that a short set will never have its size exceed 65536.
@@ -45,10 +45,10 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 	}
 	
 	public SmallShortSet(int capacity, int limit) {
-		if((limit = this.limit = Math.min(limit, 65536)) < 0)
+		if ((limit = this.limit = Math.min(limit, 65536)) < 0)
 			throw new IllegalArgumentException("limit");
 		
-		if(capacity < 0)
+		if (capacity < 0)
 			throw new IllegalArgumentException("capacity");
 		
 		this.array = new short[Math.min(capacity, limit)];
@@ -57,9 +57,10 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 	private int find(final short o) {
 		short[] a = this.array;
 		
-		for(int i = this.size; i-- != 0;)
-			if(a[i] == o) return i;
-		
+		for (int i = this.size; i-- != 0;)
+			if (a[i] == o)
+				return i;
+			
 		return -1;
 	}
 	
@@ -71,7 +72,8 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 	@Override
 	public boolean rem(final short k) {
 		final int pos = this.find(k);
-		if(pos < 0) return false;
+		if (pos < 0)
+			return false;
 		
 		System.arraycopy(this.array, pos + 1, this.array, pos, this.size-- - pos - 1);
 		
@@ -83,12 +85,13 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 	@Override
 	public boolean add(final short k) {
 		final int pos = find(k);
-		if(pos >= 0) return false;
+		if (pos >= 0)
+			return false;
 		
-		if(this.size == this.array.length)
-			if(!this.tryExpand())
+		if (this.size == this.array.length)
+			if (!this.tryExpand())
 				throw new IllegalStateException("Full");
-		
+			
 		this.array[this.size++] = k;
 		
 		this.modCount++;
@@ -100,7 +103,7 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 		final int oldLength = this.array.length;
 		final int newLength = Math.min(oldLength == 0 ? 2 : oldLength * 2, this.limit);
 		
-		if(newLength == oldLength)
+		if (newLength == oldLength)
 			return false;
 		
 		final short[] b = new short[newLength];
@@ -149,7 +152,8 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 			@Override
 			public short nextShort() {
 				checkForComodification();
-				if(!hasNext()) throw new NoSuchElementException();
+				if (!hasNext())
+					throw new NoSuchElementException();
 				
 				return array[next++];
 			}
@@ -173,7 +177,7 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 			}
 			
 			void checkForComodification() {
-				if(expectedModCount != modCount)
+				if (expectedModCount != modCount)
 					throw new ConcurrentModificationException();
 			}
 		};
@@ -194,7 +198,7 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 		
 		try {
 			c = (SmallShortSet) super.clone();
-		} catch(CloneNotSupportedException e) {
+		} catch (CloneNotSupportedException e) {
 			throw new InternalError();
 		}
 		
@@ -207,19 +211,19 @@ public class SmallShortSet extends AbstractShortSet implements Cloneable, Serial
 	private void writeObject(ObjectOutputStream s) throws IOException {
 		s.defaultWriteObject();
 		
-		for(int i = 0; i < this.size; i++)
+		for (int i = 0; i < this.size; i++)
 			s.writeShort(this.array[i]);
 	}
 	
 	private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
 		s.defaultReadObject();
 		
-		if(!(0 <= this.size && this.size <= this.limit && this.limit <= 65536))
+		if (!(0 <= this.size && this.size <= this.limit && this.limit <= 65536))
 			throw new IOException();
 		
 		this.array = new short[this.size];
 		
-		for(int i = 0; i < this.size; i++)
+		for (int i = 0; i < this.size; i++)
 			this.array[i] = s.readShort();
 	}
 }

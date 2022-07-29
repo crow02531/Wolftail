@@ -4,7 +4,8 @@ import net.minecraft.util.math.BlockPos;
 
 public final class MoreBlockPos {
 	
-	private MoreBlockPos() {}
+	private MoreBlockPos() {
+	}
 	
 	public static short toIndex(int localX, int localY, int localZ) {
 		return (short) (localX << 12 | localZ << 8 | localY);

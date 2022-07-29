@@ -1,19 +1,24 @@
 package net.wolftail.util.tracker.builtin;
 
 import javax.annotation.Nonnull;
-import javax.annotation.concurrent.Immutable;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.WorldServer;
 import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.impl.tracker.ExtTrackerWorldServer;
+import net.wolftail.util.tracker.ContentTracker;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;
 
-@Immutable
-@SideWith(section = GameSection.GAME_PLAYING)
 public final class OrderDaytime extends AbstractWorldOrder {
+	
+	static {
+		ContentTracker.addMechanism(() -> {
+			for (WorldServer w : GameSection.serverInstance().worlds)
+				((ExtTrackerWorldServer) w).wolftail_wdt_assemble();
+		});
+	}
 	
 	public OrderDaytime(@Nonnull DimensionType dim) {
 		super(dim);

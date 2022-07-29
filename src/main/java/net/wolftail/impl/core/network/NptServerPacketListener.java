@@ -40,8 +40,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.wolftail.impl.core.ImplMPCR;
 import net.wolftail.impl.core.ImplPCS;
 
-public final class NptServerPacketListener
-extends NptPacketListener implements INetHandlerPlayServer {
+public final class NptServerPacketListener extends NptPacketListener implements INetHandlerPlayServer {
 	
 	private static final Logger logger0 = LogManager.getLogger("Wolftail/User");
 	private static final Logger logger1 = LogManager.getLogger(NetHandlerPlayServer.class);
@@ -58,10 +57,10 @@ extends NptPacketListener implements INetHandlerPlayServer {
 	public void update() {
 		super.update();
 		
-		if(!this.context.getConnection().isLocalChannel()) {
+		if (!this.context.getConnection().isLocalChannel()) {
 			long ct = System.currentTimeMillis();
 			
-			if(ct > this.keepAliveTimer + 15000L) {
+			if (ct > this.keepAliveTimer + 15000L) {
 				this.keepAliveTimer = ct;
 				
 				this.context.getConnection().sendPacket(new SPacketKeepAlive(0));
@@ -79,7 +78,7 @@ extends NptPacketListener implements INetHandlerPlayServer {
 		pc.playType().callServerLeave(pc);
 		rm.logout(pc);
 		
-		if(pc.getConnection().isLocalChannel()) {
+		if (pc.getConnection().isLocalChannel()) {
 			logger1.info("Stopping singleplayer server as player logged out");
 			
 			rm.server().initiateShutdown();

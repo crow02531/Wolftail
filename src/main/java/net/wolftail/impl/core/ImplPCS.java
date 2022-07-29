@@ -42,7 +42,8 @@ public final class ImplPCS extends ImplPC {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void disconnect(ITextComponent reason) {
-		final ITextComponent r = reason == null ? new TextComponentTranslation("multiplayer.disconnect.generic") : reason;
+		final ITextComponent r = reason == null ? new TextComponentTranslation("multiplayer.disconnect.generic")
+				: reason;
 		
 		this.connection.sendPacket(new SPacketDisconnect(r), f -> this.connection.closeChannel(r));
 		this.connection.disableAutoRead();

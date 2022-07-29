@@ -1,16 +1,11 @@
 package net.wolftail.util.tracker.builtin;
 
 import javax.annotation.Nonnull;
-import javax.annotation.concurrent.Immutable;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
-import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.util.tracker.ContentOrder;
 
-@Immutable
-@SideWith(section = GameSection.GAME_PLAYING)
 public abstract class AbstractBlockOrder extends ContentOrder {
 	
 	@Nonnull
@@ -22,8 +17,8 @@ public abstract class AbstractBlockOrder extends ContentOrder {
 	/**
 	 * Constructs an abstract block order.
 	 * 
-	 * @param dim	the dimension
-	 * @param pos	the block position, must within buildable area
+	 * @param dim the dimension
+	 * @param pos the block position, must within buildable area
 	 */
 	public AbstractBlockOrder(@Nonnull DimensionType dim, @Nonnull BlockPos pos) {
 		this.dimension = dim;
@@ -48,8 +43,10 @@ public abstract class AbstractBlockOrder extends ContentOrder {
 	
 	@Override
 	public final boolean equals(Object o) {
-		if(o == this) return true;
-		if(o == null || o.getClass() != this.getClass()) return false;
+		if (o == this)
+			return true;
+		if (o == null || o.getClass() != this.getClass())
+			return false;
 		
 		AbstractBlockOrder o0 = (AbstractBlockOrder) o;
 		

@@ -112,20 +112,20 @@ public final class TransientPacketListener implements INetHandlerPlayClient {
 	}
 	
 	private void pass(ImplUPT type) {
-		if(type == null) {
-			logger.warn("Expecting a type notify packet, maybe the server dosen't install wolftail. Assume using 'minecraft:player'.");
+		if (type == null) {
+			logger.warn(
+					"Expecting a type notify packet, maybe the server dosen't install wolftail. Assume using 'minecraft:player'.");
 			
 			type = (ImplUPT) UniversalPlayerType.TYPE_PLAYER;
 		}
 		
 		GameProfile p = this.loginPacket.getProfile();
 		
-		//we now should in netty thread
-		((ExtCoreMinecraft) Minecraft.getMinecraft()).wolftail_loadContext(type,
-				p.getId(), p.getName(),
+		// we now should in netty thread
+		((ExtCoreMinecraft) Minecraft.getMinecraft()).wolftail_loadContext(type, p.getId(), p.getName(),
 				this.connection);
 		
-		if(type.isPlayerType())
+		if (type.isPlayerType())
 			this.prevHandler.handleLoginSuccess(this.loginPacket);
 	}
 	
@@ -133,15 +133,16 @@ public final class TransientPacketListener implements INetHandlerPlayClient {
 	public void handleCustomPayload(SPacketCustomPayload packetIn) {
 		ImplUPT type;
 		
-		if(packetIn.getChannelName().equals("WT|TN")) {
+		if (packetIn.getChannelName().equals("WT|TN")) {
 			ResourceLocation typeId = packetIn.getBufferData().readResourceLocation();
 			
-			if(packetIn.getBufferData().isReadable())
+			if (packetIn.getBufferData().isReadable())
 				throw new DecoderException();
 			
-			if((type = (ImplUPT) UniversalPlayerTypeRegistry.INSTANCE.byId(typeId)) == null)
+			if ((type = (ImplUPT) UniversalPlayerTypeRegistry.INSTANCE.byId(typeId)) == null)
 				throw new IllegalStateException("Unknow universal player type " + typeId);
-		} else type = null;
+		} else
+			type = null;
 		
 		this.pass(type);
 	}

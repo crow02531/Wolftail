@@ -2,12 +2,16 @@ package net.wolftail.util.tracker;
 
 import javax.annotation.concurrent.Immutable;
 
-import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.SideWith;
-
 @Immutable
-@SideWith(section = GameSection.GAME_PLAYING)
 public final class Timing {
+	
+	private static final int CACHE_AMOUNT = 20;
+	private static final Timing[] TIMING_CACHE = new Timing[CACHE_AMOUNT];
+	
+	static {
+		for (int i = 0; i < CACHE_AMOUNT; ++i)
+			TIMING_CACHE[i] = new Timing(0, i + 1);
+	}
 	
 	public static final Timing EVERY_TICK = of(1);
 	
@@ -15,7 +19,7 @@ public final class Timing {
 	private int modulo;
 	
 	public Timing(int tick, int interval) {
-		if(interval <= 0)
+		if (interval <= 0)
 			throw new IllegalArgumentException();
 		
 		this.residue = Math.abs(tick % (this.modulo = interval));
@@ -40,8 +44,10 @@ public final class Timing {
 	
 	@Override
 	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(o == null || !(o instanceof Timing)) return false;
+		if (o == this)
+			return true;
+		if (o == null || !(o instanceof Timing))
+			return false;
 		
 		Timing o0 = (Timing) o;
 		
@@ -53,17 +59,9 @@ public final class Timing {
 	}
 	
 	public static Timing of(int interval) {
-		if(interval <= 0)
+		if (interval <= 0)
 			throw new IllegalArgumentException();
 		
 		return interval <= CACHE_AMOUNT ? TIMING_CACHE[interval - 1] : new Timing(0, interval);
-	}
-	
-	private static final int CACHE_AMOUNT = 20;
-	private static final Timing[] TIMING_CACHE = new Timing[CACHE_AMOUNT];
-	
-	static {
-		for(int i = 0; i < CACHE_AMOUNT; ++i)
-			TIMING_CACHE[i] = new Timing(0, i + 1);
 	}
 }

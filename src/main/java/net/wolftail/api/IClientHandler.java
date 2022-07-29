@@ -12,7 +12,7 @@ public interface IClientHandler {
 	/**
 	 * Called when game section changes from WANDERING to PLAYING.
 	 * 
-	 * @param context	the playing play context
+	 * @param context the playing play context
 	 */
 	void handleEnter(@Nonnull PlayContext context);
 	

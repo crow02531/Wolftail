@@ -32,7 +32,7 @@ public abstract class MixinNetHandlerLoginServer {
 	
 	@Final
 	@Shadow
-    public NetworkManager networkManager;
+	public NetworkManager networkManager;
 	
 	@Shadow
 	public GameProfile loginGameProfile;
@@ -42,16 +42,18 @@ public abstract class MixinNetHandlerLoginServer {
 		GameProfile profile = this.loginGameProfile;
 		NetworkManager connect = this.networkManager;
 		
-		//now it was LOGIN state and vanilla connection has just set up
-		//we should in LOGIC_SERVER thread
+		// now it was LOGIN state and vanilla connection has just set up
+		// we should in LOGIC_SERVER thread
 		
-		ImplPCS context = ((ExtCoreMinecraftServer) this.server).wolftail_getRootManager().login(connect, profile.getId(), profile.getName());
+		ImplPCS context = ((ExtCoreMinecraftServer) this.server).wolftail_getRootManager().login(connect,
+				profile.getId(), profile.getName());
 		ImplUPT type = context.playType();
 		
-		//the connection state setting action will be executed in netty's event loop thread, it will be set to PLAY
+		// the connection state setting action will be executed in netty's event loop
+		// thread, it will be set to PLAY
 		connect.sendPacket(newTypeNotifyPacket(type));
 		
-		if(!type.isPlayerType()) {
+		if (!type.isPlayerType()) {
 			ci.cancel();
 			
 			connect.setNetHandler(new NptServerPacketListener(context));

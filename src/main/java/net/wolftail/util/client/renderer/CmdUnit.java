@@ -63,8 +63,10 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	public CmdUnit pPrint(CharSequence s) {
-		if(s == null) s = "null";
-		else if(s.length() == 0) return this;
+		if (s == null)
+			s = "null";
+		else if (s.length() == 0)
+			return this;
 		
 		this.charBuf.append(s);
 		this.updateTmp(s);
@@ -76,23 +78,23 @@ public final class CmdUnit extends UIUnit {
 		ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
 		int vw = this.param_width - 9;
 		
-		for(int i = 0, l = s.length(); i < l; ++i) {
+		for (int i = 0, l = s.length(); i < l; ++i) {
 			int cp = s.charAt(i);
 			
-			switch(cp) {
+			switch (cp) {
 			case '\n':
 				this.tmp_lineNum++;
 				this.tmp_posX = 0;
 				
 				break;
 			case '\u00a7':
-				if(i + 1 < l) {
+				if (i + 1 < l) {
 					i++;
 					
-					break; 
+					break;
 				}
 			default:
-				if(this.tmp_posX + fr.wolftail_widthOf(cp) > vw) {
+				if (this.tmp_posX + fr.wolftail_widthOf(cp) > vw) {
 					this.tmp_lineNum++;
 					this.tmp_posX = 0;
 				}
@@ -174,7 +176,7 @@ public final class CmdUnit extends UIUnit {
 	
 	@Override
 	void resize0(int oldWidth, int oldHeight) {
-		if(this.param_width != oldWidth) {
+		if (this.param_width != oldWidth) {
 			this.tmp_lineNum = 0;
 			this.tmp_posX = 0;
 			
@@ -189,7 +191,8 @@ public final class CmdUnit extends UIUnit {
 		StringBuilder buf = this.charBuf;
 		int l = buf.length();
 		
-		if(l == 0) return;
+		if (l == 0)
+			return;
 		
 		ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
 		float vw = this.param_width;
@@ -208,16 +211,18 @@ public final class CmdUnit extends UIUnit {
 		fr.wolftail_posY_set(-(scroll * 9));
 		
 		drawRect(vw - 9, 0, vw, vh, 0xD8FFFFFF);
-		if(this.pMaxScroll() != 0) drawRect(vw - 9, (vh * scroll) / (float) this.tmp_lineNum, vw, vh * (vh + scroll * 9) / (float) (this.tmp_lineNum * 9), 0x35000000);
+		if (this.pMaxScroll() != 0)
+			drawRect(vw - 9, (vh * scroll) / (float) this.tmp_lineNum, vw,
+					vh * (vh + scroll * 9) / (float) (this.tmp_lineNum * 9), 0x35000000);
 		vw -= 9;
 		
 		Style style = new Style();
 		setColor(fr, style);
 		
-		for(int i = 0; i < l; ++i) {
+		for (int i = 0; i < l; ++i) {
 			int cp = buf.charAt(i);
 			
-			switch(cp) {
+			switch (cp) {
 			case '\n':
 				fr.wolftail_posX_set(0);
 				fr.wolftail_posY_add(9);
@@ -227,28 +232,29 @@ public final class CmdUnit extends UIUnit {
 				
 				break;
 			case '\u00a7':
-				if(i + 1 < l) {
+				if (i + 1 < l) {
 					style.update("0123456789abcdefklmnor".indexOf(lowerCaseEN(buf.charAt(++i))));
 					setColor(fr, style);
 					
 					break;
 				}
 			default:
-				if(fr.wolftail_posX_get() + fr.wolftail_widthOf(cp) > vw) {
+				if (fr.wolftail_posX_get() + fr.wolftail_widthOf(cp) > vw) {
 					fr.wolftail_posX_set(0);
 					fr.wolftail_posY_add(9);
 				}
 				
-				if(fr.wolftail_posY_get() + 9 < 0)
+				if (fr.wolftail_posY_get() + 9 < 0)
 					break;
-				if(fr.wolftail_posY_get() > vh)
+				if (fr.wolftail_posY_get() > vh)
 					return;
 				
-				if(style.randomStyle) cp = fr.wolftail_randomReplacement(cp);
+				if (style.randomStyle)
+					cp = fr.wolftail_randomReplacement(cp);
 				
 				float width = fr.wolftail_renderCodepoint(cp, style.italicStyle);
 				
-				if(style.boldStyle) {
+				if (style.boldStyle) {
 					fr.wolftail_posX_add(1);
 					fr.wolftail_renderCodepoint(cp, style.italicStyle);
 					fr.wolftail_posX_add(-1);
@@ -270,7 +276,8 @@ public final class CmdUnit extends UIUnit {
 	private static void setColor(ExtRendererFontRenderer fr, Style s) {
 		int color = fr.wolftail_codeToColor(s.colorCode);
 		
-		GlStateManager.color((float) (color >> 16) / 255.0F, (float) (color >> 8 & 255) / 255.0F, (float) (color & 255) / 255.0F, 1.0F);
+		GlStateManager.color((float) (color >> 16) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
+				(float) (color & 255) / 255.0F, 1.0F);
 	}
 	
 	private static void drawRect(float left, float top, float right, float bottom, int color) {
@@ -278,8 +285,11 @@ public final class CmdUnit extends UIUnit {
 		BufferBuilder bufferbuilder = tessellator.getBuffer();
 		
 		GlStateManager.enableBlend();
-		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-		GlStateManager.color((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F, (float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
+		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+				GlStateManager.DestFactor.ZERO);
+		GlStateManager.color((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
+				(float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
 		bufferbuilder.begin(7, DefaultVertexFormats.POSITION);
 		bufferbuilder.pos(left, bottom, 0).endVertex();
 		bufferbuilder.pos(right, bottom, 0).endVertex();
@@ -308,7 +318,7 @@ public final class CmdUnit extends UIUnit {
 		}
 		
 		private void update(int op) {
-			switch(op) {
+			switch (op) {
 			case 16:
 				this.randomStyle = true;
 				
@@ -338,8 +348,9 @@ public final class CmdUnit extends UIUnit {
 				
 				break;
 			default:
-				if(op < 16) {
-					if(op < 0) op = 15;
+				if (op < 16) {
+					if (op < 0)
+						op = 15;
 					
 					this.randomStyle = false;
 					this.boldStyle = false;

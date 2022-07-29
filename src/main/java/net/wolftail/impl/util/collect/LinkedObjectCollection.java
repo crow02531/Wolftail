@@ -22,7 +22,7 @@ public class LinkedObjectCollection<K> extends AbstractObjectCollection<K> {
 		Node n = new Node(k);
 		
 		Node h;
-		if((h = this.head) != null)
+		if ((h = this.head) != null)
 			(h.prev = n).next = h;
 		
 		this.head = n;
@@ -58,7 +58,8 @@ public class LinkedObjectCollection<K> extends AbstractObjectCollection<K> {
 			@Override
 			public K next() {
 				checkForComodification();
-				if(next == null) throw0();
+				if (next == null)
+					throw0();
 				
 				next = (lastNext = next).next;
 				
@@ -68,7 +69,8 @@ public class LinkedObjectCollection<K> extends AbstractObjectCollection<K> {
 			@Override
 			public void remove() {
 				checkForComodification();
-				if(lastNext == null) throw new IllegalStateException();
+				if (lastNext == null)
+					throw new IllegalStateException();
 				
 				lastNext.unlink();
 				
@@ -77,7 +79,7 @@ public class LinkedObjectCollection<K> extends AbstractObjectCollection<K> {
 			}
 			
 			void checkForComodification() {
-				if(expectedModCount != modCount)
+				if (expectedModCount != modCount)
 					throw new ConcurrentModificationException();
 			}
 		};
@@ -116,12 +118,14 @@ public class LinkedObjectCollection<K> extends AbstractObjectCollection<K> {
 		}
 		
 		public void unlink() {
-			if(prev == null) {
-				if(head != this) throw0();
+			if (prev == null) {
+				if (head != this)
+					throw0();
 				
 				head = next;
 			} else {
-				if(prev.next != this) throw0();
+				if (prev.next != this)
+					throw0();
 				
 				prev.next = next;
 			}

@@ -9,7 +9,8 @@ public abstract class NptPacketListener implements INetHandler, ITickable {
 	
 	private INetworkHandler handler;
 	
-	NptPacketListener() {}
+	NptPacketListener() {
+	}
 	
 	public void setNetHandler(INetworkHandler h) {
 		this.handler = h;
@@ -21,15 +22,16 @@ public abstract class NptPacketListener implements INetHandler, ITickable {
 	
 	@Override
 	public void update() {
-		if(this.handler != null)
+		if (this.handler != null)
 			this.handler.tick();
 	}
 	
 	void handlePayload(ByteBuf buf) {
 		this.handler.handle(buf);
 		
-		if(buf.isReadable())
-			throw new RuntimeException("Payload was larger than I expected, found " + buf.readableBytes() + " bytes extra");
+		if (buf.isReadable())
+			throw new RuntimeException(
+					"Payload was larger than I expected, found " + buf.readableBytes() + " bytes extra");
 	}
 	
 	static void throw0() {
@@ -37,7 +39,7 @@ public abstract class NptPacketListener implements INetHandler, ITickable {
 	}
 	
 	static void check0(String channel) {
-		if(!channel.equals("WT|PL"))
+		if (!channel.equals("WT|PL"))
 			throw0();
 	}
 }

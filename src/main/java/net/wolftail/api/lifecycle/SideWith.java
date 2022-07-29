@@ -12,15 +12,16 @@ import java.lang.annotation.Target;
  * the annotated method(or constructor)'s implement.
  * 
  * <p>
- * When applied to a method or constructor, this annotation indicates during
- * the method(or constructor)'s calling the game section and the current thread
- * must satisfy some constrains(see {@link #section()} and {@link #thread()}).
+ * When applied to a method or constructor, this annotation indicates during the
+ * method(or constructor)'s calling the game section and the current thread must
+ * satisfy some constrains(see {@link #section()} and {@link #thread()}).
  * </p>
  * 
  * <p>
  * Applying this annotation to a class is identical to applying to the class's
- * all declared methods and constructors. If a declared method(or constructor) already
- * has a {@code SideWith} annotation, the method(or constructor)'s goes first.
+ * all declared methods and constructors. If a declared method(or constructor)
+ * already has a {@code SideWith} annotation, the method(or constructor)'s goes
+ * first.
  * </p>
  * 
  * @see GameSection
@@ -40,8 +41,8 @@ public @interface SideWith {
 	GameSection[] section() default {};
 	
 	/**
-	 * Require one of the logic types to be the same as the current thread's logic type.
-	 * Empty indicates no requirement.
+	 * Require one of the logic types to be the same as the current thread's logic
+	 * type. Empty indicates no requirement.
 	 * 
 	 * @return the logic types
 	 */

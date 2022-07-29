@@ -11,8 +11,7 @@ import org.spongepowered.asm.util.Constants;
  */
 public enum PhysicalType {
 	
-	INTEGRATED_CLIENT,
-	DEDICATED_SERVER;
+	INTEGRATED_CLIENT, DEDICATED_SERVER;
 	
 	public boolean is() {
 		return CURRENT_TYPE == this;
@@ -21,13 +20,13 @@ public enum PhysicalType {
 	/**
 	 * Ensure {@code is()} return true.
 	 * 
-	 * @throws IllegalStateException	when the current physical type is not
-	 * 		equals to {@code this}
+	 * @throws IllegalStateException when the current physical type is not equals to
+	 *                               {@code this}
 	 * 
 	 * @see #is()
 	 */
 	public void ensure() {
-		if(CURRENT_TYPE != this)
+		if (CURRENT_TYPE != this)
 			throw new IllegalStateException("Not in " + this);
 	}
 	
@@ -39,6 +38,7 @@ public enum PhysicalType {
 	private static final PhysicalType CURRENT_TYPE;
 	
 	static {
-		CURRENT_TYPE = Constants.SIDE_CLIENT.equals(MixinService.getService().getSideName()) ? INTEGRATED_CLIENT : DEDICATED_SERVER;
+		CURRENT_TYPE = Constants.SIDE_CLIENT.equals(MixinService.getService().getSideName()) ? INTEGRATED_CLIENT
+				: DEDICATED_SERVER;
 	}
 }

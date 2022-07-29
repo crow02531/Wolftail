@@ -44,7 +44,8 @@ import net.wolftail.impl.core.network.NptClientPacketListener;
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	
-	//---------------------------------SHADOW START---------------------------------
+	// ---------------------------------SHADOW
+	// START---------------------------------
 	
 	@Final
 	@Shadow
@@ -121,7 +122,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	@Shadow
 	public abstract void checkGLError(String message);
 	
-	//---------------------------------SHADOW END---------------------------------
+	// ---------------------------------SHADOW END---------------------------------
 	
 	@Unique
 	private static final Logger logger = LogManager.getLogger("Wolftail/User");
@@ -137,12 +138,13 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		SectionHandler.finish_loading(false);
 	}
 	
-	@Inject(method = "runTick", at = @At(value = "INVOKE_STRING", target = "endStartSection(Ljava/lang/String;)V", args = { "ldc=textures" }))
+	@Inject(method = "runTick", at = @At(value = "INVOKE_STRING", target = "endStartSection(Ljava/lang/String;)V", args = {
+			"ldc=textures" }))
 	private void on_runTick_invoke_endStartSection_0(CallbackInfo ci) {
 		ImplPCC context = this.playContext;
 		
-		if(context != null && !context.isConnected())
-			this.unloadContext(); //steve quit game
+		if (context != null && !context.isConnected())
+			this.unloadContext(); // steve quit game
 	}
 	
 	@Inject(method = "run", at = @At(value = "INVOKE", target = "displayGuiScreen"))
@@ -153,7 +155,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	@Inject(method = "runGameLoop", at = @At("HEAD"), cancellable = true)
 	private void on_runGameLoop_head(CallbackInfo ci) {
 		FutureTask<Void> task = this.loadContextTask;
-		if(task != null) {
+		if (task != null) {
 			task.run();
 			
 			this.loadContextTask = null;
@@ -161,7 +163,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		
 		ImplPCC context = this.playContext;
 		
-		if(context != null && !context.playType().isPlayerType()) {
+		if (context != null && !context.playType().isPlayerType()) {
 			ci.cancel();
 			
 			this.doGameLoop(context);
@@ -173,35 +175,35 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		Profiler profiler = this.mcProfiler;
 		profiler.startSection("root");
 		
-		//check close
-		if(Display.isCreated() && Display.isCloseRequested())
+		// check close
+		if (Display.isCreated() && Display.isCloseRequested())
 			this.shutdown();
 		
-		//update timer
+		// update timer
 		this.timer.updateTimer();
 		int i = Math.min(10, this.timer.elapsedTicks);
 		
 		profiler.startSection("scheduledExecutables");
-		runQueuedTasks(this.scheduledTasks); //here we will apply all packets received
+		runQueuedTasks(this.scheduledTasks); // here we will apply all packets received
 		profiler.endSection();
 		
 		boolean lostContext = false;
 		
-		//---------------------------------Tick Start---------------------------------
+		// ---------------------------------Tick Start---------------------------------
 		profiler.startSection("tick");
 		
-		//ticking part, notice that the code below dosen't always run every game loop
-		for(; i-- != 0;) {
+		// ticking part, notice that the code below dosen't always run every game loop
+		for (; i-- != 0;) {
 			NetworkManager connect = context.getConnection();
 			
-			if(connect.isChannelOpen())
+			if (connect.isChannelOpen())
 				connect.processReceivedPackets();
 			
-			if(!connect.isChannelOpen()) {
+			if (!connect.isChannelOpen()) {
 				connect.checkDisconnected();
 				
 				context.playType().callClientLeave();
-				this.unloadContext(); //non player type quit game
+				this.unloadContext(); // non player type quit game
 				this.displayQuitScreen(connect.getExitMessage(), connect.isLocalChannel());
 				
 				lostContext = true;
@@ -214,51 +216,52 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		}
 		
 		profiler.endSection();
-		//----------------------------------Tick End----------------------------------
+		// ----------------------------------Tick End----------------------------------
 		
 		this.checkGLError("Pre render");
 		
-		//--------------------------------Render Start--------------------------------
+		// --------------------------------Render Start--------------------------------
 		profiler.startSection("render");
 		
-		this.framebufferMc.bindFramebuffer(true); //bind framebuffer & set viewport
+		this.framebufferMc.bindFramebuffer(true); // bind framebuffer & set viewport
 		
-		//do frame
-		if(!lostContext)
+		// do frame
+		if (!lostContext)
 			context.playType().callClientFrame();
 		
-		this.framebufferMc.unbindFramebuffer(); //unbind framebuffer
-		this.framebufferMc.framebufferRender(this.displayWidth, this.displayHeight); //blit to screen
+		this.framebufferMc.unbindFramebuffer(); // unbind framebuffer
+		this.framebufferMc.framebufferRender(this.displayWidth, this.displayHeight); // blit to screen
 		
 		profiler.endSection();
-		//---------------------------------Render End---------------------------------
+		// ---------------------------------Render End---------------------------------
 		
 		this.updateDisplay();
 		Thread.yield();
 		
 		this.checkGLError("Post render");
 		
-		this.fpsCounter++; //call this every game loop
+		this.fpsCounter++; // call this every game loop
 		this.updateFrameTimer();
 		
-		while(Minecraft.getSystemTime() >= this.debugUpdateTime + 1000L) {
+		while (Minecraft.getSystemTime() >= this.debugUpdateTime + 1000L) {
 			debugFPS = this.fpsCounter;
-			this.debug = String.format("Wolftail working with %s, %d fps", context.playType().registeringId(), debugFPS);
+			this.debug = String.format("Wolftail working with %s, %d fps", context.playType().registeringId(),
+					debugFPS);
 			
 			this.debugUpdateTime += 1000L;
-			this.fpsCounter = 0; //when 1s has passed, clear it
+			this.fpsCounter = 0; // when 1s has passed, clear it
 			
 			this.usageSnooper.addMemoryStatsToSnooper();
-			this.usageSnooper.startSnooper(); //this will check isSnooperRunning()Z itself
+			this.usageSnooper.startSnooper(); // this will check isSnooperRunning()Z itself
 		}
 		
-		if((i = this.gameSettings.limitFramerate) < GameSettings.Options.FRAMERATE_LIMIT.getValueMax()) {
+		if ((i = this.gameSettings.limitFramerate) < GameSettings.Options.FRAMERATE_LIMIT.getValueMax()) {
 			profiler.startSection("fpslimit_wait");
 			Display.sync(i);
 			profiler.endSection();
 		}
 		
-		profiler.endSection(); //root
+		profiler.endSection(); // root
 	}
 	
 	@Unique
@@ -278,8 +281,9 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	
 	@Unique
 	private static void runQueuedTasks(Queue<FutureTask<?>> the_queue) {
-		synchronized(the_queue) {
-			while(!the_queue.isEmpty()) Util.runTask(the_queue.poll(), LOGGER);
+		synchronized (the_queue) {
+			while (!the_queue.isEmpty())
+				Util.runTask(the_queue.poll(), LOGGER);
 		}
 	}
 	
@@ -299,7 +303,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 				
 				logger.info("The universal player type in use is {}", type.registeringId());
 				
-				if(!type.isPlayerType()) {
+				if (!type.isPlayerType()) {
 					currentScreen.onGuiClosed();
 					currentScreen = null;
 					
@@ -307,7 +311,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 					type.callClientEnter(context);
 				}
 			}, null)).get();
-		} catch(InterruptedException | ExecutionException e) {
+		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		}
 	}

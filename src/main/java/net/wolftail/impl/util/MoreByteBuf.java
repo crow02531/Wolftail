@@ -14,16 +14,19 @@ import net.minecraft.network.PacketBuffer;
 
 public final class MoreByteBuf {
 	
-	private MoreByteBuf() {}
+	private MoreByteBuf() {
+	}
 	
 	public static PacketBuffer wrap(ByteBuf buf) {
-		if(buf == null) return null;
+		if (buf == null)
+			return null;
 		
 		return buf instanceof PacketBuffer ? (PacketBuffer) buf : new PacketBuffer(buf);
 	}
 	
 	public static ByteBuf unwrap(PacketBuffer buf) {
-		if(buf == null) return null;
+		if (buf == null)
+			return null;
 		
 		ByteBuf r = buf.retain();
 		r.release();
@@ -35,14 +38,14 @@ public final class MoreByteBuf {
 		int i = 0;
 		int j = 0;
 		
-		while(true) {
+		while (true) {
 			byte b0 = src.readByte();
 			i |= (b0 & 127) << j++ * 7;
 			
-			if(j > 5)
+			if (j > 5)
 				throw new DecoderException("VarInt too big");
 			
-			if((b0 & 128) != 128)
+			if ((b0 & 128) != 128)
 				break;
 		}
 		
@@ -50,7 +53,7 @@ public final class MoreByteBuf {
 	}
 	
 	public static <T extends ByteBuf> T writeVarInt(int i, T dst) {
-		while((i & -128) != 0) {
+		while ((i & -128) != 0) {
 			dst.writeByte(i & 127 | 128);
 			i >>>= 7;
 		}
@@ -63,7 +66,7 @@ public final class MoreByteBuf {
 	public static NBTTagCompound readTag(ByteBuf src) {
 		try {
 			return CompressedStreamTools.read(new ByteBufInputStream(src), NBTSizeTracker.INFINITE);
-		} catch(IOException e) {
+		} catch (IOException e) {
 			throw new DecoderException(e);
 		}
 	}
@@ -71,7 +74,7 @@ public final class MoreByteBuf {
 	public static <T extends ByteBuf> T writeTag(NBTTagCompound tag, T dst) {
 		try {
 			CompressedStreamTools.write(tag, new ByteBufOutputStream(dst));
-		} catch(IOException e) {
+		} catch (IOException e) {
 			throw new EncoderException(e);
 		}
 		

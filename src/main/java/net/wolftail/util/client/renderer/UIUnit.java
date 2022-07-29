@@ -25,7 +25,7 @@ import net.wolftail.api.lifecycle.SideWith;
 public abstract class UIUnit {
 	
 	static {
-		if(!OpenGlHelper.isFramebufferEnabled())
+		if (!OpenGlHelper.isFramebufferEnabled())
 			throw new IllegalStateException("Framebuffer unsupported! Please check your OpenGL.");
 	}
 	
@@ -58,11 +58,13 @@ public abstract class UIUnit {
 		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
 		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
-		GlStateManager.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (IntBuffer) null);
-		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, cbo, 0);
+		GlStateManager.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA,
+				GL11.GL_UNSIGNED_BYTE, (IntBuffer) null);
+		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0,
+				GL11.GL_TEXTURE_2D, cbo, 0);
 		GlStateManager.bindTexture(old_te);
 		
-		if(this.param_depth) {
+		if (this.param_depth) {
 			int old_rb = GL11.glGetInteger(GL30.GL_RENDERBUFFER_BINDING);
 			int rbo = this.object_rb = OpenGlHelper.glGenRenderbuffers();
 			
@@ -70,7 +72,7 @@ public abstract class UIUnit {
 			
 			int x, y;
 			
-			if(this.param_stencil) {
+			if (this.param_stencil) {
 				x = GL30.GL_DEPTH24_STENCIL8;
 				y = GL30.GL_DEPTH_STENCIL_ATTACHMENT;
 			} else {
@@ -92,8 +94,8 @@ public abstract class UIUnit {
 	private static void check0() {
 		int i = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
 		
-		if(i != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE) {
-			if(i == OpenGlHelper.GL_FB_INCOMPLETE_ATTACHMENT)
+		if (i != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE) {
+			if (i == OpenGlHelper.GL_FB_INCOMPLETE_ATTACHMENT)
 				throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
 			else if (i == OpenGlHelper.GL_FB_INCOMPLETE_MISS_ATTACH)
 				throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
@@ -107,7 +109,7 @@ public abstract class UIUnit {
 	}
 	
 	private void delete() {
-		if(this.object_rb != 0)
+		if (this.object_rb != 0)
 			OpenGlHelper.glDeleteRenderbuffers(this.object_rb);
 		
 		TextureUtil.deleteTexture(this.object_cb);
@@ -129,7 +131,7 @@ public abstract class UIUnit {
 	public void flush() {
 		this.check();
 		
-		if(this.state_dirty) {
+		if (this.state_dirty) {
 			this.delete();
 			this.create();
 			
@@ -189,7 +191,8 @@ public abstract class UIUnit {
 		this.release0();
 	}
 	
-	void release0() {}
+	void release0() {
+	}
 	
 	public boolean available() {
 		return this.object_fb != 0;
@@ -205,7 +208,7 @@ public abstract class UIUnit {
 		int oldW = this.param_width;
 		int oldH = this.param_height;
 		
-		if(oldW != width || oldH != height) {
+		if (oldW != width || oldH != height) {
 			this.param_width = width;
 			this.param_height = height;
 			
@@ -215,7 +218,8 @@ public abstract class UIUnit {
 		}
 	}
 	
-	void resize0(int oldWidth, int oldHeight) {}
+	void resize0(int oldWidth, int oldHeight) {
+	}
 	
 	public int width() {
 		this.check();

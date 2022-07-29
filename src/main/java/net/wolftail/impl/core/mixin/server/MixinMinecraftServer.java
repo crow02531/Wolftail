@@ -19,8 +19,9 @@ public abstract class MixinMinecraftServer {
 	
 	@Inject(method = "startServerThread", at = @At(value = "INVOKE", target = "start()V"))
 	private void on_startServerThread_invoke_start(CallbackInfo ci) {
-		if(PhysicalType.DEDICATED_SERVER.is()) {
-			//invoked by the 'zero' thread, transfer the host to the now unstarted serverThread
+		if (PhysicalType.DEDICATED_SERVER.is()) {
+			// invoked by the 'zero' thread, transfer the host to the now unstarted
+			// serverThread
 			
 			SectionHandler.dedicatedServerRegularThread = this.serverThread;
 		}
