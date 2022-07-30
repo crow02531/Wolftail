@@ -1,7 +1,7 @@
 {
   "required": true,
   "compatibilityLevel": "JAVA_8",
-  "package": "net.wolftail.impl.renderer.mixin",
+  "package": "net.wolftail.internal.renderer.mixin",
   "client": [
     "client.MixinFontRenderer"
   ]

@@ -7,7 +7,7 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.Sealed;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.tracker.Mechanisms;
+import net.wolftail.internal.tracker.Mechanisms;
 
 /**
  * Every server, no matter it is integrated or dedicated, has an unique content
@@ -35,8 +35,8 @@ public interface ContentTracker {
 	}
 	
 	/**
-	 * Add a mechanism that will be run by logic server during server assembling.
-	 * Duplicate adding will be ignored.
+	 * Add a assemble mechanism that will be run by logic server during server
+	 * assembling. Duplicate adding will be ignored.
 	 * 
 	 * @param r the mechanism, two mechanisms {@code a} and {@code b} are regarded
 	 *          the same if and only if {@code a == b}

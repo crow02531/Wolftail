@@ -6,7 +6,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.impl.tracker.ExtTrackerWorldServer;
+import net.wolftail.internal.tracker.ExtTrackerWorldServer;
 import net.wolftail.util.tracker.ContentTracker;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;

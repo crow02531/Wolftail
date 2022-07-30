@@ -1,9 +1,8 @@
 package net.wolftail.api.lifecycle;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.wolftail.impl.core.SectionHandler;
+import net.wolftail.internal.core.SectionHandler;
 
 /**
  * There are many threads running in Minecraft. In
@@ -49,7 +48,7 @@ public enum LogicType {
 				if (SectionHandler.HANDLER_PREPARED.getState() != SectionState.ACTIVE)
 					return false;
 				
-				IntegratedServer server = Minecraft.getMinecraft().getIntegratedServer();
+				MinecraftServer server = GameSection.Holder.integratedServer();
 				
 				return server == null ? false : server.isCallingFromMinecraftThread();
 			} else {

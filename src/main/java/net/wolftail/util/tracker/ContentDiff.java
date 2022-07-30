@@ -6,7 +6,7 @@ import javax.annotation.concurrent.Immutable;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import net.wolftail.api.lifecycle.Sealed;
-import net.wolftail.impl.tracker.ImplCD;
+import net.wolftail.internal.tracker.ImplCD;
 
 /**
  * Represents a change of content or the content itself. A content diff is

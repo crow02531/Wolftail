@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.IServerHandler;
@@ -8,6 +9,7 @@ import net.wolftail.api.PlayContext;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.util.tracker.Timing;
 import net.wolftail.util.tracker.builtin.OrderDaytime;
+import net.wolftail.util.tracker.builtin.OrderTileEntity;
 import net.wolftail.util.tracker.builtin.TraceVisitor;
 
 public final class PigServerHandler implements IServerHandler {
@@ -19,7 +21,7 @@ public final class PigServerHandler implements IServerHandler {
 	
 	@Override
 	public void handleEnter(PlayContext context) {
-		context.setHandler(new PigServerNetHandler(context));
+		context.setHandler(new PigServerNetHandler());
 	}
 	
 	@Override
@@ -29,13 +31,12 @@ public final class PigServerHandler implements IServerHandler {
 	
 	private static class PigServerNetHandler implements INetworkHandler {
 		
-		final PlayContext playContext;
-		
-		PigServerNetHandler(PlayContext c) {
-			this.playContext = c;
+		PigServerNetHandler() {
+			TraceVisitor v = new TraceVisitor(System.out);
 			
-			(new OrderDaytime(DimensionType.OVERWORLD)).track(GameSection.serverInstance(),
-					new TraceVisitor(System.out), Timing.of(10));
+			(new OrderDaytime(DimensionType.OVERWORLD)).track(GameSection.serverInstance(), v, Timing.of(10));
+			(new OrderTileEntity(DimensionType.OVERWORLD, new BlockPos(0, 4, 0))).track(GameSection.serverInstance(), v,
+					Timing.EVERY_TICK);
 		}
 		
 		@Override

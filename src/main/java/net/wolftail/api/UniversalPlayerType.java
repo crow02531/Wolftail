@@ -6,7 +6,7 @@ import net.minecraft.util.ResourceLocation;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.Sealed;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.core.ImplUPT;
+import net.wolftail.internal.core.ImplUPT;
 
 /**
  * Represent an uniplayer type.

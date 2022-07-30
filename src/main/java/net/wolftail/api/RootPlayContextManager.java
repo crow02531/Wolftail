@@ -9,7 +9,7 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.Sealed;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.core.ExtCoreMinecraftServer;
+import net.wolftail.internal.core.ExtCoreMinecraftServer;
 
 /**
  * Similar to {@link net.minecraft.server.players.PlayerList PlayerList}, except

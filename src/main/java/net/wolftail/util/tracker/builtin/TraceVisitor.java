@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
-import net.wolftail.impl.util.MoreByteBuf;
+import net.wolftail.internal.util.MoreByteBuf;
 import net.wolftail.util.tracker.DiffVisitor;
 
 public final class TraceVisitor implements DiffVisitor {

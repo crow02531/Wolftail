@@ -1,7 +1,7 @@
 {
   "required": true,
   "compatibilityLevel": "JAVA_8",
-  "package": "net.wolftail.impl.core.mixin",
+  "package": "net.wolftail.internal.core.mixin",
   "mixins": [
     "MixinMinecraftServer",
     "MixinNetHandlerLoginServer",

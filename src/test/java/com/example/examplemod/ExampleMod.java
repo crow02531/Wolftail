@@ -17,6 +17,7 @@ public class ExampleMod {
 	
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-		UniversalPlayerTypeRegistry.INSTANCE.register(TYPE_PIG_ID, PigServerHandler.INSTANCE, PigClientHandler.INSTANCE);
+		UniversalPlayerTypeRegistry.INSTANCE.register(TYPE_PIG_ID, PigServerHandler.INSTANCE,
+				PigClientHandler.INSTANCE);
 	}
 }

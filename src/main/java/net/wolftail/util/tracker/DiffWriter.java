@@ -1,12 +1,12 @@
 package net.wolftail.util.tracker;
 
-import static net.wolftail.impl.util.MoreByteBuf.writeVarInt;
+import static net.wolftail.internal.util.MoreByteBuf.writeVarInt;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
-import net.wolftail.impl.tracker.Insncodes;
+import net.wolftail.internal.tracker.Insncodes;
 
 /**
  * A special diff visitor that could record instructions and use it to produce

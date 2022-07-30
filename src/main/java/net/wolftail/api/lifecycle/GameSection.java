@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
-import net.wolftail.impl.core.SectionHandler;
+import net.wolftail.internal.core.SectionHandler;
 
 /**
  * Minecraft's lifecycle could be divided into several sections.
@@ -108,8 +108,8 @@ public enum GameSection {
 	}
 	
 	/**
-	 * Get the current minecraft server instance. For dedicated server this method
-	 * always returns the same value, but for integrated client it returns the
+	 * Get the current minecraft server instance. In dedicated server this method
+	 * always returns the same value, but in integrated client it returns the
 	 * current integrated server.
 	 * 
 	 * @return the current minecraft server instance
@@ -117,7 +117,14 @@ public enum GameSection {
 	@Nonnull
 	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
 	public static MinecraftServer serverInstance() {
-		return PhysicalType.INTEGRATED_CLIENT.is() ? Minecraft.getMinecraft().getIntegratedServer()
-				: SectionHandler.dedicatedServer;
+		return PhysicalType.INTEGRATED_CLIENT.is() ? Holder.integratedServer() : SectionHandler.dedicatedServer;
+	}
+	
+	// prevent classloading IntegratedServer
+	static final class Holder {
+		
+		static MinecraftServer integratedServer() {
+			return Minecraft.getMinecraft().getIntegratedServer();
+		}
 	}
 }

@@ -11,7 +11,7 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.Sealed;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.impl.core.ImplUPTR;
+import net.wolftail.internal.core.ImplUPTR;
 
 @Sealed
 @SideWith(section = GameSection.GAME_LOADED)
