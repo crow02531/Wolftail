@@ -14,7 +14,7 @@ import net.wolftail.internal.tracker.Mechanisms;
 public abstract class MixinMinecraftServer {
 	
 	@Inject(method = "tick", at = @At(value = "FIELD", target = "tickCounter:I", opcode = Opcodes.PUTFIELD))
-	private void on_tick_putField_tickCounter(CallbackInfo info) {
+	private void on_tick_putField_tickCounter(CallbackInfo ci) {
 		Mechanisms.run();
 	}
 }
