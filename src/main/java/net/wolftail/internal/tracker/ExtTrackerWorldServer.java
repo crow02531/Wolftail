@@ -11,7 +11,13 @@ public interface ExtTrackerWorldServer {
 	
 	boolean wolftail_wdt_untrack(DiffVisitor acceptor);
 	
+	boolean wolftail_ww_track(DiffVisitor acceptor, Timing timing);
+	
+	boolean wolftail_ww_untrack(DiffVisitor acceptor);
+	
 	void wolftail_wdt_assemble();
+	
+	void wolftail_ww_assemble();
 	
 	void wolftail_cbs_assemble();
 	

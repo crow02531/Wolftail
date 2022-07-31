@@ -9,14 +9,13 @@ import net.minecraft.world.chunk.Chunk;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.internal.tracker.ExtTrackerChunk;
 import net.wolftail.internal.tracker.ExtTrackerWorldServer;
-import net.wolftail.util.tracker.ContentTracker;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;
 
 public final class OrderBlockState extends AbstractChunkOrder {
 	
 	static {
-		ContentTracker.addMechanism(() -> {
+		addMechanism(() -> {
 			for (WorldServer w : GameSection.serverInstance().worlds)
 				((ExtTrackerWorldServer) w).wolftail_cbs_assemble();
 		});

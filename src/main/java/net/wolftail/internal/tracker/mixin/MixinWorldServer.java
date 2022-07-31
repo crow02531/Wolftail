@@ -36,6 +36,9 @@ public abstract class MixinWorldServer extends World implements ExtTrackerWorldS
 	private final TimedTrackComplex<Void> wdt = new TimedTrackComplex<>(3, null);
 	
 	@Unique
+	private final TimedTrackComplex<float[]> ww = new TimedTrackComplex<>(3, () -> new float[2]);
+	
+	@Unique
 	private final LinkedObjectCollection<Chunk> chunks = new LinkedObjectCollection<>();
 	
 	// unused
@@ -49,6 +52,11 @@ public abstract class MixinWorldServer extends World implements ExtTrackerWorldS
 		this.addEventListener(new WorldServerListener());
 	}
 	
+	@Unique
+	private int tickCounter() {
+		return this.mcServer.getTickCounter();
+	}
+	
 	@Override
 	public boolean wolftail_wdt_track(DiffVisitor acceptor, Timing timing) {
 		return this.wdt.add(timing, acceptor);
@@ -60,8 +68,18 @@ public abstract class MixinWorldServer extends World implements ExtTrackerWorldS
 	}
 	
 	@Override
+	public boolean wolftail_ww_track(DiffVisitor acceptor, Timing timing) {
+		return this.ww.add(timing, acceptor);
+	}
+	
+	@Override
+	public boolean wolftail_ww_untrack(DiffVisitor acceptor) {
+		return this.ww.remove(acceptor);
+	}
+	
+	@Override
 	public void wolftail_wdt_assemble() {
-		this.wdt.forEach(this.mcServer.getTickCounter(), r -> {
+		this.wdt.forEach(this.tickCounter(), r -> {
 			DiffVisitor v = r.getMultiA();
 			
 			v.jzBegin();
@@ -72,13 +90,42 @@ public abstract class MixinWorldServer extends World implements ExtTrackerWorldS
 	}
 	
 	@Override
+	public void wolftail_ww_assemble() {
+		this.ww.forEach(this.tickCounter(), r -> {
+			float[] cache = r.attachment;
+			DiffVisitor v;
+			
+			if ((v = r.getMultiA()) != null) {
+				v.jzBegin();
+				v.jzBindWorld(this.provider.getDimensionType());
+				v.jzSetWeather(this.rainingStrength, this.thunderingStrength);
+				v.jzEnd();
+			}
+			
+			if ((v = r.getMultiB()) != null) {
+				if (cache[0] != this.rainingStrength || cache[1] != this.thunderingStrength) {
+					v.jzBegin();
+					v.jzBindWorld(this.provider.getDimensionType());
+					v.jzSetWeather(this.rainingStrength, this.thunderingStrength);
+					v.jzEnd();
+				}
+			}
+			
+			cache[0] = this.rainingStrength;
+			cache[1] = this.thunderingStrength;
+			
+			r.transferA2B();
+		});
+	}
+	
+	@Override
 	public void wolftail_cbs_assemble() {
-		this.chunks.forEach(c -> ((ExtTrackerChunk) c).wolftail_cbs_assemble(this.mcServer.getTickCounter()));
+		this.chunks.forEach(c -> ((ExtTrackerChunk) c).wolftail_cbs_assemble(this.tickCounter()));
 	}
 	
 	@Override
 	public void wolftail_bte_assemble() {
-		this.chunks.forEach(c -> ((ExtTrackerChunk) c).wolftail_bte_assemble(this.mcServer.getTickCounter()));
+		this.chunks.forEach(c -> ((ExtTrackerChunk) c).wolftail_bte_assemble(this.tickCounter()));
 	}
 	
 	@Override

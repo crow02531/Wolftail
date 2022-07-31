@@ -10,26 +10,26 @@ import net.wolftail.internal.tracker.ExtTrackerWorldServer;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;
 
-public final class OrderDaytime extends AbstractWorldOrder {
+public final class OrderWeather extends AbstractWorldOrder {
 	
 	static {
 		addMechanism(() -> {
 			for (WorldServer w : GameSection.serverInstance().worlds)
-				((ExtTrackerWorldServer) w).wolftail_wdt_assemble();
+				((ExtTrackerWorldServer) w).wolftail_ww_assemble();
 		});
 	}
 	
-	public OrderDaytime(@Nonnull DimensionType dim) {
+	public OrderWeather(@Nonnull DimensionType dim) {
 		super(dim);
 	}
 	
 	@Override
 	public boolean track(@Nonnull MinecraftServer server, @Nonnull DiffVisitor acceptor, @Nonnull Timing timing) {
-		return ((ExtTrackerWorldServer) server.getWorld(this.dimension.getId())).wolftail_wdt_track(acceptor, timing);
+		return ((ExtTrackerWorldServer) server.getWorld(this.dimension.getId())).wolftail_ww_track(acceptor, timing);
 	}
 	
 	@Override
 	public boolean untrack(@Nonnull MinecraftServer server, @Nonnull DiffVisitor acceptor) {
-		return ((ExtTrackerWorldServer) server.getWorld(this.dimension.getId())).wolftail_wdt_untrack(acceptor);
+		return ((ExtTrackerWorldServer) server.getWorld(this.dimension.getId())).wolftail_ww_untrack(acceptor);
 	}
 }

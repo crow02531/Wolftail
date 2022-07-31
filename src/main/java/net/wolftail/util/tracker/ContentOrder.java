@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
+import net.wolftail.internal.tracker.Mechanisms;
 
 /**
  * An order asking what you want to subscribe in the server.
@@ -57,4 +58,15 @@ public abstract class ContentOrder {
 	
 	@Override
 	public abstract boolean equals(Object o);
+	
+	/**
+	 * Add a assemble mechanism that will be run by logic server during server
+	 * assembling. Duplicate adding will be ignored.
+	 * 
+	 * @param r the mechanism, two mechanisms {@code a} and {@code b} are regarded
+	 *          the same if and only if {@code a == b}
+	 */
+	public static void addMechanism(@Nonnull Runnable r) {
+		Mechanisms.add(r);
+	}
 }

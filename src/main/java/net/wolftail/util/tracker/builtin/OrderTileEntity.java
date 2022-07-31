@@ -11,14 +11,13 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.internal.tracker.ExtTrackerChunk;
 import net.wolftail.internal.tracker.ExtTrackerWorldServer;
 import net.wolftail.internal.util.MoreBlockPos;
-import net.wolftail.util.tracker.ContentTracker;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;
 
 public final class OrderTileEntity extends AbstractBlockOrder {
 	
 	static {
-		ContentTracker.addMechanism(() -> {
+		addMechanism(() -> {
 			for (WorldServer w : GameSection.serverInstance().worlds)
 				((ExtTrackerWorldServer) w).wolftail_bte_assemble();
 		});

@@ -2,6 +2,7 @@ package net.wolftail.internal.core.network;
 
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.INetHandlerPlayClient;
+import net.minecraft.network.play.client.CPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketAdvancementInfo;
 import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.network.play.server.SPacketBlockAction;
@@ -108,7 +109,7 @@ public final class NptClientPacketListener extends NptPacketListener implements 
 	
 	@Override
 	public void handleKeepAlive(SPacketKeepAlive packetIn) {
-		// NOOP
+		this.connection.sendPacket(new CPacketKeepAlive(0));
 	}
 	
 	@Override

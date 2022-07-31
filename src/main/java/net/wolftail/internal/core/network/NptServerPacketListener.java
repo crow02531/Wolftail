@@ -94,7 +94,7 @@ public final class NptServerPacketListener extends NptPacketListener implements 
 	
 	@Override
 	public void processKeepAlive(CPacketKeepAlive packetIn) {
-		throw0();
+		// NOOP
 	}
 	
 	@Override
