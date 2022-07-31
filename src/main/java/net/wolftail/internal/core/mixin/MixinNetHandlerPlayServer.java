@@ -32,14 +32,14 @@ public abstract class MixinNetHandlerPlayServer {
 	@Unique
 	private static final Logger logger = LogManager.getLogger("Wolftail/User");
 	
-	@Inject(method = "onDisconnect", at = @At(value = "INVOKE", target = "isSinglePlayer()Z"))
+	@Inject(method = "onDisconnect", at = @At(value = "INVOKE", target = "net.minecraft.server.MinecraftServer.isSinglePlayer()Z"))
 	private void on_onDisconnect_invoke_isSinglePlayer(CallbackInfo ci) {
 		ImplMPCR root = ((ExtCoreMinecraftServer) this.serverController).wolftail_getRootManager();
 		
 		root.logout(root.contextFor(this.player.getGameProfile().getId()));
 	}
 	
-	@Redirect(method = "onDisconnect", at = @At(value = "FIELD", target = "LOGGER", opcode = Opcodes.GETSTATIC, ordinal = 0))
+	@Redirect(method = "onDisconnect", at = @At(value = "FIELD", target = "net.minecraft.network.NetHandlerPlayServer.LOGGER:Lorg/apache/logging/log4j/Logger;", opcode = Opcodes.GETSTATIC, ordinal = 0))
 	private Logger proxy_onDisconnect_getStatic_LOGGER_0() {
 		return logger;
 	}

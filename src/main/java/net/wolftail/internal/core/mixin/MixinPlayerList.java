@@ -21,7 +21,7 @@ public abstract class MixinPlayerList {
 	@Shadow
 	public MinecraftServer mcServer;
 	
-	@Redirect(method = "allowUserToConnect", at = @At(value = "INVOKE", target = "size()I"))
+	@Redirect(method = "allowUserToConnect", at = @At(value = "INVOKE", target = "java.util.List.size()I", remap = false))
 	private int proxy_allowUserToConnect_size(List<EntityPlayerMP> list) {
 		return ((ExtCoreMinecraftServer) this.mcServer).wolftail_getRootManager().currentLoad();
 	}

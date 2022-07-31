@@ -14,7 +14,7 @@ import net.wolftail.internal.core.SectionHandler;
 @Mixin(DedicatedServer.class)
 public abstract class MixinDedicatedServer extends net.wolftail.internal.core.mixin.MixinMinecraftServer {
 	
-	@Inject(method = "init", at = @At(value = "INVOKE", target = "loadAllWorlds"))
+	@Inject(method = "init", at = @At(value = "INVOKE", target = "net.minecraft.server.MinecraftServer.loadAllWorlds(Ljava/lang/String;Ljava/lang/String;JLnet/minecraft/world/WorldType;Ljava/lang/String;)V"))
 	private void on_init_invoke_loadAllWorlds(CallbackInfoReturnable<Boolean> cir) {
 		SectionHandler.finish_loading(true);
 		this.root = new ImplMPCR(SectionHandler.dedicatedServer = (DedicatedServer) (Object) this);

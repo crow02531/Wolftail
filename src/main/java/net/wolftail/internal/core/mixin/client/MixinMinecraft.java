@@ -44,9 +44,6 @@ import net.wolftail.internal.core.network.NptClientPacketListener;
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	
-	// ---------------------------------SHADOW
-	// START---------------------------------
-	
 	@Final
 	@Shadow
 	public static Logger LOGGER;
@@ -138,7 +135,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		SectionHandler.finish_loading(false);
 	}
 	
-	@Inject(method = "runTick", at = @At(value = "INVOKE_STRING", target = "endStartSection(Ljava/lang/String;)V", args = {
+	@Inject(method = "runTick", at = @At(value = "INVOKE_STRING", target = "net.minecraft.profiler.Profiler.endStartSection(Ljava/lang/String;)V", args = {
 			"ldc=textures" }))
 	private void on_runTick_invoke_endStartSection_0(CallbackInfo ci) {
 		ImplPCC context = this.playContext;
@@ -147,7 +144,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 			this.unloadContext(); // steve quit game
 	}
 	
-	@Inject(method = "run", at = @At(value = "INVOKE", target = "displayGuiScreen"))
+	@Inject(method = "run", at = @At(value = "INVOKE", target = "net.minecraft.client.Minecraft.displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V"))
 	private void on_run_invoke_displayGuiScreen(CallbackInfo ci) {
 		this.unloadContext();
 	}

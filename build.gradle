@@ -6,6 +6,7 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+        classpath 'org.spongepowered:mixingradle:0.7.+'
     }
 }
         
@@ -14,9 +15,11 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.0'
-group = 'com.yourname.modid' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = 'modid'
+apply plugin: 'org.spongepowered.mixin'
+
+version = '1.12.2-0.0.1'
+group = 'net.wolftail' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = 'wolftail'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
@@ -75,7 +78,9 @@ dependencies {
     // compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     // compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
 
-    compile "org.spongepowered:mixin:0.8.2"
+    compile 'org.spongepowered:mixin:0.8.2'
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
 
     // The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
     // provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
@@ -89,17 +94,19 @@ dependencies {
 
 }
 
-// Example for how to get properties into the manifest for reading by the runtime..
+mixin {
+    add sourceSets.main, 'mixins.wolftail.refmap.json'
+
+    config 'mixins.wolftail.core.json'
+    config 'mixins.wolftail.renderer.json'
+    config 'mixins.wolftail.tracker.json'
+}
+
 jar {
     manifest {
         attributes([
-            "Specification-Title": "examplemod",
-            "Specification-Vendor": "examplemodsareus",
-            "Specification-Version": "1", // We are version 1 of ourselves
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"examplemodsareus",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+            "TweakOrder": "0"
         ])
     }
 }

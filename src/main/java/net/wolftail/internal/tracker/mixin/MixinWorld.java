@@ -21,7 +21,7 @@ public abstract class MixinWorld {
 	@Shadow
 	public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
 	
-	@Inject(method = "markChunkDirty", at = @At(value = "INVOKE", target = "markDirty()V"))
+	@Inject(method = "markChunkDirty", at = @At(value = "INVOKE", target = "net.minecraft.world.chunk.Chunk.markDirty()V"))
 	private void on_markChunkDirty_invoke_markDirty(BlockPos pos, TileEntity unusedTileEntity, CallbackInfo ci) {
 		this.on_removeTileEntity_return(pos, null);
 	}

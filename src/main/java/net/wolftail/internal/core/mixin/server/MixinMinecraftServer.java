@@ -17,7 +17,7 @@ public abstract class MixinMinecraftServer {
 	@Shadow
 	public Thread serverThread;
 	
-	@Inject(method = "startServerThread", at = @At(value = "INVOKE", target = "start()V"))
+	@Inject(method = "startServerThread", at = @At(value = "INVOKE", target = "java.lang.Thread.start()V", remap = false))
 	private void on_startServerThread_invoke_start(CallbackInfo ci) {
 		if (PhysicalType.DEDICATED_SERVER.is()) {
 			// invoked by the 'zero' thread, transfer the host to the now unstarted
@@ -27,7 +27,7 @@ public abstract class MixinMinecraftServer {
 		}
 	}
 	
-	@Inject(method = "main", at = @At("HEAD"))
+	@Inject(method = "main", at = @At("HEAD"), remap = false)
 	private static void on_main_head(CallbackInfo ci) {
 		SectionHandler.finish_preparing();
 	}

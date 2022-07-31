@@ -37,7 +37,7 @@ public abstract class MixinNetHandlerLoginServer {
 	@Shadow
 	public GameProfile loginGameProfile;
 	
-	@Inject(method = "tryAcceptPlayer", at = @At(value = "INVOKE", target = "sendPacket(Lnet/minecraft/network/Packet;)V", shift = Shift.AFTER), cancellable = true)
+	@Inject(method = "tryAcceptPlayer", at = @At(value = "INVOKE", target = "net.minecraft.network.NetworkManager.sendPacket(Lnet/minecraft/network/Packet;)V", shift = Shift.AFTER), cancellable = true)
 	private void on_tryAcceptPlayer_invokeAfter_sendPacket_1(CallbackInfo ci) {
 		GameProfile profile = this.loginGameProfile;
 		NetworkManager connect = this.networkManager;

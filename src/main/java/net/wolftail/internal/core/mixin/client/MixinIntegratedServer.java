@@ -21,7 +21,7 @@ public abstract class MixinIntegratedServer extends MixinMinecraftServer {
 		this.root = new ImplMPCR((IntegratedServer) (Object) this);
 	}
 	
-	@Redirect(method = "shareToLAN", at = @At(value = "INVOKE", target = "setPermissionLevel"))
+	@Redirect(method = "shareToLAN", at = @At(value = "INVOKE", target = "net.minecraft.client.entity.EntityPlayerSP.setPermissionLevel(I)V"))
 	private void proxy_shareToLAN_setPermissionLevel(EntityPlayerSP sp, int i) {
 		if (sp != null)
 			sp.setPermissionLevel(i);
