@@ -12,9 +12,9 @@ import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.internal.core.ExtCoreMinecraftServer;
 
 /**
- * Similar to {@link net.minecraft.server.players.PlayerList PlayerList}, except
- * player list is the manager of all {@link UniversalPlayerType#TYPE_PLAYER
- * steves}, but this is the manager of all uniplayer types.
+ * Similar to vanilla {@code PlayerList} except player list is the manager of
+ * all {@link UniversalPlayerType#TYPE_PLAYER steves}, but this is the manager
+ * of all uniplayers.
  */
 @Sealed
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)

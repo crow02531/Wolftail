@@ -4,6 +4,7 @@ buildscript {
         jcenter()
         mavenCentral()
     }
+
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
         classpath 'org.spongepowered:mixingradle:0.7.+'
@@ -17,9 +18,9 @@ apply plugin: 'maven-publish'
 
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.12.2-0.0.1'
-group = 'net.wolftail' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group = 'net.wolftail'
 archivesBaseName = 'wolftail'
+version = '1.12.2-0.0.1'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
@@ -113,19 +114,39 @@ jar {
 
 // Example configuration to allow publishing using the maven-publish task
 // This is the preferred method to reobfuscate your jar file
-jar.finalizedBy('reobfJar') 
+//jar.finalizedBy('reobfJar') 
 // However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
 //publish.dependsOn('reobfJar')
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        gpr(MavenPublication) {
+            artifactId project.archivesBaseName
+
             artifact jar
+            artifact sourcesJar
+            artifact javadocJar
         }
     }
+
     repositories {
         maven {
-            url "file:///${project.projectDir}/mcmodsrepo"
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/crow02531/Wolftail"
+            credentials {
+                username = project.findProperty("gpr.user")
+                password = project.findProperty("gpr.key")
+            }
         }
     }
 }

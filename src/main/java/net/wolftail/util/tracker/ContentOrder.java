@@ -11,8 +11,6 @@ import net.wolftail.internal.tracker.Mechanisms;
 
 /**
  * An order asking what you want to subscribe in the server.
- * 
- * @see ContentTracker
  */
 @Immutable
 public abstract class ContentOrder {
