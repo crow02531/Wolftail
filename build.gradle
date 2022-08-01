@@ -79,7 +79,7 @@ dependencies {
     // compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     // compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
 
-    compile 'org.spongepowered:mixin:0.8.2'
+    implementation 'org.spongepowered:mixin:0.8.2'
 
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
 
