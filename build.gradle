@@ -19,8 +19,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
 group = 'net.wolftail'
-archivesBaseName = 'wolftail'
-version = '1.12.2-0.0.1'
+archivesBaseName = 'wolftail-1.12.2'
+version = '0.1.0'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
