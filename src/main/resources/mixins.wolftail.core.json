@@ -20,7 +20,6 @@
     "server.MixinDedicatedServer"
   ],
   "injectors": {
-     "defaultRequire": 1
-   },
-   "refmap": "mixins.wolftail.refmap.json"
+    "defaultRequire": 1
+  }
 }

@@ -112,6 +112,20 @@ jar {
     }
 }
 
+import groovy.json.JsonOutput
+
+task addRefmap {
+    doLast {
+        fileTree(processResources.destinationDir).each {
+            def parsedJson = new groovy.json.JsonSlurper().parseText(it.text)
+            parsedJson.put 'refmap', 'mixins.wolftail.refmap.json'
+            it.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedJson))
+        }
+    }
+}
+
+processResources.finalizedBy('addRefmap')
+
 // Example configuration to allow publishing using the maven-publish task
 // This is the preferred method to reobfuscate your jar file
 //jar.finalizedBy('reobfJar') 
@@ -130,7 +144,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 publishing {
     publications {
-        gpr(MavenPublication) {
+        mavenJava(MavenPublication) {
             artifactId project.archivesBaseName
 
             from components.java
