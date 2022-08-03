@@ -35,7 +35,7 @@ public abstract class MixinFontRenderer implements ExtRendererFontRenderer {
 	@Shadow
 	public abstract float renderChar(char ch, boolean italic);
 	
-	@Shadow
+	@Shadow(remap = false)
 	public abstract void doDraw(float f);
 	
 	@Shadow

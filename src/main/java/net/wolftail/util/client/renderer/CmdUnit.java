@@ -191,16 +191,15 @@ public final class CmdUnit extends UIUnit {
 		StringBuilder buf = this.charBuf;
 		int l = buf.length();
 		
-		if (l == 0)
-			return;
-		
 		ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
 		float vw = this.param_width;
 		float vh = this.param_height;
 		
-		GlStateManager.clearColor(0, 0, 0, 0);
-		GlStateManager.clearDepth(1);
+		GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL11.glClearColor(0, 0, 0, 0);
+		GL11.glClearDepth(1);
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL11.glPopAttrib();
 		
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glOrtho(0, vw, vh, 0, -1, 1);
@@ -210,10 +209,12 @@ public final class CmdUnit extends UIUnit {
 		fr.wolftail_posX_set(0);
 		fr.wolftail_posY_set(-(scroll * 9));
 		
-		drawRect(vw - 9, 0, vw, vh, 0xD8FFFFFF);
-		if (this.pMaxScroll() != 0)
+		if (this.pMaxScroll() != 0) {
+			drawRect(vw - 9, 0, vw, vh, 0xD8FFFFFF);
 			drawRect(vw - 9, (vh * scroll) / (float) this.tmp_lineNum, vw,
 					vh * (vh + scroll * 9) / (float) (this.tmp_lineNum * 9), 0x35000000);
+		}
+		
 		vw -= 9;
 		
 		Style style = new Style();
@@ -276,27 +277,30 @@ public final class CmdUnit extends UIUnit {
 	private static void setColor(ExtRendererFontRenderer fr, Style s) {
 		int color = fr.wolftail_codeToColor(s.colorCode);
 		
-		GlStateManager.color((float) (color >> 16) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
+		GL11.glColor4f((float) (color >> 16) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
 				(float) (color & 255) / 255.0F, 1.0F);
 	}
 	
 	private static void drawRect(float left, float top, float right, float bottom, int color) {
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuffer();
-		
+		GlStateManager.disableTexture2D();
 		GlStateManager.enableBlend();
 		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
 				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
 				GlStateManager.DestFactor.ZERO);
-		GlStateManager.color((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
+		GL11.glColor4f((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
 				(float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION);
-		bufferbuilder.pos(left, bottom, 0).endVertex();
-		bufferbuilder.pos(right, bottom, 0).endVertex();
-		bufferbuilder.pos(right, top, 0).endVertex();
-		bufferbuilder.pos(left, top, 0).endVertex();
-		tessellator.draw();
+		
+		Tessellator tess = Tessellator.getInstance();
+		BufferBuilder buffer = tess.getBuffer();
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
+		buffer.pos(left, bottom, 0).endVertex();
+		buffer.pos(right, bottom, 0).endVertex();
+		buffer.pos(right, top, 0).endVertex();
+		buffer.pos(left, top, 0).endVertex();
+		tess.draw();
+		
 		GlStateManager.disableBlend();
+		GlStateManager.enableTexture2D();
 	}
 	
 	private static final class Style {

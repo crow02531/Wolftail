@@ -138,7 +138,7 @@ public abstract class UIUnit {
 			this.state_dirty = false;
 		}
 		
-		int old_binding = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+		int old_binding = GlStateManager.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
 		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, this.object_fb);
 		
 		GL11.glPushAttrib(GL11.GL_VIEWPORT_BIT | GL11.GL_TRANSFORM_BIT);
@@ -169,7 +169,7 @@ public abstract class UIUnit {
 		this.check();
 		
 		GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
-		GlStateManager.bindTexture(this.object_cb);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.object_cb);
 		
 		Tessellator tess = Tessellator.getInstance();
 		BufferBuilder buffer = tess.getBuffer();
@@ -180,7 +180,6 @@ public abstract class UIUnit {
 		buffer.pos(p3.x, p3.y, p3.z).tex(0.0D, 1.0D).color(255, 255, 255, 255).endVertex();
 		tess.draw();
 		
-		GlStateManager.bindTexture(0);
 		GL11.glPopAttrib();
 	}
 	
