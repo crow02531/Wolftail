@@ -4,14 +4,14 @@
   "package": "net.wolftail.internal.core.mixin",
   "mixins": [
     "MixinMinecraftServer",
-    "MixinNetHandlerLoginServer",
+    "MixinNetworkDispatcher",
     "MixinNetHandlerPlayServer",
     "MixinPlayerList"
   ],
   "client": [
     "client.MixinMain",
     "client.MixinMinecraft",
-    "client.MixinNetHandlerLoginClient",
+    "client.MixinNetworkDispatcher",
     "client.MixinGuiMainMenu",
     "client.MixinIntegratedServer"
   ],

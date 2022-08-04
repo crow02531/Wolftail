@@ -89,6 +89,8 @@ public final class ImplMPCR implements RootPlayContextManager {
 		logger.info("{}({}) the universal player logged in with type {} and address {}", id, name, type.registeringId(),
 				connection.getRemoteAddress());
 		
+		this.server.refreshStatusNextTick();
+		
 		return context;
 	}
 	
@@ -97,6 +99,8 @@ public final class ImplMPCR implements RootPlayContextManager {
 		context.subManager.current_load--;
 		
 		logger.info("{}({}) the universal player logged out", context.identifier, context.name);
+		
+		this.server.refreshStatusNextTick();
 	}
 	
 	public void loadDat() throws IOException {

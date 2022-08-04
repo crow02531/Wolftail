@@ -33,11 +33,13 @@ import net.minecraft.util.FrameTimer;
 import net.minecraft.util.Timer;
 import net.minecraft.util.Util;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.wolftail.internal.core.ExtCoreMinecraft;
 import net.wolftail.internal.core.ImplPCC;
 import net.wolftail.internal.core.ImplUPT;
 import net.wolftail.internal.core.SectionHandler;
 import net.wolftail.internal.core.network.NptClientPacketListener;
+import net.wolftail.internal.core.network.NptPacketListener;
 
 //SH: on_client_playing_change, finish_loading
 //inject play context; intercept game loop for non player type
@@ -301,10 +303,13 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 				logger.info("The universal player type in use is {}", type.registeringId());
 				
 				if (!type.isPlayerType()) {
+					// clean up
 					currentScreen.onGuiClosed();
 					currentScreen = null;
-					
+					FMLClientHandler.instance().setPlayClient(null);
+					NptPacketListener.cleanFML(connect);
 					connect.setNetHandler(new NptClientPacketListener(connect));
+					
 					type.callClientEnter(context);
 				}
 			}, null)).get();
