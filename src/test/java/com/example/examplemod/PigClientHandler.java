@@ -61,7 +61,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 	public void tick() {
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKeyState()) {
-				switch(Keyboard.getEventKey()) {
+				switch (Keyboard.getEventKey()) {
 				case Keyboard.KEY_RETURN:
 					this.ui.pPrintln();
 					

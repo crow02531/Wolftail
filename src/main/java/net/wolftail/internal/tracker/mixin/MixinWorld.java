@@ -12,7 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.wolftail.internal.tracker.ExtTrackerChunk;
-import net.wolftail.internal.util.MoreBlockPos;
+import net.wolftail.util.MoreBlockPos;
 
 //record tile entity changes
 @Mixin(World.class)

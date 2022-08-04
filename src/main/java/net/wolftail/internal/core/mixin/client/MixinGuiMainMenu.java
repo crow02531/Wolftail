@@ -14,6 +14,6 @@ public abstract class MixinGuiMainMenu extends GuiScreen {
 	
 	@Inject(method = "drawScreen", at = @At("RETURN"))
 	private void on_drawScreen_return(CallbackInfo info) {
-		this.drawString(this.fontRenderer, "Wolftail Installed", 2, 2, -1);
+		this.fontRenderer.drawString("Wolftail Installed", 2, 2, -1, true);
 	}
 }

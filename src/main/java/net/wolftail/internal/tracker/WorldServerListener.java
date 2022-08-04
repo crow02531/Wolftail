@@ -8,7 +8,7 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
-import net.wolftail.internal.util.MoreBlockPos;
+import net.wolftail.util.MoreBlockPos;
 
 public final class WorldServerListener implements IWorldEventListener {
 	

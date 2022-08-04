@@ -6,7 +6,7 @@ import net.minecraft.world.DimensionType;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.IServerHandler;
 import net.wolftail.api.PlayContext;
-import net.wolftail.api.lifecycle.GameSection;
+import net.wolftail.util.MoreServers;
 import net.wolftail.util.tracker.ContentOrder;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;
@@ -35,9 +35,9 @@ public final class PigServerHandler implements IServerHandler {
 	public void handleLeave(PlayContext context) {
 		DiffVisitor dv = ((PigServerNetHandler) context.getHandler()).v;
 		
-		O0.untrack(GameSection.serverInstance(), dv);
-		O1.untrack(GameSection.serverInstance(), dv);
-		O2.untrack(GameSection.serverInstance(), dv);
+		O0.untrack(MoreServers.serverInstance(), dv);
+		O1.untrack(MoreServers.serverInstance(), dv);
+		O2.untrack(MoreServers.serverInstance(), dv);
 	}
 	
 	private static class PigServerNetHandler implements INetworkHandler {
@@ -45,9 +45,9 @@ public final class PigServerHandler implements IServerHandler {
 		final TraceVisitor v = new TraceVisitor(System.out);
 		
 		PigServerNetHandler() {
-			O0.track(GameSection.serverInstance(), this.v, Timing.of(10));
-			O1.track(GameSection.serverInstance(), this.v, Timing.of(2));
-			O2.track(GameSection.serverInstance(), this.v, Timing.EVERY_TICK);
+			O0.track(MoreServers.serverInstance(), this.v, Timing.of(10));
+			O1.track(MoreServers.serverInstance(), this.v, Timing.of(2));
+			O2.track(MoreServers.serverInstance(), this.v, Timing.EVERY_TICK);
 		}
 		
 		@Override

@@ -16,13 +16,13 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.server.SPacketCustomPayload;
 import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher;
-import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.internal.core.ExtCoreMinecraftServer;
 import net.wolftail.internal.core.ExtCorePlayerList;
 import net.wolftail.internal.core.ImplPCS;
 import net.wolftail.internal.core.ImplUPT;
 import net.wolftail.internal.core.network.NptPacketListener;
 import net.wolftail.internal.core.network.NptServerPacketListener;
+import net.wolftail.util.MoreServers;
 
 //server side accepts uniplayers
 @Mixin(NetworkDispatcher.class)
@@ -42,7 +42,7 @@ public abstract class MixinNetworkDispatcher {
 		
 		// we should in LOGIC_SERVER thread, modded connection
 		
-		ImplPCS context = ((ExtCoreMinecraftServer) GameSection.serverInstance()).wolftail_getRootManager()
+		ImplPCS context = ((ExtCoreMinecraftServer) MoreServers.serverInstance()).wolftail_getRootManager()
 				.login(connect, profile.getId(), profile.getName());
 		ImplUPT type = context.playType();
 		
@@ -70,7 +70,7 @@ public abstract class MixinNetworkDispatcher {
 	
 	@Unique
 	private void cleanOthers() {
-		ExtCorePlayerList ext = (ExtCorePlayerList) GameSection.serverInstance().getPlayerList();
+		ExtCorePlayerList ext = (ExtCorePlayerList) MoreServers.serverInstance().getPlayerList();
 		
 		ext.wolftail_rem_advancements(this.player.getUniqueID());
 		ext.wolftail_rem_playerStatFiles(this.player.getUniqueID());

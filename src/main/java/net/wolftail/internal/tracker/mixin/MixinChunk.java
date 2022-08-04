@@ -27,10 +27,10 @@ import net.wolftail.internal.tracker.ExtTrackerChunk;
 import net.wolftail.internal.tracker.ExtTrackerWorldServer;
 import net.wolftail.internal.tracker.container.TimedTrackComplex;
 import net.wolftail.internal.tracker.container.TrackContainer;
-import net.wolftail.internal.util.MoreBlockPos;
-import net.wolftail.internal.util.MoreByteBufs;
 import net.wolftail.internal.util.collect.LinkedObjectCollection;
 import net.wolftail.internal.util.collect.SmallShortSet;
+import net.wolftail.util.MoreBlockPos;
+import net.wolftail.util.MoreByteBufs;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;
 

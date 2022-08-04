@@ -5,8 +5,6 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.server.MinecraftServer;
 import net.wolftail.internal.core.SectionHandler;
 
 /**
@@ -104,27 +102,6 @@ public enum GameSection {
 			action.accept(this.handler.getState());
 		} finally {
 			rlock.unlock();
-		}
-	}
-	
-	/**
-	 * Get the current minecraft server instance. In dedicated server this method
-	 * always returns the same value, but in integrated client it returns the
-	 * current integrated server.
-	 * 
-	 * @return the current minecraft server instance
-	 */
-	@Nonnull
-	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
-	public static MinecraftServer serverInstance() {
-		return PhysicalType.INTEGRATED_CLIENT.is() ? Holder.integratedServer() : SectionHandler.dedicatedServer;
-	}
-	
-	// prevent classloading IntegratedServer
-	static final class Holder {
-		
-		static MinecraftServer integratedServer() {
-			return Minecraft.getMinecraft().getIntegratedServer();
 		}
 	}
 }

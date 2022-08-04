@@ -7,10 +7,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.internal.tracker.ExtTrackerChunk;
 import net.wolftail.internal.tracker.ExtTrackerWorldServer;
-import net.wolftail.internal.util.MoreBlockPos;
+import net.wolftail.util.MoreBlockPos;
+import net.wolftail.util.MoreServers;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.Timing;
 
@@ -18,7 +18,7 @@ public final class OrderTileEntity extends AbstractBlockOrder {
 	
 	static {
 		addMechanism(() -> {
-			for (WorldServer w : GameSection.serverInstance().worlds)
+			for (WorldServer w : MoreServers.serverInstance().worlds)
 				((ExtTrackerWorldServer) w).wolftail_bte_assemble();
 		});
 	}

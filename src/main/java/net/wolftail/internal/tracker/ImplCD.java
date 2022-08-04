@@ -1,6 +1,6 @@
 package net.wolftail.internal.tracker;
 
-import static net.wolftail.internal.util.MoreByteBufs.readVarInt;
+import static net.wolftail.util.MoreByteBufs.readVarInt;
 
 import java.util.Arrays;
 

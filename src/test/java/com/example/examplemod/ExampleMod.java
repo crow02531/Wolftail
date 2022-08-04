@@ -16,8 +16,8 @@ public class ExampleMod {
 	public static final String VERSION = "1.0";
 	
 	public static final ResourceLocation TYPE_PIG_ID = new ResourceLocation("examplemod", "pig");
-	public static final UniversalPlayerType TYPE_PIG = UniversalPlayerType.create(PigServerHandler.INSTANCE,
-			PigClientHandler.INSTANCE).setRegistryName(TYPE_PIG_ID);
+	public static final UniversalPlayerType TYPE_PIG = UniversalPlayerType
+			.create(PigServerHandler.INSTANCE, PigClientHandler.INSTANCE).setRegistryName(TYPE_PIG_ID);
 	
 	@SubscribeEvent
 	public static void event_registerUniplayerTypes(RegistryEvent.Register<UniversalPlayerType> e) {

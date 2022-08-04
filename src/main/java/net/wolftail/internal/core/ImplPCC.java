@@ -8,7 +8,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.client.CPacketCustomPayload;
 import net.minecraft.util.text.ITextComponent;
-import net.wolftail.internal.util.MoreByteBufs;
+import net.wolftail.util.MoreByteBufs;
 
 public final class ImplPCC extends ImplPC {
 	

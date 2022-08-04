@@ -8,7 +8,7 @@ import net.minecraftforge.fml.common.Mod.InstanceFactory;
 public final class Wolftail {
 	
 	public static final String MOD_ID = "wolftail";
-	public static final String MOD_VERSION = "0.2.0";
+	public static final String MOD_VERSION = "0.2.1";
 	
 	public static final String MC_VERSION = "1.12.2";
 	
