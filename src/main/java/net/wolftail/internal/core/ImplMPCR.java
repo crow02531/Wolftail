@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
@@ -22,7 +22,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.wolftail.api.RootPlayContextManager;
 import net.wolftail.api.UniversalPlayerType;
-import net.wolftail.api.UniversalPlayerTypeRegistry;
 
 public final class ImplMPCR implements RootPlayContextManager {
 	
@@ -31,20 +30,20 @@ public final class ImplMPCR implements RootPlayContextManager {
 	final MinecraftServer server;
 	final Random rnd;
 	
-	private final Map<ImplUPT, ImplMPCS> subs;
+	private final ImmutableMap<UniversalPlayerType, ImplMPCS> subs;
 	private final Map<UUID, ImplPCS> contexts;
 	
 	private File file_uniplayerType;
 	private NBTTagCompound data_uniplayerType;
 	
-	@SuppressWarnings("unchecked")
 	public ImplMPCR(MinecraftServer arg0) {
 		this.server = arg0;
 		
-		ImmutableMap.Builder<ImplUPT, ImplMPCS> builder = ImmutableMap.builder();
+		Builder<UniversalPlayerType, ImplMPCS> builder = ImmutableMap.builder();
 		
-		for (ImplUPT t : (Set<ImplUPT>) (Object) UniversalPlayerTypeRegistry.INSTANCE.asMap().values())
-			builder.put(t, new ImplMPCS(t, this));
+		RegistryHolder.getRegistry().forEach(t -> {
+			builder.put(t, new ImplMPCS((ImplUPT) t, this));
+		});
 		
 		this.subs = builder.build();
 		this.contexts = new HashMap<>();
@@ -86,8 +85,8 @@ public final class ImplMPCR implements RootPlayContextManager {
 			throw new IllegalStateException("Duplicated join with ID " + id);
 		context.subManager.current_load++;
 		
-		logger.info("{}({}) the universal player logged in with type {} and address {}", id, name, type.registeringId(),
-				connection.getRemoteAddress());
+		logger.info("{}({}) the universal player logged in with type {} and address {}", id, name,
+				type.getRegistryName(), connection.getRemoteAddress());
 		
 		this.server.refreshStatusNextTick();
 		
@@ -122,12 +121,12 @@ public final class ImplMPCR implements RootPlayContextManager {
 		NBTBase tag = data.getTag(name = id.toString());
 		
 		if (tag != null && tag.getId() == 8)
-			type = UniversalPlayerTypeRegistry.INSTANCE.byId(new ResourceLocation(((NBTTagString) tag).getString()));
+			type = RegistryHolder.getRegistry().getValue(new ResourceLocation(((NBTTagString) tag).getString()));
 		
 		if (type == null) {
-			type = UniversalPlayerTypeRegistry.INSTANCE.getRandomType(this.rnd);
+			type = this.subs.values().asList().get(this.rnd.nextInt(this.subs.size())).type;
 			
-			data.setString(name, type.registeringId().toString());
+			data.setString(name, type.getRegistryName().toString());
 		}
 		
 		return (ImplUPT) type;

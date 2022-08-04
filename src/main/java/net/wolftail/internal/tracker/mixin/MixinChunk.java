@@ -28,7 +28,7 @@ import net.wolftail.internal.tracker.ExtTrackerWorldServer;
 import net.wolftail.internal.tracker.container.TimedTrackComplex;
 import net.wolftail.internal.tracker.container.TrackContainer;
 import net.wolftail.internal.util.MoreBlockPos;
-import net.wolftail.internal.util.MoreByteBuf;
+import net.wolftail.internal.util.MoreByteBufs;
 import net.wolftail.internal.util.collect.LinkedObjectCollection;
 import net.wolftail.internal.util.collect.SmallShortSet;
 import net.wolftail.util.tracker.DiffVisitor;
@@ -278,6 +278,6 @@ public abstract class MixinChunk implements ExtTrackerChunk {
 	private ByteBuf make_tileentity(BlockPos p) {
 		TileEntity t = this.getTileEntity(p, EnumCreateEntityType.CHECK);
 		
-		return t == null ? null : MoreByteBuf.writeTag(t.serializeNBT(), Unpooled.buffer());
+		return t == null ? null : MoreByteBufs.writeTag(t.serializeNBT(), Unpooled.buffer());
 	}
 }

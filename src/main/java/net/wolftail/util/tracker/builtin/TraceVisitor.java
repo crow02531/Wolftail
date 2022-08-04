@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
-import net.wolftail.internal.util.MoreByteBuf;
+import net.wolftail.internal.util.MoreByteBufs;
 import net.wolftail.util.tracker.DiffVisitor;
 
 public final class TraceVisitor implements DiffVisitor {
@@ -148,7 +148,7 @@ public final class TraceVisitor implements DiffVisitor {
 	@Override
 	public void jzSetTileEntity(ByteBuf buf) {
 		pw.print("Set the tile entity to: ");
-		pw.println(buf == null ? "EMPTY" : MoreByteBuf.readTag(buf.duplicate()));
+		pw.println(buf == null ? "EMPTY" : MoreByteBufs.readTag(buf.duplicate()));
 		
 		if (dv != null)
 			dv.jzSetTileEntity(buf);

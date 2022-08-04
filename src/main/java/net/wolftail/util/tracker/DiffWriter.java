@@ -1,6 +1,6 @@
 package net.wolftail.util.tracker;
 
-import static net.wolftail.internal.util.MoreByteBuf.writeVarInt;
+import static net.wolftail.internal.util.MoreByteBufs.writeVarInt;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;

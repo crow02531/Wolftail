@@ -12,9 +12,9 @@ import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
-public final class MoreByteBuf {
+public final class MoreByteBufs {
 	
-	private MoreByteBuf() {
+	private MoreByteBufs() {
 	}
 	
 	public static PacketBuffer wrap(ByteBuf buf) {

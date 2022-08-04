@@ -10,7 +10,7 @@ import net.minecraft.network.play.server.SPacketCustomPayload;
 import net.minecraft.network.play.server.SPacketDisconnect;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.wolftail.internal.util.MoreByteBuf;
+import net.wolftail.internal.util.MoreByteBufs;
 
 public final class ImplPCS extends ImplPC {
 	
@@ -36,7 +36,7 @@ public final class ImplPCS extends ImplPC {
 	public void send(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
 		this.ensureNonPlayerType();
 		
-		this.connection.sendPacket(new SPacketCustomPayload("WT|PL", MoreByteBuf.wrap(buf)), listener);
+		this.connection.sendPacket(new SPacketCustomPayload("WT|PL", MoreByteBufs.wrap(buf)), listener);
 	}
 	
 	@SuppressWarnings("unchecked")

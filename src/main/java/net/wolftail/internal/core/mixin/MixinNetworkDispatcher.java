@@ -48,7 +48,7 @@ public abstract class MixinNetworkDispatcher {
 		
 		connect.sendPacket(newTypeNotifyPacket(type));
 		
-		if (!type.isPlayerType()) {
+		if (!type.isSteve()) {
 			ci.cancel();
 			
 			// clean up
@@ -63,7 +63,7 @@ public abstract class MixinNetworkDispatcher {
 	@Unique
 	private static SPacketCustomPayload newTypeNotifyPacket(ImplUPT type) {
 		PacketBuffer buf = new PacketBuffer(Unpooled.buffer());
-		buf.writeResourceLocation(type.registeringId());
+		buf.writeResourceLocation(type.getRegistryName());
 		
 		return new SPacketCustomPayload("WT|TN", buf);
 	}

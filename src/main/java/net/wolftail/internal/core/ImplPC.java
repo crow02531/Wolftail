@@ -70,7 +70,7 @@ public abstract class ImplPC implements PlayContext {
 	}
 	
 	final void ensureNonPlayerType() {
-		if (this.playType().isPlayerType())
+		if (this.playType().isSteve())
 			throw new UnsupportedOperationException();
 	}
 }

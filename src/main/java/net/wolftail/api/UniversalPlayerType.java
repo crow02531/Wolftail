@@ -3,27 +3,20 @@ package net.wolftail.api;
 import javax.annotation.Nonnull;
 
 import net.minecraft.util.ResourceLocation;
-import net.wolftail.api.lifecycle.GameSection;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.wolftail.api.lifecycle.Sealed;
-import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.internal.core.ImplUPT;
 
-/**
- * Represent an uniplayer type.
- */
 @Sealed
-public interface UniversalPlayerType {
+public interface UniversalPlayerType extends IForgeRegistryEntry<UniversalPlayerType> {
 	
 	ResourceLocation TYPE_PLAYER_ID = new ResourceLocation("minecraft", "player");
-	UniversalPlayerType TYPE_PLAYER = new ImplUPT();
+	UniversalPlayerType TYPE_PLAYER = new ImplUPT().setRegistryName(TYPE_PLAYER_ID);
+	
+	boolean hasRegistered();
 	
 	@Nonnull
-	@SideWith(section = GameSection.GAME_PREPARED)
-	default ResourceLocation registeringId() {
-		return UniversalPlayerTypeRegistry.INSTANCE.idFor(this);
-	}
-	
-	default boolean isPlayerType() {
-		return this == TYPE_PLAYER;
+	static UniversalPlayerType create(IServerHandler serverHandler, IClientHandler clientHandler) {
+		return new ImplUPT(serverHandler, clientHandler);
 	}
 }

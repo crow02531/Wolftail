@@ -94,9 +94,9 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher.ConnectionType;
 import net.wolftail.api.UniversalPlayerType;
-import net.wolftail.api.UniversalPlayerTypeRegistry;
 import net.wolftail.internal.core.ExtCoreMinecraft;
 import net.wolftail.internal.core.ImplUPT;
+import net.wolftail.internal.core.RegistryHolder;
 
 public final class TransientPacketListener implements INetHandlerPlayClient {
 	
@@ -124,7 +124,7 @@ public final class TransientPacketListener implements INetHandlerPlayClient {
 		// we now should in netty thread
 		((ExtCoreMinecraft) Minecraft.getMinecraft()).wolftail_loadContext(type, p.getId(), p.getName(), c);
 		
-		if (type.isPlayerType()) {
+		if (type.isSteve()) {
 			MinecraftForge.EVENT_BUS
 					.post(new FMLNetworkEvent.ClientConnectedToServerEvent(c, this.connectionType.name()));
 			
@@ -144,7 +144,7 @@ public final class TransientPacketListener implements INetHandlerPlayClient {
 			if (packetIn.getBufferData().isReadable())
 				throw new DecoderException();
 			
-			if ((type = (ImplUPT) UniversalPlayerTypeRegistry.INSTANCE.byId(typeId)) == null)
+			if ((type = (ImplUPT) RegistryHolder.getRegistry().getValue(typeId)) == null)
 				throw new IllegalStateException("Unknow universal player type " + typeId);
 			
 			this.pass(type, null);

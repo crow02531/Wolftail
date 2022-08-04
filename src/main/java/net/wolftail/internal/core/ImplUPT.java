@@ -1,10 +1,11 @@
 package net.wolftail.internal.core;
 
+import net.minecraftforge.registries.IForgeRegistryEntry.Impl;
 import net.wolftail.api.IClientHandler;
 import net.wolftail.api.IServerHandler;
 import net.wolftail.api.UniversalPlayerType;
 
-public final class ImplUPT implements UniversalPlayerType {
+public final class ImplUPT extends Impl<UniversalPlayerType> implements UniversalPlayerType {
 	
 	private final IServerHandler handler_server;
 	private final IClientHandler handler_client;
@@ -41,5 +42,14 @@ public final class ImplUPT implements UniversalPlayerType {
 	public void callClientLeave() {
 		if (this.handler_client != null)
 			this.handler_client.handleLeave();
+	}
+	
+	public boolean isSteve() {
+		return this == TYPE_PLAYER;
+	}
+	
+	@Override
+	public boolean hasRegistered() {
+		return this.delegate.name() != null;
 	}
 }

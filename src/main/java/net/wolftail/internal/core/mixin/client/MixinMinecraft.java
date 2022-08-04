@@ -162,7 +162,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		
 		ImplPCC context = this.playContext;
 		
-		if (context != null && !context.playType().isPlayerType()) {
+		if (context != null && !context.playType().isSteve()) {
 			ci.cancel();
 			
 			this.doGameLoop(context);
@@ -244,7 +244,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		
 		while (Minecraft.getSystemTime() >= this.debugUpdateTime + 1000L) {
 			debugFPS = this.fpsCounter;
-			this.debug = String.format("Wolftail working with %s, %d fps", context.playType().registeringId(),
+			this.debug = String.format("Wolftail working with %s, %d fps", context.playType().getRegistryName(),
 					debugFPS);
 			
 			this.debugUpdateTime += 1000L;
@@ -300,9 +300,9 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 				ImplPCC context = playContext = new ImplPCC(type, id, name, connect);
 				SectionHandler.on_client_playing_change();
 				
-				logger.info("The universal player type in use is {}", type.registeringId());
+				logger.info("The universal player type in use is {}", type.getRegistryName());
 				
-				if (!type.isPlayerType()) {
+				if (!type.isSteve()) {
 					// clean up
 					currentScreen.onGuiClosed();
 					currentScreen = null;

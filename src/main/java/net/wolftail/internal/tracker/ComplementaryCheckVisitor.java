@@ -22,7 +22,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.chunk.BlockStateContainer;
-import net.wolftail.internal.util.MoreByteBuf;
+import net.wolftail.internal.util.MoreByteBufs;
 import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.DiffWriter;
 
@@ -135,7 +135,7 @@ final class ComplementaryCheckVisitor implements DiffVisitor {
 		checkState(bind_block);
 		
 		if (buf != null) {
-			MoreByteBuf.readTag(buf);
+			MoreByteBufs.readTag(buf);
 			checkArgument(!buf.isReadable());
 			
 			buf.readerIndex(0);
