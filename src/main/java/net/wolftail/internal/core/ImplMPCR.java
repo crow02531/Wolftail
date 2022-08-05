@@ -2,7 +2,9 @@ package net.wolftail.internal.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -30,8 +32,10 @@ public final class ImplMPCR implements RootPlayContextManager {
 	final MinecraftServer server;
 	final Random rnd;
 	
-	private final ImmutableMap<UniversalPlayerType, ImplMPCS> subs;
-	private final Map<UUID, ImplPCS> contexts;
+	private final ImmutableMap<UniversalPlayerType, ImplMPCS> type2subs;
+	private final Map<UUID, ImplPCS> id2contexts;
+	
+	private final List<ImplPCS> contexts;
 	
 	private File file_uniplayerType;
 	private NBTTagCompound data_uniplayerType;
@@ -45,8 +49,10 @@ public final class ImplMPCR implements RootPlayContextManager {
 			builder.put(t, new ImplMPCS((ImplUPT) t, this));
 		});
 		
-		this.subs = builder.build();
-		this.contexts = new HashMap<>();
+		this.type2subs = builder.build();
+		this.id2contexts = new HashMap<>();
+		
+		this.contexts = new ArrayList<>();
 		
 		this.rnd = new Random();
 	}
@@ -58,12 +64,12 @@ public final class ImplMPCR implements RootPlayContextManager {
 	
 	@Override
 	public ImplPCS contextFor(UUID playId) {
-		return this.contexts.get(playId);
+		return this.id2contexts.get(playId);
 	}
 	
 	@Override
 	public int currentLoad() {
-		return this.contexts.size();
+		return this.id2contexts.size();
 	}
 	
 	@Override
@@ -73,33 +79,39 @@ public final class ImplMPCR implements RootPlayContextManager {
 	
 	@Override
 	public ImplMPCS subManager(UniversalPlayerType type) {
-		return this.subs.get(type);
+		return this.type2subs.get(type);
+	}
+	
+	public ImplPCS contextAt(int i) {
+		return this.contexts.get(i);
 	}
 	
 	public ImplPCS login(NetworkManager connection, UUID id, String name) {
 		ImplUPT type = this.determine_type(id, name);
+		ImplPCS context = new ImplPCS(this.type2subs.get(type), id, name, connection);
 		
-		ImplPCS context = new ImplPCS(this.subs.get(type), id, name, connection);
-		
-		if (this.contexts.putIfAbsent(id, context) != null)
+		if (this.id2contexts.putIfAbsent(id, context) != null)
 			throw new IllegalStateException("Duplicated join with ID " + id);
+		
 		context.subManager.current_load++;
+		
+		this.contexts.add(context);
+		this.server.refreshStatusNextTick();
 		
 		logger.info("{}({}) the universal player logged in with type {} and address {}", id, name,
 				type.getRegistryName(), connection.getRemoteAddress());
-		
-		this.server.refreshStatusNextTick();
 		
 		return context;
 	}
 	
 	public void logout(ImplPCS context) {
-		this.contexts.remove(context.identifier);
+		this.id2contexts.remove(context.identifier);
+		this.contexts.remove(context);
+		this.server.refreshStatusNextTick();
+		
 		context.subManager.current_load--;
 		
 		logger.info("{}({}) the universal player logged out", context.identifier, context.name);
-		
-		this.server.refreshStatusNextTick();
 	}
 	
 	public void loadDat() throws IOException {
@@ -124,7 +136,7 @@ public final class ImplMPCR implements RootPlayContextManager {
 			type = RegistryHolder.getRegistry().getValue(new ResourceLocation(((NBTTagString) tag).getString()));
 		
 		if (type == null) {
-			type = this.subs.values().asList().get(this.rnd.nextInt(this.subs.size())).type;
+			type = this.type2subs.values().asList().get(this.rnd.nextInt(this.type2subs.size())).type;
 			
 			data.setString(name, type.getRegistryName().toString());
 		}
