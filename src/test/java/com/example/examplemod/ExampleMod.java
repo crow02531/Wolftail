@@ -5,6 +5,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.wolftail.api.Introduction;
 import net.wolftail.api.UniversalPlayerType;
 
 @EventBusSubscriber
@@ -17,7 +18,9 @@ public class ExampleMod {
 	
 	public static final ResourceLocation TYPE_PIG_ID = new ResourceLocation("examplemod", "pig");
 	public static final UniversalPlayerType TYPE_PIG = UniversalPlayerType
-			.create(PigServerHandler.INSTANCE, PigClientHandler.INSTANCE).setRegistryName(TYPE_PIG_ID);
+			.create(new Introduction("utype.examplemod.pig.name", "utype.examplemod.pig.desc"),
+					PigServerHandler.INSTANCE, PigClientHandler.INSTANCE)
+			.setRegistryName(TYPE_PIG_ID);
 	
 	@SubscribeEvent
 	public static void event_registerUniplayerTypes(RegistryEvent.Register<UniversalPlayerType> e) {

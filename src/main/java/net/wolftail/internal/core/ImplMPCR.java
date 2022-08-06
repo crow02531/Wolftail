@@ -24,6 +24,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.wolftail.api.RootPlayContextManager;
 import net.wolftail.api.UniversalPlayerType;
+import net.wolftail.util.MoreServers;
 
 public final class ImplMPCR implements RootPlayContextManager {
 	
@@ -115,8 +116,8 @@ public final class ImplMPCR implements RootPlayContextManager {
 	}
 	
 	public void loadDat() throws IOException {
-		if ((this.file_uniplayerType = new File(this.server.worlds[0].getSaveHandler().getWorldDirectory(),
-				"uniplayer-type.dat")).createNewFile()) {
+		if ((this.file_uniplayerType = new File(MoreServers.dirOf(this.server), "uniplayer-type.dat"))
+				.createNewFile()) {
 			this.data_uniplayerType = new NBTTagCompound();
 		} else
 			this.data_uniplayerType = CompressedStreamTools.read(this.file_uniplayerType);

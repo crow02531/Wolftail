@@ -3,18 +3,19 @@ package net.wolftail.internal.core;
 import net.minecraftforge.registries.IForgeRegistryEntry.Impl;
 import net.wolftail.api.IClientHandler;
 import net.wolftail.api.IServerHandler;
+import net.wolftail.api.Introduction;
 import net.wolftail.api.UniversalPlayerType;
 
 public final class ImplUPT extends Impl<UniversalPlayerType> implements UniversalPlayerType {
 	
+	public final Introduction introduction;
+	
 	private final IServerHandler handler_server;
 	private final IClientHandler handler_client;
 	
-	public ImplUPT() {
-		this(null, null);
-	}
-	
-	public ImplUPT(IServerHandler s, IClientHandler c) {
+	public ImplUPT(Introduction i, IServerHandler s, IClientHandler c) {
+		this.introduction = i;
+		
 		this.handler_server = s;
 		this.handler_client = c;
 	}

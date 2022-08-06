@@ -1,6 +1,7 @@
 package net.wolftail.util;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
@@ -86,6 +87,27 @@ public final class MoreByteBufs {
 	}
 	
 	/**
+	 * Read exactly what {@link #writeUTF(String, ByteBuf)} writes.
+	 * 
+	 * @param src the source
+	 * 
+	 * @return the string
+	 */
+	@Nonnull
+	public static String readUTF(@Nonnull ByteBuf src) {
+		try (ByteBufInputStream is = new ByteBufInputStream(src)) {
+			return is.readUTF();
+		} catch (IOException e) {
+			throw new DecoderException(e);
+		}
+	}
+	
+	@Nonnull
+	public static UUID readUUID(@Nonnull ByteBuf src) {
+		return new UUID(src.readLong(), src.readLong());
+	}
+	
+	/**
 	 * Write a var int to {@code dst}.
 	 * 
 	 * @param i   the integer
@@ -119,6 +141,35 @@ public final class MoreByteBufs {
 		} catch (IOException e) {
 			throw new EncoderException(e);
 		}
+		
+		return dst;
+	}
+	
+	/**
+	 * Writes two bytes of length information to {@code dst}, followed by the
+	 * {@link java.io.DataInput modified UTF-8} representation of every character in
+	 * the string {@code s}.
+	 * 
+	 * @param s   the string
+	 * @param dst the destination
+	 * 
+	 * @return {@code dst}
+	 */
+	@Nonnull
+	public static <T extends ByteBuf> T writeUTF(@Nonnull String s, @Nonnull T dst) {
+		try (ByteBufOutputStream os = new ByteBufOutputStream(dst)) {
+			os.writeUTF(s);
+		} catch (IOException e) {
+			throw new EncoderException(e);
+		}
+		
+		return dst;
+	}
+	
+	@Nonnull
+	public static <T extends ByteBuf> T writeUUID(@Nonnull UUID uuid, @Nonnull T dst) {
+		dst.writeLong(uuid.getMostSignificantBits());
+		dst.writeLong(uuid.getLeastSignificantBits());
 		
 		return dst;
 	}
