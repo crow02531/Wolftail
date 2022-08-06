@@ -112,8 +112,8 @@ public final class TransientPacketListener implements INetHandlerPlayClient {
 	
 	private void pass(ImplUPT type, Packet<INetHandlerPlayClient> unexpected) {
 		if (unexpected != null) {
-			logger.warn(
-					"Expecting a type notify packet, maybe the server dosen't install wolftail. Assuming 'minecraft:player'.");
+			logger.warn("Expecting a type notify packet, maybe the server dosen't install wolftail. Assuming '"
+					+ UniversalPlayerType.TYPE_PLAYER_ID + "'.");
 			
 			type = (ImplUPT) UniversalPlayerType.TYPE_PLAYER;
 		}

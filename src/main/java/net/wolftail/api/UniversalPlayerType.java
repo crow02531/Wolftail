@@ -10,10 +10,10 @@ import net.wolftail.internal.core.ImplUPT;
 @Sealed
 public interface UniversalPlayerType extends IForgeRegistryEntry<UniversalPlayerType> {
 	
-	ResourceLocation TYPE_PLAYER_ID = new ResourceLocation("minecraft", "player");
+	ResourceLocation TYPE_PLAYER_ID = new ResourceLocation("wolftail", "player");
 	
-	UniversalPlayerType TYPE_PLAYER = create(new Introduction("utype.minecraft.player.name",
-			"utype.minecraft.player.desc", "minecraft:textures/utype/player.json"), null, null)
+	UniversalPlayerType TYPE_PLAYER = create(new Introduction("utype.wolftail.player.name",
+			"utype.wolftail.player.desc", "wolftail:textures/utype/player.json"), null, null)
 			.setRegistryName(TYPE_PLAYER_ID);
 	
 	boolean hasRegistered();
