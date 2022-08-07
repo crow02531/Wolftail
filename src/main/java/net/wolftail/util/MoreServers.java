@@ -7,7 +7,6 @@ import javax.annotation.Nonnull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
 import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.PhysicalType;
 import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.internal.core.SectionHandler;
@@ -25,7 +24,7 @@ public final class MoreServers {
 	 * @return the current minecraft server instance
 	 */
 	@Nonnull
-	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
+	@SideWith(section = GameSection.GAME_PLAYING)
 	public static MinecraftServer serverInstance() {
 		return PhysicalType.INTEGRATED_CLIENT.is() ? Holder.integratedServer() : SectionHandler.dedicatedServer;
 	}
