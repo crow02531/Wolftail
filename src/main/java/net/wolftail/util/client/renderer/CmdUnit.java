@@ -16,16 +16,21 @@ import net.wolftail.internal.renderer.ExtRendererFontRenderer;
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public final class CmdUnit extends UIUnit {
 	
+	public static final int FONT_HEIGHT = 9;
+	public static final int SCROLL_WIDTH = 12;
+	
+	private static final int INITIAL_CAPACITY = 512;
+	
 	private StringBuilder charBuf;
 	private float scroll;
 	
-	private int tmp_lineNum;
-	private float tmp_posX;
+	private int cache_lineNum;
+	private float cache_posX;
 	
 	public CmdUnit(int width, int height) {
-		super(width, height, true, false);
+		super(width, height, false, false);
 		
-		this.charBuf = new StringBuilder(512);
+		this.charBuf = new StringBuilder(INITIAL_CAPACITY);
 	}
 	
 	public CmdUnit pPrint(boolean b) {
@@ -69,22 +74,22 @@ public final class CmdUnit extends UIUnit {
 			return this;
 		
 		this.charBuf.append(s);
-		this.updateTmp(s);
+		this.updateCache(s);
 		
 		return this;
 	}
 	
-	private void updateTmp(CharSequence s) {
+	private void updateCache(CharSequence s) {
 		ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
-		int vw = this.param_width - 9;
+		int vw = this.param_width - SCROLL_WIDTH;
 		
 		for (int i = 0, l = s.length(); i < l; ++i) {
 			int cp = s.charAt(i);
 			
 			switch (cp) {
 			case '\n':
-				this.tmp_lineNum++;
-				this.tmp_posX = 0;
+				this.cache_lineNum++;
+				this.cache_posX = 0;
 				
 				break;
 			case '\u00a7':
@@ -94,9 +99,9 @@ public final class CmdUnit extends UIUnit {
 					break;
 				}
 			default:
-				if (this.tmp_posX + fr.wolftail_widthOf(cp) > vw) {
-					this.tmp_lineNum++;
-					this.tmp_posX = 0;
+				if (this.cache_posX + fr.wolftail_widthOf(cp) > vw) {
+					this.cache_lineNum++;
+					this.cache_posX = 0;
 				}
 			}
 		}
@@ -105,8 +110,8 @@ public final class CmdUnit extends UIUnit {
 	public void pPrintln() {
 		this.charBuf.append('\n');
 		
-		this.tmp_lineNum++;
-		this.tmp_posX = 0;
+		this.cache_lineNum++;
+		this.cache_posX = 0;
 	}
 	
 	public void pPrintln(boolean b) {
@@ -142,15 +147,19 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	public void pClear() {
-		this.charBuf = new StringBuilder(512);
+		if (this.charBuf.length() > INITIAL_CAPACITY * 1.75)
+			this.charBuf = new StringBuilder(INITIAL_CAPACITY);
+		else
+			this.charBuf.setLength(0);
+		
 		this.scroll = 0;
 		
-		this.tmp_lineNum = 0;
-		this.tmp_posX = 0;
+		this.cache_lineNum = 0;
+		this.cache_posX = 0;
 	}
 	
 	public float pMaxScroll() {
-		return Math.max((float) this.tmp_lineNum - (float) this.param_height / 9.0F, 0);
+		return Math.max((float) this.cache_lineNum - (float) this.param_height / (float) FONT_HEIGHT, 0);
 	}
 	
 	public float pGetScroll() {
@@ -177,10 +186,10 @@ public final class CmdUnit extends UIUnit {
 	@Override
 	void resize0(int oldWidth, int oldHeight) {
 		if (this.param_width != oldWidth) {
-			this.tmp_lineNum = 0;
-			this.tmp_posX = 0;
+			this.cache_lineNum = 0;
+			this.cache_posX = 0;
 			
-			this.updateTmp(this.charBuf);
+			this.updateCache(this.charBuf);
 		}
 		
 		this.pSetScroll(this.scroll);
@@ -195,10 +204,9 @@ public final class CmdUnit extends UIUnit {
 		float vw = this.param_width;
 		float vh = this.param_height;
 		
-		GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT);
 		GL11.glClearColor(0, 0, 0, 0);
-		GL11.glClearDepth(1);
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
 		GL11.glPopAttrib();
 		
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
@@ -207,16 +215,16 @@ public final class CmdUnit extends UIUnit {
 		
 		float scroll = this.scroll;
 		fr.wolftail_posX_set(0);
-		fr.wolftail_posY_set(-(scroll * 9));
+		fr.wolftail_posY_set(-(scroll * FONT_HEIGHT));
 		
-		if (this.pMaxScroll() != 0) {
-			drawRect(vw - 9, 0, vw, vh, 0xD8FFFFFF);
-			drawRect(vw - 9, (vh * scroll) / (float) this.tmp_lineNum, vw,
-					vh * (vh + scroll * 9) / (float) (this.tmp_lineNum * 9), 0x35000000);
-		}
+		// draw scroll
+		drawRect(vw - SCROLL_WIDTH, 0, vw, vh, 0xD8FFFFFF);
+		if (this.pMaxScroll() != 0)
+			drawRect(vw - SCROLL_WIDTH, (vh * scroll) / (float) this.cache_lineNum, vw,
+					vh * (vh + scroll * FONT_HEIGHT) / (float) (this.cache_lineNum * FONT_HEIGHT), 0x35000000);
+		vw -= SCROLL_WIDTH;
 		
-		vw -= 9;
-		
+		// draw content
 		Style style = new Style();
 		setColor(fr, style);
 		
@@ -226,7 +234,7 @@ public final class CmdUnit extends UIUnit {
 			switch (cp) {
 			case '\n':
 				fr.wolftail_posX_set(0);
-				fr.wolftail_posY_add(9);
+				fr.wolftail_posY_add(FONT_HEIGHT);
 				
 				style.reset();
 				setColor(fr, style);
@@ -242,10 +250,10 @@ public final class CmdUnit extends UIUnit {
 			default:
 				if (fr.wolftail_posX_get() + fr.wolftail_widthOf(cp) > vw) {
 					fr.wolftail_posX_set(0);
-					fr.wolftail_posY_add(9);
+					fr.wolftail_posY_add(FONT_HEIGHT);
 				}
 				
-				if (fr.wolftail_posY_get() + 9 < 0)
+				if (fr.wolftail_posY_get() + FONT_HEIGHT < 0)
 					break;
 				if (fr.wolftail_posY_get() > vh)
 					return;

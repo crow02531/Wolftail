@@ -19,8 +19,10 @@ import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
+import net.wolftail.api.lifecycle.Sealed;
 import net.wolftail.api.lifecycle.SideWith;
 
+@Sealed
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public abstract class UIUnit {
 	

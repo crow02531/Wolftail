@@ -12,14 +12,13 @@ public interface UniversalPlayerType extends IForgeRegistryEntry<UniversalPlayer
 	
 	ResourceLocation TYPE_PLAYER_ID = new ResourceLocation("wolftail", "player");
 	
-	UniversalPlayerType TYPE_PLAYER = create(new Introduction("utype.wolftail.player.name",
-			"utype.wolftail.player.desc", "wolftail:textures/utype/player.json"), null, null)
-			.setRegistryName(TYPE_PLAYER_ID);
+	UniversalPlayerType TYPE_PLAYER = create(null, null, new Introduction("utype.wolftail.player.name",
+			"utype.wolftail.player.desc", "wolftail:textures/utype/player.json")).setRegistryName(TYPE_PLAYER_ID);
 	
 	boolean hasRegistered();
 	
 	@Nonnull
-	static UniversalPlayerType create(@Nonnull Introduction intro, IServerHandler sh, IClientHandler ch) {
-		return new ImplUPT(intro, sh, ch);
+	static UniversalPlayerType create(IServerHandler sh, IClientHandler ch, @Nonnull Introduction intro) {
+		return new ImplUPT(sh, ch, intro);
 	}
 }

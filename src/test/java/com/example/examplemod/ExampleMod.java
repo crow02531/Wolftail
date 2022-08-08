@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.wolftail.api.Introduction;
 import net.wolftail.api.UniversalPlayerType;
+import net.wolftail.api.lifecycle.PhysicalType;
 
 @EventBusSubscriber
 @Mod(modid = ExampleMod.MODID, name = ExampleMod.NAME, version = ExampleMod.VERSION)
@@ -18,8 +19,8 @@ public class ExampleMod {
 	
 	public static final ResourceLocation TYPE_PIG_ID = new ResourceLocation("examplemod", "pig");
 	public static final UniversalPlayerType TYPE_PIG = UniversalPlayerType
-			.create(new Introduction("utype.examplemod.pig.name", "utype.examplemod.pig.desc"),
-					PigServerHandler.INSTANCE, PigClientHandler.INSTANCE)
+			.create(PigServerHandler.INSTANCE, PhysicalType.INTEGRATED_CLIENT.is() ? PigClientHandler.INSTANCE : null,
+					new Introduction("utype.examplemod.pig.name", "utype.examplemod.pig.desc"))
 			.setRegistryName(TYPE_PIG_ID);
 	
 	@SubscribeEvent

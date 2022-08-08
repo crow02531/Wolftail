@@ -13,11 +13,11 @@ public final class ImplUPT extends Impl<UniversalPlayerType> implements Universa
 	private final IServerHandler handler_server;
 	private final IClientHandler handler_client;
 	
-	public ImplUPT(Introduction i, IServerHandler s, IClientHandler c) {
-		this.introduction = i;
-		
+	public ImplUPT(IServerHandler s, IClientHandler c, Introduction i) {
 		this.handler_server = s;
 		this.handler_client = c;
+		
+		this.introduction = i;
 	}
 	
 	public void callServerEnter(ImplPC arg) {

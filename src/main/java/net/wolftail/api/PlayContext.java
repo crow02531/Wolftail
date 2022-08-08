@@ -30,6 +30,11 @@ public interface PlayContext {
 	@Nonnull
 	String playName();
 	
+	/**
+	 * Return the byte buf allocator for the play context.
+	 * 
+	 * @return the alloc for the play context
+	 */
 	@Nonnull
 	ByteBufAllocator alloc();
 	
@@ -39,17 +44,31 @@ public interface PlayContext {
 	 * @see #send(ByteBuf, GenericFutureListener)
 	 */
 	default void send(@Nonnull ByteBuf buf) {
-		this.send(buf, null);
+		this.send(buf, (GenericFutureListener<? extends Future<? super Void>>) null);
+	}
+	
+	/**
+	 * Similar to {@link #send(ByteBuf, GenericFutureListener)}, except this method
+	 * ignore the future.
+	 * 
+	 * @see #send(ByteBuf, GenericFutureListener)
+	 */
+	default void send(@Nonnull ByteBuf buf, Runnable listener) {
+		if (listener == null)
+			this.send(buf);
+		else
+			this.send(buf, f -> listener.run());
 	}
 	
 	/**
 	 * Plan to send a packet. Notice that the packet may still in outbound pipeline
-	 * after this method returns.
+	 * after this method returns. We will call {@code buf.release()} once the work
+	 * has done.
 	 * 
-	 * @param buf      the whole data of the packet, callers are responsible of
-	 *                 making all its readable bytes unchanged before the packet
-	 *                 actually sent.
-	 * @param listener called when the packet had been sent.
+	 * @param buf      the payload of the packet, callers are responsible of making
+	 *                 all its readable bytes unchanged before the packet actually
+	 *                 sent.
+	 * @param listener called when the packet had been sent
 	 * 
 	 * @throws UnsupportedOperationException if this is a
 	 *                                       {@link UniversalPlayerType#TYPE_PLAYER

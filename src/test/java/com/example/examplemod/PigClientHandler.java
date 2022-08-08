@@ -1,11 +1,14 @@
 package com.example.examplemod;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ChatAllowedCharacters;
 import net.wolftail.api.IClientHandler;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
@@ -26,11 +29,14 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		this.playContext = context;
 		context.setHandler(this);
 		
-		this.ui = new CmdUnit(400, 300);
+		this.ui = new CmdUnit(calcWidth(), calcHeight());
 	}
 	
 	@Override
 	public void handleFrame() {
+		if (Display.wasResized())
+			this.ui.resize(calcWidth(), calcHeight());
+		
 		GlStateManager.clearColor(0, 0, 0, 1);
 		GlStateManager.clearDepth(1);
 		GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -62,23 +68,37 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKeyState()) {
 				switch (Keyboard.getEventKey()) {
-				case Keyboard.KEY_RETURN:
-					this.ui.pPrintln();
-					
-					break;
 				case Keyboard.KEY_ESCAPE:
 					this.playContext.disconnect();
 					
 					break;
-				case Keyboard.KEY_LSHIFT:
-				case Keyboard.KEY_RSHIFT:
+				case Keyboard.KEY_RETURN:
+					this.ui.pPrintln();
+					
+					break;
+				case Keyboard.KEY_LCONTROL:
 					this.ui.pPrint('\u00a7');
 					
 					break;
+				case Keyboard.KEY_RCONTROL:
+					this.ui.pPrint('\r');
+					
+					break;
 				default:
-					this.ui.pPrint(Keyboard.getEventCharacter());
+					char c = Keyboard.getEventCharacter();
+					
+					if (ChatAllowedCharacters.isAllowedCharacter(c))
+						this.ui.pPrint(c);
 				}
 			}
 		}
+	}
+	
+	private static int calcHeight() {
+		return Minecraft.getMinecraft().displayHeight >> 1;
+	}
+	
+	private static int calcWidth() {
+		return Minecraft.getMinecraft().displayWidth >> 1;
 	}
 }
