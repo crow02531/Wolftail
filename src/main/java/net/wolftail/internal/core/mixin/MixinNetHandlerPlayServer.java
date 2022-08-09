@@ -17,6 +17,7 @@ import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.server.MinecraftServer;
 import net.wolftail.internal.core.ExtCoreMinecraftServer;
 import net.wolftail.internal.core.ImplMPCR;
+import net.wolftail.internal.core.ImplPCS;
 
 //server side steve logout
 @Mixin(NetHandlerPlayServer.class)
@@ -35,8 +36,10 @@ public abstract class MixinNetHandlerPlayServer {
 	@Inject(method = "onDisconnect", at = @At(value = "INVOKE", target = "net.minecraft.server.MinecraftServer.isSinglePlayer()Z"))
 	private void on_onDisconnect_invoke_isSinglePlayer(CallbackInfo ci) {
 		ImplMPCR root = ((ExtCoreMinecraftServer) this.serverController).wolftail_getRootManager();
+		ImplPCS pc = root.contextFor(this.player.getUniqueID());
 		
-		root.logout(root.contextFor(this.player.getGameProfile().getId()));
+		if (pc != null) // disconnect during FML handshake
+			root.logout(pc);
 	}
 	
 	@Redirect(method = "onDisconnect", at = @At(value = "FIELD", target = "net.minecraft.network.NetHandlerPlayServer.LOGGER:Lorg/apache/logging/log4j/Logger;", opcode = Opcodes.GETSTATIC, ordinal = 0))
