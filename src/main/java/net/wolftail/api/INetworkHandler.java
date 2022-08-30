@@ -4,7 +4,6 @@ import javax.annotation.Nonnull;
 
 import io.netty.buffer.ByteBuf;
 import net.wolftail.api.lifecycle.GameSection;
-import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
 
 @SideWith(section = GameSection.GAME_PLAYING)
@@ -24,9 +23,8 @@ public interface INetworkHandler {
 	void handle(@Nonnull ByteBuf buf);
 	
 	/**
-	 * Called every (network) tick.
+	 * Called every (network) tick from either logic client or logic server.
 	 */
-	@SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_HOST)
 	default void tick() {
 	}
 }
