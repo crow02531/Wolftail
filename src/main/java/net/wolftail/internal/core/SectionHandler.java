@@ -7,7 +7,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import net.minecraft.server.MinecraftServer;
 import net.wolftail.api.lifecycle.SectionState;
 
 public final class SectionHandler {
@@ -57,8 +56,6 @@ public final class SectionHandler {
 	private static final Logger logger = LogManager.getLogger("Wolftail/Lifecycle");
 	
 	public static Thread dedicatedServerRegularThread;
-	
-	public static MinecraftServer dedicatedServer;
 	
 	public static void finish_preparing() {
 		SectionHandler preparing = HANDLER_PREPARING;
