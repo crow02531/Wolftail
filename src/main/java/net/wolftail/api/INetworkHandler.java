@@ -10,15 +10,10 @@ import net.wolftail.api.lifecycle.SideWith;
 public interface INetworkHandler {
 	
 	/**
-	 * Process a packet. Called by netty thread. You should read all readable bytes
-	 * in {@code buf} before the method returns.
+	 * Process a packet. Called by netty thread. An exception will be thrown if
+	 * there are readable bytes after this method returns.
 	 * 
-	 * <p>
-	 * Notice that {@code buf} is pooled so it's not recommended to keep its ref too
-	 * long.
-	 * </p>
-	 * 
-	 * @param buf the data of the packet
+	 * @param buf the data of the packet, pooled
 	 */
 	void handle(@Nonnull ByteBuf buf);
 	

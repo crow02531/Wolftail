@@ -30,10 +30,10 @@ public final class ImplPCC extends ImplPC {
 	public void send(ByteBuf buf, GenericFutureListener<? extends Future<? super Void>> listener) {
 		this.ensureNonPlayerType();
 		
-		this.connection.sendPacket(new CPacketCustomPayload("WT|PL", MoreByteBufs.wrap(buf)), f -> {
-			if (!this.connection.isLocalChannel())
-				buf.release();
-		}, listener);
+		this.connection.sendPacket(
+				new CPacketCustomPayload("WT|PL",
+						MoreByteBufs.wrap(this.connection.isLocalChannel() ? buf.copy() : buf)),
+				f -> buf.release(), listener);
 	}
 	
 	@Override

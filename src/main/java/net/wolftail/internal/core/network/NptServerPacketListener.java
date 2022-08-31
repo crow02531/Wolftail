@@ -87,9 +87,15 @@ public final class NptServerPacketListener extends NptPacketListener implements 
 	
 	@Override
 	public void processCustomPayload(CPacketCustomPayload packetIn) {
-		check0(packetIn.getChannelName());
-		
-		this.handlePayload(packetIn.getBufferData());
+		try {
+			check0(packetIn.getChannelName());
+			
+			this.handlePayload(packetIn.getBufferData());
+		} catch (Throwable e) {
+			packetIn.getBufferData().release();
+			
+			throw e;
+		}
 	}
 	
 	@Override
