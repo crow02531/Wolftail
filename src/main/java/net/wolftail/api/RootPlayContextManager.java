@@ -56,7 +56,7 @@ public interface RootPlayContextManager {
 	int maxLoad();
 	
 	/**
-	 * Identical to {@code sendChat(type, text, () -> true)}.
+	 * Identical to {@code sendChat(type, text, null)}.
 	 */
 	default void sendChat(@Nonnull ChatType type, @Nonnull ITextComponent text) {
 		this.sendChat(type, text, Predicates.alwaysTrue());
@@ -67,9 +67,9 @@ public interface RootPlayContextManager {
 	 * 
 	 * @param type   the type of the chat
 	 * @param text   the content of the chat
-	 * @param filter the filter
+	 * @param filter the filter, null equals to {@code () -> true}
 	 */
-	void sendChat(@Nonnull ChatType type, @Nonnull ITextComponent text, @Nonnull Predicate<PlayContext> filter);
+	void sendChat(@Nonnull ChatType type, @Nonnull ITextComponent text, Predicate<PlayContext> filter);
 	
 	/**
 	 * Get the sub manager governing the given type.

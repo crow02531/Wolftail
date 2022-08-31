@@ -89,6 +89,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 					break;
 				case Keyboard.KEY_RCONTROL:
 					this.ui.pPrint('\r');
+					this.playContext.send(this.playContext.alloc().buffer(1).writeByte(2));
 					
 					break;
 				default:

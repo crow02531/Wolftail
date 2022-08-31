@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
@@ -89,10 +90,15 @@ public final class ImplMPCR implements RootPlayContextManager {
 	
 	@Override
 	public void sendChat(ChatType type, ITextComponent text, Predicate<PlayContext> filter) {
+		this.server.sendMessage(text);
+		
 		this.sendChat(new SPacketChat(text, type), filter);
 	}
 	
 	public void sendChat(SPacketChat p, Predicate<PlayContext> f) {
+		if (f == null)
+			f = Predicates.alwaysTrue();
+		
 		for (ImplPCS pcs : this.contexts) {
 			if (f.test(pcs))
 				pcs.connection.sendPacket(p);

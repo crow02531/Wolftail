@@ -52,7 +52,7 @@ public final class PigServerHandler implements IServerHandler {
 		
 		@Override
 		public void handle(ByteBuf buf) {
-			
+			buf.readByte();
 		}
 		
 		@Override

@@ -12,8 +12,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.google.common.base.Predicates;
-
 import net.minecraft.advancements.PlayerAdvancements;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
@@ -50,8 +48,7 @@ public abstract class MixinPlayerList implements ExtCorePlayerList {
 		if (p instanceof SPacketChat) {
 			ci.cancel();
 			
-			((ExtCoreMinecraftServer) this.mcServer).wolftail_getRootManager().sendChat((SPacketChat) p,
-					Predicates.alwaysTrue());
+			((ExtCoreMinecraftServer) this.mcServer).wolftail_getRootManager().sendChat((SPacketChat) p, null);
 		}
 	}
 	
