@@ -35,6 +35,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.wolftail.internal.core.ExtCoreMinecraft;
+import net.wolftail.internal.core.ImplPC;
 import net.wolftail.internal.core.ImplPCC;
 import net.wolftail.internal.core.ImplUPT;
 import net.wolftail.internal.core.SectionHandler;
@@ -316,5 +317,10 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	@Override
+	public ImplPC wolftail_currentContext() {
+		return this.playContext;
 	}
 }

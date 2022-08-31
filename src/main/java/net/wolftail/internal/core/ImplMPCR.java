@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,8 +21,12 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.ITextComponent;
+import net.wolftail.api.PlayContext;
 import net.wolftail.api.RootPlayContextManager;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.util.MoreServers;
@@ -68,6 +73,10 @@ public final class ImplMPCR implements RootPlayContextManager {
 		return this.id2contexts.get(playId);
 	}
 	
+	public ImplPCS contextAt(int i) {
+		return this.contexts.get(i);
+	}
+	
 	@Override
 	public int currentLoad() {
 		return this.id2contexts.size();
@@ -79,12 +88,20 @@ public final class ImplMPCR implements RootPlayContextManager {
 	}
 	
 	@Override
-	public ImplMPCS subManager(UniversalPlayerType type) {
-		return this.type2subs.get(type);
+	public void sendChat(ChatType type, ITextComponent text, Predicate<PlayContext> filter) {
+		this.sendChat(new SPacketChat(text, type), filter);
 	}
 	
-	public ImplPCS contextAt(int i) {
-		return this.contexts.get(i);
+	public void sendChat(SPacketChat p, Predicate<PlayContext> f) {
+		for (ImplPCS pcs : this.contexts) {
+			if (f.test(pcs))
+				pcs.connection.sendPacket(p);
+		}
+	}
+	
+	@Override
+	public ImplMPCS subManager(UniversalPlayerType type) {
+		return this.type2subs.get(type);
 	}
 	
 	public ImplPCS login(NetworkManager connection, UUID id, String name) {

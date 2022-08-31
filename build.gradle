@@ -20,7 +20,7 @@ apply plugin: 'org.spongepowered.mixin'
 
 group = 'net.wolftail'
 archivesBaseName = 'wolftail-1.12.2'
-version = '0.2.1'
+version = '0.3.0-SNAPSHOT'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 

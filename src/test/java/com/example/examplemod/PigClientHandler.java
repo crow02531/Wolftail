@@ -9,6 +9,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ChatAllowedCharacters;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.ITextComponent;
 import net.wolftail.api.IClientHandler;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
@@ -49,6 +51,11 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		
 		this.ui.flush();
 		this.ui.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
+	}
+	
+	@Override
+	public void handleChat(ChatType type, ITextComponent text) {
+		this.ui.pPrintln(text.getFormattedText());
 	}
 	
 	@Override

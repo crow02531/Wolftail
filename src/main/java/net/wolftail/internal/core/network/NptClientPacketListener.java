@@ -1,6 +1,8 @@
 package net.wolftail.internal.core.network;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.play.INetHandlerPlayClient;
 import net.minecraft.network.play.client.CPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketAdvancementInfo;
@@ -81,6 +83,7 @@ import net.minecraft.network.play.server.SPacketWindowItems;
 import net.minecraft.network.play.server.SPacketWindowProperty;
 import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.util.text.ITextComponent;
+import net.wolftail.internal.core.ExtCoreMinecraft;
 
 public final class NptClientPacketListener extends NptPacketListener implements INetHandlerPlayClient {
 	
@@ -110,6 +113,16 @@ public final class NptClientPacketListener extends NptPacketListener implements 
 	@Override
 	public void handleKeepAlive(SPacketKeepAlive packetIn) {
 		this.connection.sendPacket(new CPacketKeepAlive(0));
+	}
+	
+	@Override
+	public void handleChat(SPacketChat packetIn) {
+		Minecraft mc = Minecraft.getMinecraft();
+		
+		PacketThreadUtil.checkThreadAndEnqueue(packetIn, this, mc);
+		
+		((ExtCoreMinecraft) mc).wolftail_currentContext().playType().callClientChat(packetIn.getType(),
+				packetIn.getChatComponent());
 	}
 	
 	@Override
@@ -184,11 +197,6 @@ public final class NptClientPacketListener extends NptPacketListener implements 
 	
 	@Override
 	public void handleBlockChange(SPacketBlockChange packetIn) {
-		throw0();
-	}
-	
-	@Override
-	public void handleChat(SPacketChat packetIn) {
 		throw0();
 	}
 	

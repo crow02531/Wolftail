@@ -1,10 +1,15 @@
 package net.wolftail.api;
 
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.base.Predicates;
+
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.ITextComponent;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.Sealed;
@@ -49,6 +54,22 @@ public interface RootPlayContextManager {
 	 * @return the 'max-players'
 	 */
 	int maxLoad();
+	
+	/**
+	 * Identical to {@code sendChat(type, text, () -> true)}.
+	 */
+	default void sendChat(@Nonnull ChatType type, @Nonnull ITextComponent text) {
+		this.sendChat(type, text, Predicates.alwaysTrue());
+	}
+	
+	/**
+	 * Send a chat to all play contexts matching {@code filter}.
+	 * 
+	 * @param type   the type of the chat
+	 * @param text   the content of the chat
+	 * @param filter the filter
+	 */
+	void sendChat(@Nonnull ChatType type, @Nonnull ITextComponent text, @Nonnull Predicate<PlayContext> filter);
 	
 	/**
 	 * Get the sub manager governing the given type.

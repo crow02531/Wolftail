@@ -2,6 +2,8 @@ package net.wolftail.api;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.ITextComponent;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
@@ -20,6 +22,14 @@ public interface IClientHandler {
 	 * Called every game loop.
 	 */
 	void handleFrame();
+	
+	/**
+	 * Called when receiving a chat from server.
+	 * 
+	 * @param type the type of the chat
+	 * @param text the content of the chat
+	 */
+	void handleChat(@Nonnull ChatType type, @Nonnull ITextComponent text);
 	
 	/**
 	 * Called when game section changes from PLAYING to WANDERING.

@@ -1,5 +1,7 @@
 package net.wolftail.internal.core;
 
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.registries.IForgeRegistryEntry.Impl;
 import net.wolftail.api.IClientHandler;
 import net.wolftail.api.IServerHandler;
@@ -38,6 +40,11 @@ public final class ImplUPT extends Impl<UniversalPlayerType> implements Universa
 	public void callClientFrame() {
 		if (this.handler_client != null)
 			this.handler_client.handleFrame();
+	}
+	
+	public void callClientChat(ChatType type, ITextComponent text) {
+		if (this.handler_client != null)
+			this.handler_client.handleChat(type, text);
 	}
 	
 	public void callClientLeave() {
