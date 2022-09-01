@@ -2,6 +2,7 @@ package net.wolftail.internal.renderer.mixin.client;
 
 import java.util.Random;
 
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -72,8 +73,8 @@ public abstract class MixinFontRenderer implements ExtRendererFontRenderer {
 	}
 	
 	@Override
-	public float wolftail_widthOf(char codepoint) {
-		return this.getCharWidth(codepoint);
+	public float wolftail_widthOf(int fontHeight, char codepoint) {
+		return this.getCharWidth(codepoint) * fontHeight / 9;
 	}
 	
 	@Override
@@ -100,8 +101,20 @@ public abstract class MixinFontRenderer implements ExtRendererFontRenderer {
 	}
 	
 	@Override
-	public float wolftail_renderCodepoint(char codepoint, boolean italic) {
-		return this.renderChar(codepoint, italic);
+	public float wolftail_renderCodepoint(int fontHeight, char codepoint, boolean italic) {
+		float r = fontHeight / 9;
+		float w;
+		
+		GL11.glPushMatrix();
+		
+		GL11.glTranslatef(this.posX, this.posY, 0);
+		GL11.glScalef(r, r, 1);
+		GL11.glTranslatef(-this.posX, -this.posY, 0);
+		w = this.renderChar(codepoint, italic) * r;
+		
+		GL11.glPopMatrix();
+		
+		return w;
 	}
 	
 	@Override

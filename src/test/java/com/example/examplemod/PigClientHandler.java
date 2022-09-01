@@ -32,6 +32,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		context.setHandler(this);
 		
 		this.ui = new LogUnit(width(), height());
+		this.ui.pPrintln("测试abcdwaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawawaddwadwawadwadwadwadwawadawfewffsgefdwaawa");
 		this.ui.pPrint("测试abc");
 	}
 	

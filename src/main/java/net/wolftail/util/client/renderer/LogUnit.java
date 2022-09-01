@@ -115,7 +115,7 @@ public final class LogUnit extends UIUnit {
 					break;
 				}
 			default:
-				if (this.cache_posX + fr.wolftail_widthOf(cp) > vw) {
+				if (this.cache_posX + fr.wolftail_widthOf(FONT_HEIGHT, cp) > vw) {
 					this.cache_lineNum++;
 					this.cache_posX = 0;
 				}
@@ -263,8 +263,6 @@ public final class LogUnit extends UIUnit {
 			
 			// enable to support rendering unicode
 			GL11.glEnable(GL11.GL_ALPHA_TEST);
-			// scale, because the default font height is 9
-			GL11.glScalef(2, 2, 1);
 			
 			// draw content
 			Style style = new Style();
@@ -290,7 +288,7 @@ public final class LogUnit extends UIUnit {
 						break;
 					}
 				default:
-					if (fr.wolftail_posX_get() + fr.wolftail_widthOf(cp) > vw) {
+					if (fr.wolftail_posX_get() + fr.wolftail_widthOf(FONT_HEIGHT, cp) > vw) {
 						fr.wolftail_posX_set(0);
 						fr.wolftail_posY_add(FONT_HEIGHT);
 					}
@@ -303,14 +301,14 @@ public final class LogUnit extends UIUnit {
 					if (style.randomStyle)
 						cp = fr.wolftail_randomReplacement(cp);
 					
-					float width = fr.wolftail_renderCodepoint(cp, style.italicStyle);
+					float width = fr.wolftail_renderCodepoint(FONT_HEIGHT, cp, style.italicStyle);
 					
 					if (style.boldStyle) {
-						fr.wolftail_posX_add(1);
-						fr.wolftail_renderCodepoint(cp, style.italicStyle);
-						fr.wolftail_posX_add(-1);
+						fr.wolftail_posX_add(2);
+						fr.wolftail_renderCodepoint(FONT_HEIGHT, cp, style.italicStyle);
+						fr.wolftail_posX_add(-2);
 						
-						width += 1;
+						width += 2;
 					}
 					
 					fr.wolftail_renderAttachment(width, style.strikethroughStyle, style.underlineStyle);
