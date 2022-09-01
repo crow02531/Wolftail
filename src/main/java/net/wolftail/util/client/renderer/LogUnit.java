@@ -1,10 +1,10 @@
 package net.wolftail.util.client.renderer;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.text.TextFormatting;
@@ -14,12 +14,14 @@ import net.wolftail.api.lifecycle.SideWith;
 import net.wolftail.internal.renderer.ExtRendererFontRenderer;
 
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
-public final class CmdUnit extends UIUnit {
+public final class LogUnit extends UIUnit {
 	
-	public static final int FONT_HEIGHT = 9;
-	public static final int SCROLL_WIDTH = 12;
+	public static final int FONT_HEIGHT = 18;
+	public static final int SCROLL_WIDTH = 24;
 	
 	private static final int INITIAL_CAPACITY = 512;
+	
+	private int object_fb;
 	
 	private StringBuilder charBuf;
 	private float scroll;
@@ -27,47 +29,61 @@ public final class CmdUnit extends UIUnit {
 	private int cache_lineNum;
 	private float cache_posX;
 	
-	public CmdUnit(int width, int height) {
-		super(width, height, false, false);
+	private void bindAndExecute(Runnable r) {
+		int old_binding = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+		
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, this.object_fb);
+		r.run();
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, old_binding);
+	}
+	
+	public LogUnit(int width, int height) {
+		super(width, height);
+		
+		this.object_fb = GL30.glGenFramebuffers();
+		this.bindAndExecute(() -> {
+			GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, object_tex,
+					0);
+		});
 		
 		this.charBuf = new StringBuilder(INITIAL_CAPACITY);
 	}
 	
-	public CmdUnit pPrint(boolean b) {
+	public LogUnit pPrint(boolean b) {
 		return this.pPrint(String.valueOf(b));
 	}
 	
-	public CmdUnit pPrint(char c) {
+	public LogUnit pPrint(char c) {
 		return this.pPrint(String.valueOf(c));
 	}
 	
-	public CmdUnit pPrint(int i) {
+	public LogUnit pPrint(int i) {
 		return this.pPrint(String.valueOf(i));
 	}
 	
-	public CmdUnit pPrint(long l) {
+	public LogUnit pPrint(long l) {
 		return this.pPrint(String.valueOf(l));
 	}
 	
-	public CmdUnit pPrint(float f) {
+	public LogUnit pPrint(float f) {
 		return this.pPrint(String.valueOf(f));
 	}
 	
-	public CmdUnit pPrint(double d) {
+	public LogUnit pPrint(double d) {
 		return this.pPrint(String.valueOf(d));
 	}
 	
-	public CmdUnit pPrint(TextFormatting f) {
+	public LogUnit pPrint(TextFormatting f) {
 		this.charBuf.append(f.toString());
 		
 		return this;
 	}
 	
-	public CmdUnit pPrint(Object o) {
+	public LogUnit pPrint(Object o) {
 		return this.pPrint(String.valueOf(o));
 	}
 	
-	public CmdUnit pPrint(CharSequence s) {
+	public LogUnit pPrint(CharSequence s) {
 		if (s == null)
 			s = "null";
 		else if (s.length() == 0)
@@ -84,7 +100,7 @@ public final class CmdUnit extends UIUnit {
 		int vw = this.param_width - SCROLL_WIDTH;
 		
 		for (int i = 0, l = s.length(); i < l; ++i) {
-			int cp = s.charAt(i);
+			char cp = s.charAt(i);
 			
 			switch (cp) {
 			case '\n':
@@ -159,14 +175,20 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	public float pMaxScroll() {
+		this.check();
+		
 		return Math.max((float) this.cache_lineNum - (float) this.param_height / (float) FONT_HEIGHT, 0);
 	}
 	
 	public float pGetScroll() {
+		this.check();
+		
 		return this.scroll;
 	}
 	
 	public float pSetScroll(float s) {
+		this.check();
+		
 		return this.scroll = (s <= 0 ? 0 : Math.min(s, this.pMaxScroll()));
 	}
 	
@@ -180,11 +202,18 @@ public final class CmdUnit extends UIUnit {
 	
 	@Override
 	void release0() {
+		GL30.glDeleteFramebuffers(this.object_fb);
+		
 		this.charBuf = null;
 	}
 	
 	@Override
 	void resize0(int oldWidth, int oldHeight) {
+		this.bindAndExecute(() -> {
+			GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, object_tex,
+					0);
+		});
+		
 		if (this.param_width != oldWidth) {
 			this.cache_lineNum = 0;
 			this.cache_posX = 0;
@@ -197,89 +226,110 @@ public final class CmdUnit extends UIUnit {
 	
 	@Override
 	void flush0() {
-		StringBuilder buf = this.charBuf;
-		int l = buf.length();
+		GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_VIEWPORT_BIT | GL11.GL_TRANSFORM_BIT | GL11.GL_CURRENT_BIT
+				| GL11.GL_ENABLE_BIT);
 		
-		ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
-		float vw = this.param_width;
-		float vh = this.param_height;
-		
-		GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT);
-		GL11.glClearColor(0, 0, 0, 0);
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-		GL11.glPopAttrib();
-		
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glOrtho(0, vw, vh, 0, -1, 1);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		
-		float scroll = this.scroll;
-		fr.wolftail_posX_set(0);
-		fr.wolftail_posY_set(-(scroll * FONT_HEIGHT));
-		
-		// draw scroll
-		drawRect(vw - SCROLL_WIDTH, 0, vw, vh, 0xD8FFFFFF);
-		if (this.pMaxScroll() != 0)
-			drawRect(vw - SCROLL_WIDTH, (vh * scroll) / (float) this.cache_lineNum, vw,
-					vh * (vh + scroll * FONT_HEIGHT) / (float) (this.cache_lineNum * FONT_HEIGHT), 0x35000000);
-		vw -= SCROLL_WIDTH;
-		
-		// draw content
-		Style style = new Style();
-		setColor(fr, style);
-		
-		for (int i = 0; i < l; ++i) {
-			int cp = buf.charAt(i);
+		this.bindAndExecute(() -> {
+			StringBuilder buf = charBuf;
+			int l = buf.length();
 			
-			switch (cp) {
-			case '\n':
-				fr.wolftail_posX_set(0);
-				fr.wolftail_posY_add(FONT_HEIGHT);
+			ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
+			float vw = param_width;
+			float vh = param_height;
+			
+			GL11.glViewport(0, 0, param_width, param_height);
+			
+			GL11.glClearColor(0, 0, 0, 0);
+			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+			
+			GL11.glMatrixMode(GL11.GL_PROJECTION);
+			GL11.glPushMatrix();
+			GL11.glLoadIdentity();
+			GL11.glOrtho(0, vw, vh, 0, -1, 1);
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			GL11.glPushMatrix();
+			GL11.glLoadIdentity();
+			
+			float scroll = this.scroll;
+			fr.wolftail_posX_set(0);
+			fr.wolftail_posY_set(-(scroll * FONT_HEIGHT));
+			
+			// draw scroll
+			drawRect(vw - SCROLL_WIDTH, 0, vw, vh, 0xD8FFFFFF);
+			if (this.pMaxScroll() != 0)
+				drawRect(vw - SCROLL_WIDTH, (vh * scroll) / (float) this.cache_lineNum, vw,
+						vh * (vh + scroll * FONT_HEIGHT) / (float) (this.cache_lineNum * FONT_HEIGHT), 0x35000000);
+			vw -= SCROLL_WIDTH;
+			
+			// enable to support rendering unicode
+			GL11.glEnable(GL11.GL_ALPHA_TEST);
+			// scale, because the default font height is 9
+			GL11.glScalef(2, 2, 1);
+			
+			// draw content
+			Style style = new Style();
+			setColor(fr, style);
+			
+			for (int i = 0; i < l; ++i) {
+				char cp = buf.charAt(i);
 				
-				style.reset();
-				setColor(fr, style);
-				
-				break;
-			case '\u00a7':
-				if (i + 1 < l) {
-					style.update("0123456789abcdefklmnor".indexOf(lowerCaseEN(buf.charAt(++i))));
+				switch (cp) {
+				case '\n':
+					fr.wolftail_posX_set(0);
+					fr.wolftail_posY_add(FONT_HEIGHT);
+					
+					style.reset();
 					setColor(fr, style);
 					
 					break;
-				}
-			default:
-				if (fr.wolftail_posX_get() + fr.wolftail_widthOf(cp) > vw) {
-					fr.wolftail_posX_set(0);
-					fr.wolftail_posY_add(FONT_HEIGHT);
-				}
-				
-				if (fr.wolftail_posY_get() + FONT_HEIGHT < 0)
-					break;
-				if (fr.wolftail_posY_get() > vh)
-					return;
-				
-				if (style.randomStyle)
-					cp = fr.wolftail_randomReplacement(cp);
-				
-				float width = fr.wolftail_renderCodepoint(cp, style.italicStyle);
-				
-				if (style.boldStyle) {
-					fr.wolftail_posX_add(1);
-					fr.wolftail_renderCodepoint(cp, style.italicStyle);
-					fr.wolftail_posX_add(-1);
+				case '\u00a7':
+					if (i + 1 < l) {
+						style.update("0123456789abcdefklmnor".indexOf(lowerCaseEN(buf.charAt(++i))));
+						setColor(fr, style);
+						
+						break;
+					}
+				default:
+					if (fr.wolftail_posX_get() + fr.wolftail_widthOf(cp) > vw) {
+						fr.wolftail_posX_set(0);
+						fr.wolftail_posY_add(FONT_HEIGHT);
+					}
 					
-					width += 1;
+					if (fr.wolftail_posY_get() + FONT_HEIGHT < 0)
+						break;
+					if (fr.wolftail_posY_get() > vh)
+						return;
+					
+					if (style.randomStyle)
+						cp = fr.wolftail_randomReplacement(cp);
+					
+					float width = fr.wolftail_renderCodepoint(cp, style.italicStyle);
+					
+					if (style.boldStyle) {
+						fr.wolftail_posX_add(1);
+						fr.wolftail_renderCodepoint(cp, style.italicStyle);
+						fr.wolftail_posX_add(-1);
+						
+						width += 1;
+					}
+					
+					fr.wolftail_renderAttachment(width, style.strikethroughStyle, style.underlineStyle);
+					
+					fr.wolftail_posX_add(width);
 				}
-				
-				fr.wolftail_renderAttachment(width, style.strikethroughStyle, style.underlineStyle);
-				
-				fr.wolftail_posX_add(width);
 			}
-		}
+			
+			GL11.glMatrixMode(GL11.GL_PROJECTION);
+			GL11.glPopMatrix();
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			GL11.glPopMatrix();
+		});
+		
+		GL11.glPopAttrib();
 	}
 	
-	private static int lowerCaseEN(int codepoint) {
-		return 'A' <= codepoint && codepoint <= 'Z' ? codepoint + ('a' - 'A') : codepoint;
+	private static char lowerCaseEN(char cp) {
+		return 'A' <= cp && cp <= 'Z' ? (char) (cp + ('a' - 'A')) : cp;
 	}
 	
 	private static void setColor(ExtRendererFontRenderer fr, Style s) {
@@ -290,11 +340,9 @@ public final class CmdUnit extends UIUnit {
 	}
 	
 	private static void drawRect(float left, float top, float right, float bottom, int color) {
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableBlend();
-		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
-				GlStateManager.DestFactor.ZERO);
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glColor4f((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
 				(float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
 		
@@ -307,8 +355,8 @@ public final class CmdUnit extends UIUnit {
 		buffer.pos(left, top, 0).endVertex();
 		tess.draw();
 		
-		GlStateManager.disableBlend();
-		GlStateManager.enableTexture2D();
+		GL11.glDisable(GL11.GL_BLEND);
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
 	}
 	
 	private static final class Style {

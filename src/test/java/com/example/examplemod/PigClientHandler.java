@@ -14,14 +14,14 @@ import net.minecraft.util.text.ITextComponent;
 import net.wolftail.api.IClientHandler;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
-import net.wolftail.util.client.renderer.CmdUnit;
+import net.wolftail.util.client.renderer.LogUnit;
 
 public final class PigClientHandler implements IClientHandler, INetworkHandler {
 	
 	static final PigClientHandler INSTANCE = new PigClientHandler();
 	
 	private PlayContext playContext;
-	private CmdUnit ui;
+	private LogUnit ui;
 	
 	private PigClientHandler() {
 	}
@@ -31,16 +31,15 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		this.playContext = context;
 		context.setHandler(this);
 		
-		this.ui = new CmdUnit(calcWidth(), calcHeight());
+		this.ui = new LogUnit(width(), height());
+		this.ui.pPrint("测试abc");
 	}
 	
 	@Override
 	public void handleFrame() {
 		if (Display.wasResized())
-			this.ui.resize(calcWidth(), calcHeight());
+			this.ui.resize(width(), height());
 		
-		GlStateManager.clearColor(0, 0, 0, 1);
-		GlStateManager.clearDepth(1);
 		GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		
 		GlStateManager.matrixMode(GL11.GL_PROJECTION);
@@ -102,11 +101,11 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		}
 	}
 	
-	private static int calcHeight() {
-		return Minecraft.getMinecraft().displayHeight >> 1;
+	private static int height() {
+		return Minecraft.getMinecraft().displayHeight;
 	}
 	
-	private static int calcWidth() {
-		return Minecraft.getMinecraft().displayWidth >> 1;
+	private static int width() {
+		return Minecraft.getMinecraft().displayWidth;
 	}
 }

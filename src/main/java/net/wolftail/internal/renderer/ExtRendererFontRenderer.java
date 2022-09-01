@@ -14,13 +14,13 @@ public interface ExtRendererFontRenderer {
 	
 	void wolftail_posY_add(float dy);
 	
-	float wolftail_widthOf(int codepoint);
+	float wolftail_widthOf(char codepoint);
 	
 	int wolftail_codeToColor(int i);
 	
-	int wolftail_randomReplacement(int codepoint);
+	char wolftail_randomReplacement(char codepoint);
 	
-	float wolftail_renderCodepoint(int codepoint, boolean italic);
+	float wolftail_renderCodepoint(char codepoint, boolean italic);
 	
 	void wolftail_renderAttachment(float width, boolean strikethrough, boolean underline);
 }

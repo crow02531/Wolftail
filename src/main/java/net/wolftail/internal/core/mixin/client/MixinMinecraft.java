@@ -62,6 +62,9 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	@Shadow
 	public GuiScreen currentScreen;
 	
+	@Shadow
+	public NetworkManager myNetworkManager;
+	
 	@Final
 	@Shadow
 	public Timer timer;
@@ -307,6 +310,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 					// clean up
 					currentScreen.onGuiClosed();
 					currentScreen = null;
+					myNetworkManager = null;
 					FMLClientHandler.instance().setPlayClient(null);
 					NptPacketListener.cleanFML(connect);
 					connect.setNetHandler(new NptClientPacketListener(connect));

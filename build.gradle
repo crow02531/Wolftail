@@ -126,7 +126,7 @@ task addRefmap {
     }
 }
 
-processResources.finalizedBy('addRefmap')
+//processResources.finalizedBy('addRefmap')
 
 tasks.getByPath('eclipse').doLast {
     File f = file('.settings/org.eclipse.jdt.apt.core.prefs')
