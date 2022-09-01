@@ -268,7 +268,7 @@ public final class LogUnit extends UIUnit {
 			Style style = new Style();
 			setColor(fr, style);
 			
-			for (int i = 0; i < l; ++i) {
+			L: for (int i = 0; i < l; ++i) {
 				char cp = buf.charAt(i);
 				
 				switch (cp) {
@@ -296,7 +296,7 @@ public final class LogUnit extends UIUnit {
 					if (fr.wolftail_posY_get() + FONT_HEIGHT < 0)
 						break;
 					if (fr.wolftail_posY_get() > vh)
-						return;
+						break L;
 					
 					if (style.randomStyle)
 						cp = fr.wolftail_randomReplacement(cp);
