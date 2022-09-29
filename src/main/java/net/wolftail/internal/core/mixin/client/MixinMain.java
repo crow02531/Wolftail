@@ -13,7 +13,7 @@ import net.wolftail.internal.core.SectionHandler;
 public abstract class MixinMain {
 	
 	@Inject(method = "main", at = @At("HEAD"), remap = false)
-	private static void on_main_head(CallbackInfo info) {
+	private static void on_main_head(CallbackInfo ci) {
 		SectionHandler.finish_preparing();
 	}
 }

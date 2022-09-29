@@ -12,52 +12,31 @@ buildscript {
 }
 
 apply plugin: 'net.minecraftforge.gradle'
-// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
-
 apply plugin: 'org.spongepowered.mixin'
+
+apply plugin: 'eclipse'
+apply plugin: 'idea'
 
 group = 'net.wolftail'
 archivesBaseName = 'wolftail-1.12.2'
 version = '0.3.0-SNAPSHOT'
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 minecraft {
-    // The mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   Snapshot are built nightly.
-    // stable_#            Stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    //mappings channel: 'snapshot', version: '20171003-1.12'
     mappings channel: 'snapshot', version: '20171003-1.12'
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
-    
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
-            workingDirectory project.file('run')
-
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
             arg '-torg.spongepowered.asm.launch.MixinTweaker'
-            arg '-username=Steve001'
+            arg '-username=Player001'
         }
 
         server {
-
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
             arg '-torg.spongepowered.asm.launch.MixinTweaker'
@@ -66,33 +45,10 @@ minecraft {
 }
 
 dependencies {
-    // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
-    // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
-    // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2855'
-
-    // You may put jars on which you depend on in ./libs or you may define them like so..
-    // compile "some.group:artifact:version:classifier"
-    // compile "some.group:artifact:version"
-
-    // Real examples
-    // compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    // compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
     implementation 'org.spongepowered:mixin:0.8.2'
 
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
-
-    // The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-    // provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // These dependencies get remapped to your current MCP mappings
-    // deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // For more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
 }
 
 mixin {
@@ -107,67 +63,22 @@ jar {
     manifest {
         attributes([
             "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-            "TweakOrder": "0"
+            "TweakOrder": "0",
+            "ForceLoadAsMod": "true"
         ])
     }
 }
 
 import groovy.json.JsonOutput
 
-task addRefmap {
-    doLast {
-        fileTree(processResources.destinationDir).each {
-            if(it.name.startsWith('mixins.') && it.name.endsWith('.json')) {
-                def parsedJson = new groovy.json.JsonSlurper().parseText(it.text)
-                parsedJson.put 'refmap', 'mixins.wolftail.refmap.json'
-                it.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedJson))
-            }
+processResources.doLast {
+    fileTree(processResources.destinationDir).each {
+        if(it.name.startsWith('mixins.') && it.name.endsWith('.json')) {
+            def parsedJson = new groovy.json.JsonSlurper().parseText(it.text)
+            parsedJson.put 'refmap', 'mixins.wolftail.refmap.json'
+            it.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedJson))
         }
     }
 }
 
-//processResources.finalizedBy('addRefmap')
-
-tasks.getByPath('eclipse').doLast {
-    File f = file('.settings/org.eclipse.jdt.apt.core.prefs')
-    f.append 'org.eclipse.jdt.apt.genSrcDir=build\\\\.apt_generated'
-}
-
-// Example configuration to allow publishing using the maven-publish task
-// This is the preferred method to reobfuscate your jar file
-//jar.finalizedBy('reobfJar') 
-// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
-//publish.dependsOn('reobfJar')
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId project.archivesBaseName
-
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = "https://maven.pkg.github.com/crow02531/Wolftail"
-            credentials {
-                username = project.findProperty("gpr.user")
-                password = project.findProperty("gpr.key")
-            }
-        }
-    }
-}
+jar.finalizedBy('reobfJar')

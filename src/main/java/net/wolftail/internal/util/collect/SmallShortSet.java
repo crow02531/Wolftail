@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.shorts.ShortIterator;
  * 
  * @see it.unimi.dsi.fastutil.shorts.ShortArraySet ShortArraySet
  */
-public class SmallShortSet extends AbstractShortSet implements Cloneable, Serializable, RandomAccess {
+public class SmallShortSet extends AbstractShortSet implements Serializable, RandomAccess {
 	
 	private static final long serialVersionUID = 1L;
 	
