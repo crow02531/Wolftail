@@ -70,15 +70,34 @@ jar {
 }
 
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 processResources.doLast {
     fileTree(processResources.destinationDir).each {
         if(it.name.startsWith('mixins.') && it.name.endsWith('.json')) {
-            def parsedJson = new groovy.json.JsonSlurper().parseText(it.text)
+            def parsedJson = new JsonSlurper().parseText(it.text)
             parsedJson.put 'refmap', 'mixins.wolftail.refmap.json'
             it.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedJson))
         }
     }
+}
+
+task fixVSCodeRuns {
+    doLast {
+        def file_launch = file('.vscode/launch.json')
+        def parsedJson = new JsonSlurper().parseText(file_launch.text)
+
+        parsedJson.get('configurations').forEach {
+            it.put 'shortenCommandLine', 'none'
+        }
+
+        file_launch.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedJson))
+    }
+}
+
+tasks.whenTaskAdded {
+    if(it.name == 'genVSCodeRuns')
+        it.finalizedBy('fixVSCodeRuns')
 }
 
 jar.finalizedBy('reobfJar')

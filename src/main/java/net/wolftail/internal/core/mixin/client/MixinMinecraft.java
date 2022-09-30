@@ -7,6 +7,7 @@ import java.util.concurrent.FutureTask;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.util.Throwables;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -160,6 +161,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		FutureTask<Void> task = this.loadContextTask;
 		if (task != null) {
 			task.run();
+			rethrowException(task);
 			
 			this.loadContextTask = null;
 		}
@@ -291,6 +293,15 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	}
 	
 	@Unique
+	private static void rethrowException(FutureTask<?> task) {
+		try {
+			task.get();
+		} catch (InterruptedException | ExecutionException e) {
+			Throwables.rethrow(e.getCause());
+		}
+	}
+	
+	@Unique
 	private void unloadContext() {
 		SectionHandler.on_client_playing_change();
 		
@@ -319,7 +330,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 				}
 			}, null)).get();
 		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
+			// never happens
 		}
 	}
 	
