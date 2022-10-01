@@ -69,35 +69,42 @@ jar {
     }
 }
 
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
+
+import org.gradle.api.execution.TaskExecutionGraph
+
+Gson gson = new GsonBuilder()
+    .setPrettyPrinting()
+    .create();
 
 processResources.doLast {
     fileTree(processResources.destinationDir).each {
         if(it.name.startsWith('mixins.') && it.name.endsWith('.json')) {
-            def parsedJson = new JsonSlurper().parseText(it.text)
-            parsedJson.put 'refmap', 'mixins.wolftail.refmap.json'
-            it.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedJson))
+            def obj = gson.fromJson(it.text, JsonObject.class)
+
+            obj.addProperty 'refmap', 'mixins.wolftail.refmap.json'
+
+            it.text = gson.toJson(obj)
         }
     }
 }
 
-task fixVSCodeRuns {
-    doLast {
-        def file_launch = file('.vscode/launch.json')
-        def parsedJson = new JsonSlurper().parseText(file_launch.text)
+gradle.addListener new TaskExecutionGraphListener() {
 
-        parsedJson.get('configurations').forEach {
-            it.put 'shortenCommandLine', 'none'
+    void graphPopulated(TaskExecutionGraph graph) {
+        genVSCodeRuns.doLast {
+            def file_launch = file('.vscode/launch.json')
+            def obj = gson.fromJson(file_launch.text, JsonObject.class)
+
+            obj.get('configurations').forEach {
+                it.addProperty 'shortenCommandLine', 'none'
+            }
+
+            file_launch.text = gson.toJson(obj)
         }
-
-        file_launch.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedJson))
     }
-}
-
-tasks.whenTaskAdded {
-    if(it.name == 'genVSCodeRuns')
-        it.finalizedBy('fixVSCodeRuns')
 }
 
 jar.finalizedBy('reobfJar')
