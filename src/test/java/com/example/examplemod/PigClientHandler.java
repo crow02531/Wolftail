@@ -2,6 +2,7 @@ package com.example.examplemod;
 
 import java.lang.reflect.Method;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.Project;
 
@@ -15,11 +16,13 @@ import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.math.BlockPos;
@@ -29,6 +32,7 @@ import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
@@ -62,24 +66,34 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		TileEntityRendererDispatcher.instance.setWorld(this.world);
 		MinecraftForgeClient.clearRenderCache();
 
-		mc.player = new EntityPlayerSP(mc, mc.world, new NetHandlerPlayClient(mc, null, null, mc.getSession().getProfile()), null, null);
+		mc.player = new EntityPlayerSP(mc, mc.world,
+				new NetHandlerPlayClient(mc, null, null, mc.getSession().getProfile()), null, null);
 		mc.player.width = 0;
 		mc.player.height = 0;
 		mc.player.eyeHeight = 0;
 		mc.playerController = new PlayerControllerMP(mc, mc.player.connection);
 		mc.setRenderViewEntity(mc.player);
 
-		for(int x = 0; x < 4; ++x) {
-			for(int z = 0; z < 4; ++z) {
+		for (int x = 0; x < 4; ++x) {
+			for (int z = 0; z < 4; ++z) {
 				world.doPreChunk(x - 2, z - 2, true);
 			}
 		}
 
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-8, 0, -8, 8, 1, 8))
 			world.setBlockState(p, Blocks.BEDROCK.getDefaultState());
-		
+
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-4, 2, -4, 4, 2, 4))
 			world.setBlockState(p, Blocks.GLASS.getDefaultState());
+
+		this.world.setBlockState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
+		this.world.setBlockState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
+
+		EntityPig e = new EntityPig(world);
+		e.setPositionAndRotation(0, 7, 0, 0, 0);
+		e.rotationYawHead = e.prevRotationYawHead = 60;
+		e.renderYawOffset = e.prevRenderYawOffset = 30;
+		world.spawnEntity(e);
 	}
 
 	@Override
@@ -99,20 +113,20 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 
 	private static void renderWorld(Minecraft mc, RenderGlobal rg, float partialTicks, long finishTimeNano) {
 		GlStateManager.enableDepth();
-        GlStateManager.enableBlend();
-		
+		GlStateManager.enableBlend();
+
 		double x = -14;
 		double y = 14;
 		double z = 0;
 		double yaw = -80;
-		double pitch = 45;
-		double roll = 45;
+		double pitch = 30;
+		double roll = 20;
 
 		// setup opnegl transform
 		{
 			GlStateManager.matrixMode(5889);
 			GlStateManager.loadIdentity();
-			Project.gluPerspective(90, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
+			Project.gluPerspective(45, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
 					(float) (mc.gameSettings.renderDistanceChunks * 16) * MathHelper.SQRT_2);
 
 			GlStateManager.matrixMode(5888);
@@ -131,22 +145,24 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 			Vec3d skyColor = mc.world.getSkyColor(mc.getRenderViewEntity(), partialTicks);
 			GlStateManager.clearColor((float) skyColor.x, (float) skyColor.y, (float) skyColor.z, 0);
 			GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT);
-			
+
 			GlStateManager.matrixMode(5889);
-            GlStateManager.loadIdentity();
-            Project.gluPerspective(90, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F, (float) (mc.gameSettings.renderDistanceChunks * 16) * 2.0F);
-            GlStateManager.matrixMode(5888);
-			
-			GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-            rg.renderSky(partialTicks, 2);
+			GlStateManager.loadIdentity();
+			Project.gluPerspective(45, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
+					(float) (mc.gameSettings.renderDistanceChunks * 16) * 2.0F);
+			GlStateManager.matrixMode(5888);
+
+			GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE,
+					GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+			rg.renderSky(partialTicks, 2);
 			GlStateManager.disableAlpha();
 			GlStateManager.disableFog();
-			
-            GlStateManager.matrixMode(5889);
-            GlStateManager.loadIdentity();
-            Project.gluPerspective(90, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
+
+			GlStateManager.matrixMode(5889);
+			GlStateManager.loadIdentity();
+			Project.gluPerspective(45, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
 					(float) (mc.gameSettings.renderDistanceChunks * 16) * MathHelper.SQRT_2);
-            GlStateManager.matrixMode(5888);
+			GlStateManager.matrixMode(5888);
 		}
 
 		// update light map
@@ -156,7 +172,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 			m.setAccessible(true);
 
 			m.invoke(mc.entityRenderer, partialTicks);
-		} catch(Throwable e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 
@@ -173,14 +189,23 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		GlStateManager.enableCull();
 		rg.renderBlockLayer(BlockRenderLayer.SOLID, partialTicks, 2, mc.player);
 		GlStateManager.enableBlend();
-		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false, mc.gameSettings.mipmapLevels > 0);
-        rg.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, partialTicks, 2, mc.player);
-        mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
-        mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false, false);
-        rg.renderBlockLayer(BlockRenderLayer.CUTOUT, partialTicks, 2, mc.player);
-        mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
+		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+				GlStateManager.DestFactor.ZERO);
+		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false,
+				mc.gameSettings.mipmapLevels > 0);
+		rg.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, partialTicks, 2, mc.player);
+		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
+		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false, false);
+		rg.renderBlockLayer(BlockRenderLayer.CUTOUT, partialTicks, 2, mc.player);
+		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
 		rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, partialTicks, 2, mc.player);
+
+		// draw entities
+		RenderHelper.enableStandardItemLighting();
+		ForgeHooksClient.setRenderPass(0);
+		rg.renderEntities(mc.player, icamera, partialTicks);
+		RenderHelper.disableStandardItemLighting();
 	}
 
 	@Override
@@ -193,6 +218,8 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 
 		MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(this.world));
 		this.world = Minecraft.getMinecraft().world = null;
+		Minecraft.getMinecraft().player = null;
+		Minecraft.getMinecraft().setRenderViewEntity(null);
 	}
 
 	@Override
@@ -203,5 +230,11 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 	@Override
 	public void tick() {
 		this.world.setWorldTime(System.currentTimeMillis() % 24000);
+
+		while(Keyboard.next()) {
+			if(Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+				this.playContext.disconnect();
+			}
+		}
 	}
 }
