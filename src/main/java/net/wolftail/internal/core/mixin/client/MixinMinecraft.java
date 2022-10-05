@@ -25,6 +25,7 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.network.NetworkManager;
@@ -213,7 +214,6 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 			}
 
 			this.renderEngine.tick();
-			this.mcMusicTicker.update();
 			this.mcSoundHandler.update();
 		}
 
@@ -226,6 +226,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		profiler.startSection("render");
 
 		// directly draw to the default framebuffer
+		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, 0);
 		GlStateManager.viewport(0, 0, this.displayWidth, this.displayHeight);
 
 		// do frame

@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -120,7 +121,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		double z = 0;
 		double yaw = -80;
 		double pitch = 30;
-		double roll = 20;
+		double roll = 0;
 
 		// setup opnegl transform
 		{
@@ -152,8 +153,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 					(float) (mc.gameSettings.renderDistanceChunks * 16) * 2.0F);
 			GlStateManager.matrixMode(5888);
 
-			GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE,
-					GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
 			rg.renderSky(partialTicks, 2);
 			GlStateManager.disableAlpha();
 			GlStateManager.disableFog();
@@ -189,9 +189,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		GlStateManager.enableCull();
 		rg.renderBlockLayer(BlockRenderLayer.SOLID, partialTicks, 2, mc.player);
 		GlStateManager.enableBlend();
-		GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
-				GlStateManager.DestFactor.ZERO);
+		GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false,
 				mc.gameSettings.mipmapLevels > 0);
 		rg.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, partialTicks, 2, mc.player);
@@ -200,12 +198,30 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		rg.renderBlockLayer(BlockRenderLayer.CUTOUT, partialTicks, 2, mc.player);
 		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
 		rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, partialTicks, 2, mc.player);
+		GlStateManager.disableCull();
 
 		// draw entities
 		RenderHelper.enableStandardItemLighting();
 		ForgeHooksClient.setRenderPass(0);
 		rg.renderEntities(mc.player, icamera, partialTicks);
+		ForgeHooksClient.setRenderPass(1);
+		rg.renderEntities(mc.player, icamera, partialTicks);
+		ForgeHooksClient.setRenderPass(-1);
 		RenderHelper.disableStandardItemLighting();
+
+		// draw particles & rain snow
+		mc.entityRenderer.enableLightmap();
+		mc.effectRenderer.renderParticles(mc.player, partialTicks);
+		mc.effectRenderer.renderLitParticles(mc.player, partialTicks);
+		mc.entityRenderer.disableLightmap();
+		try {
+			Method m = EntityRenderer.class.getDeclaredMethod("renderRainSnow", float.class);
+			m.setAccessible(true);
+
+			m.invoke(mc.entityRenderer, partialTicks);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -231,8 +247,13 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 	public void tick() {
 		this.world.setWorldTime(System.currentTimeMillis() % 24000);
 
-		while(Keyboard.next()) {
-			if(Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+		//Minecraft.getMinecraft().effectRenderer.updateEffects();
+		//world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, -8, 8, 4, 0, 0, 0);
+
+		world.rainingStrength = world.prevRainingStrength = 0.4f;
+
+		while (Keyboard.next()) {
+			if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
 				this.playContext.disconnect();
 			}
 		}
