@@ -1,7 +1,5 @@
 package com.example.examplemod;
 
-import java.lang.reflect.Method;
-
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.Project;
@@ -13,19 +11,22 @@ import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.GlStateManager.DestFactor;
+import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.culling.ICamera;
+import net.minecraft.client.renderer.texture.ITextureObject;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -40,6 +41,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.wolftail.api.IClientHandler;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
+import net.wolftail.internal.renderer.ExtEntityRenderer;
 
 public final class PigClientHandler implements IClientHandler, INetworkHandler {
 
@@ -113,67 +115,55 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 	}
 
 	private static void renderWorld(Minecraft mc, RenderGlobal rg, float partialTicks, long finishTimeNano) {
-		GlStateManager.enableDepth();
-		GlStateManager.enableBlend();
-
 		double x = -14;
 		double y = 14;
 		double z = 0;
-		double yaw = -80;
-		double pitch = 30;
-		double roll = 0;
+		float yaw = -80;
+		float pitch = 30;
+		float roll = 20;
+		float fovy = 45;
+		float aspect = (float) mc.displayWidth / (float) mc.displayHeight;
 
-		// setup opnegl transform
+		// setup root transform
 		{
-			GlStateManager.matrixMode(5889);
+			GlStateManager.matrixMode(GL11.GL_PROJECTION);
 			GlStateManager.loadIdentity();
-			Project.gluPerspective(45, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
-					(float) (mc.gameSettings.renderDistanceChunks * 16) * MathHelper.SQRT_2);
+			Project.gluPerspective(fovy, aspect, 0.05F, mc.gameSettings.renderDistanceChunks * 16 * MathHelper.SQRT_2);
 
-			GlStateManager.matrixMode(5888);
+			GlStateManager.matrixMode(GL11.GL_MODELVIEW);
 			GlStateManager.loadIdentity();
-			GlStateManager.rotate((float) roll, 0.0F, 0.0F, 1.0F);
-			GlStateManager.rotate((float) pitch, 1.0F, 0.0F, 0.0F);
-			GlStateManager.rotate((float) yaw + 180, 0.0F, 1.0F, 0.0F);
+			GlStateManager.rotate(roll, 0, 0, 1);
+			GlStateManager.rotate(pitch, 1, 0, 0);
+			GlStateManager.rotate(yaw + 180, 0, 1, 0);
 		}
 
-		mc.player.setLocationAndAngles(x, y, z, (float) yaw, (float) pitch);
+		// setup cache
+		mc.player.setLocationAndAngles(x, y, z, yaw, pitch);
 		ClippingHelperImpl.getInstance();
-		ActiveRenderInfo.updateRenderInfo(mc.player, mc.gameSettings.thirdPersonView == 2);
+		ActiveRenderInfo.updateRenderInfo(mc.player, false);
+
+		// update light map
+		((ExtEntityRenderer) mc.entityRenderer).wolftail_forceUpdateLightmap(partialTicks);
 
 		// draw sky
 		{
-			Vec3d skyColor = mc.world.getSkyColor(mc.getRenderViewEntity(), partialTicks);
+			Vec3d skyColor = mc.world.getSkyColor(mc.player, partialTicks);
 			GlStateManager.clearColor((float) skyColor.x, (float) skyColor.y, (float) skyColor.z, 0);
 			GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT);
 
-			GlStateManager.matrixMode(5889);
+			GlStateManager.matrixMode(GL11.GL_PROJECTION);
+			GlStateManager.pushMatrix();
 			GlStateManager.loadIdentity();
-			Project.gluPerspective(45, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
-					(float) (mc.gameSettings.renderDistanceChunks * 16) * 2.0F);
-			GlStateManager.matrixMode(5888);
+			Project.gluPerspective(fovy, aspect, 0.05F, mc.gameSettings.renderDistanceChunks * 16 * 2.0F);
+			GlStateManager.matrixMode(GL11.GL_MODELVIEW);
 
-			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
 			rg.renderSky(partialTicks, 2);
 			GlStateManager.disableAlpha();
 			GlStateManager.disableFog();
 
-			GlStateManager.matrixMode(5889);
-			GlStateManager.loadIdentity();
-			Project.gluPerspective(45, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
-					(float) (mc.gameSettings.renderDistanceChunks * 16) * MathHelper.SQRT_2);
-			GlStateManager.matrixMode(5888);
-		}
-
-		// update light map
-		mc.entityRenderer.updateRenderer();
-		try {
-			Method m = EntityRenderer.class.getDeclaredMethod("updateLightmap", float.class);
-			m.setAccessible(true);
-
-			m.invoke(mc.entityRenderer, partialTicks);
-		} catch (Throwable e) {
-			e.printStackTrace();
+			GlStateManager.matrixMode(GL11.GL_PROJECTION);
+			GlStateManager.popMatrix();
+			GlStateManager.matrixMode(GL11.GL_MODELVIEW);
 		}
 
 		// build terrain
@@ -183,45 +173,50 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		rg.updateChunks(finishTimeNano);
 
 		// draw terrain
-		mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+		{
+			ITextureObject tex_blocks = bindAndGetTexture(mc.renderEngine, TextureMap.LOCATION_BLOCKS_TEXTURE);
+			GlStateManager.enableCull();
 
-		GlStateManager.disableBlend();
-		GlStateManager.enableCull();
-		rg.renderBlockLayer(BlockRenderLayer.SOLID, partialTicks, 2, mc.player);
-		GlStateManager.enableBlend();
-		GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false,
-				mc.gameSettings.mipmapLevels > 0);
-		rg.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, partialTicks, 2, mc.player);
-		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
-		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false, false);
-		rg.renderBlockLayer(BlockRenderLayer.CUTOUT, partialTicks, 2, mc.player);
-		mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
-		rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, partialTicks, 2, mc.player);
-		GlStateManager.disableCull();
+			GlStateManager.disableBlend();
+			rg.renderBlockLayer(BlockRenderLayer.SOLID, partialTicks, 2, mc.player);
+
+			GlStateManager.enableBlend();
+			GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+
+			tex_blocks.setBlurMipmap(false, mc.gameSettings.mipmapLevels > 0);
+			rg.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, partialTicks, 2, mc.player);
+
+			tex_blocks.restoreLastBlurMipmap();
+			tex_blocks.setBlurMipmap(false, false);
+			rg.renderBlockLayer(BlockRenderLayer.CUTOUT, partialTicks, 2, mc.player);
+
+			tex_blocks.restoreLastBlurMipmap();
+			rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, partialTicks, 2, mc.player);
+		}
 
 		// draw entities
+		GlStateManager.disableCull();
 		RenderHelper.enableStandardItemLighting();
 		ForgeHooksClient.setRenderPass(0);
 		rg.renderEntities(mc.player, icamera, partialTicks);
 		ForgeHooksClient.setRenderPass(1);
 		rg.renderEntities(mc.player, icamera, partialTicks);
 		ForgeHooksClient.setRenderPass(-1);
-		RenderHelper.disableStandardItemLighting();
 
 		// draw particles & rain snow
+		RenderHelper.disableStandardItemLighting();
 		mc.entityRenderer.enableLightmap();
 		mc.effectRenderer.renderParticles(mc.player, partialTicks);
 		mc.effectRenderer.renderLitParticles(mc.player, partialTicks);
 		mc.entityRenderer.disableLightmap();
-		try {
-			Method m = EntityRenderer.class.getDeclaredMethod("renderRainSnow", float.class);
-			m.setAccessible(true);
+		((ExtEntityRenderer) mc.entityRenderer).wolftail_rendererUpdateCount_set(frameCount);
+		((ExtEntityRenderer) mc.entityRenderer).wolftail_renderRainSnow(partialTicks);
+	}
 
-			m.invoke(mc.entityRenderer, partialTicks);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
+	private static ITextureObject bindAndGetTexture(TextureManager tm, ResourceLocation l) {
+		tm.bindTexture(l);
+
+		return tm.getTexture(l);
 	}
 
 	@Override
@@ -240,15 +235,14 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 
 	@Override
 	public void handle(ByteBuf buf) {
-
 	}
 
 	@Override
 	public void tick() {
 		this.world.setWorldTime(System.currentTimeMillis() % 24000);
 
-		//Minecraft.getMinecraft().effectRenderer.updateEffects();
-		//world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, -8, 8, 4, 0, 0, 0);
+		// Minecraft.getMinecraft().effectRenderer.updateEffects();
+		// world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, -8, 8, 4, 0, 0, 0);
 
 		world.rainingStrength = world.prevRainingStrength = 0.4f;
 
