@@ -50,7 +50,7 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		if (Display.wasResized())
 			ui.resize(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
 
-		ui.pCamera(-20, 14, 0, -80, 30, 0, 45);
+		ui.pCamera(-20, 14, 0, -80, 30, 30, 45);
 		ui.flush();
 
 		GlStateManager.matrixMode(GL11.GL_PROJECTION);

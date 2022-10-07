@@ -14,6 +14,7 @@ import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
@@ -31,7 +32,6 @@ import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
@@ -86,7 +86,8 @@ public final class VanillaUnit extends UIUnit {
         Minecraft mc = Minecraft.getMinecraft();
 
         // create world & player
-        this.world = new WorldClient(null, new WorldSettings(0, null, false, false, WorldType.FLAT), 0, null, mc.mcProfiler);
+        this.world = new WorldClient(null, new WorldSettings(0, null, false, false, WorldType.FLAT), 0, null,
+                mc.mcProfiler);
         this.player = new EntityPlayerSP(mc, this.world,
                 new NetHandlerPlayClient(mc, null, null, mc.getSession().getProfile()), null, null);
         this.player.width = 0;
@@ -124,9 +125,9 @@ public final class VanillaUnit extends UIUnit {
 
         ChunkProviderClient cp = this.world.getChunkProvider();
 
-        for(int x = -1; x <= 1; ++x) {
-            for(int z = -1; z <= 1; ++z) {
-                if(!cp.isChunkGeneratedAt(cx + x, cz + z))
+        for (int x = -1; x <= 1; ++x) {
+            for (int z = -1; z <= 1; ++z) {
+                if (!cp.isChunkGeneratedAt(cx + x, cz + z))
                     cp.loadChunk(cx + x, cz + z);
             }
         }
@@ -147,7 +148,7 @@ public final class VanillaUnit extends UIUnit {
     }
 
     public void pClear() {
-        
+
     }
 
     @Override
@@ -157,7 +158,7 @@ public final class VanillaUnit extends UIUnit {
         this.world = null;
         this.player = null;
         this.render_global = null;
-        
+
         System.gc();
     }
 
@@ -195,6 +196,7 @@ public final class VanillaUnit extends UIUnit {
         this.bindAndExecute(this::flush0_ext);
 
         // restore states
+        GlStateManager.disableFog();
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glPopMatrix();
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
@@ -210,11 +212,12 @@ public final class VanillaUnit extends UIUnit {
 
     private void flush0_ext() {
         Minecraft mc = Minecraft.getMinecraft();
-        WorldClient world = this.world;
-        EntityPlayerSP player = this.player;
+        EntityRenderer er = mc.entityRenderer;
         RenderGlobal rg = this.render_global;
+        EntityPlayerSP p = this.player;
+
         float aspect = (float) this.param_width / (float) this.param_height;
-        float zFar_base = mc.gameSettings.renderDistanceChunks * 16;
+        er.farPlaneDistance = mc.gameSettings.renderDistanceChunks * 16;
 
         // set viewport
         GL11.glViewport(0, 0, this.param_width, this.param_height);
@@ -223,39 +226,42 @@ public final class VanillaUnit extends UIUnit {
         {
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glLoadIdentity();
-            Project.gluPerspective(this.player_fovy, aspect, 0.05F, zFar_base * MathHelper.SQRT_2);
+            Project.gluPerspective(this.player_fovy, aspect, 0.05F, er.farPlaneDistance * MathHelper.SQRT_2);
 
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
             GL11.glRotatef(this.player_roll, 0, 0, 1);
-            GL11.glRotatef(player.rotationPitch, 1, 0, 0);
-            GL11.glRotatef(player.rotationYaw + 180, 0, 1, 0);
+            GL11.glRotatef(p.rotationPitch, 1, 0, 0);
+            GL11.glRotatef(p.rotationYaw + 180, 0, 1, 0);
         }
 
         // setup cache
         ClippingHelperImpl.getInstance();
-        ActiveRenderInfo.updateRenderInfo(player, false);
+        ActiveRenderInfo.updateRenderInfo(p, false);
 
-        // update light map
-        mc.entityRenderer.lightmapUpdateNeeded = true;
-        mc.entityRenderer.updateLightmap(0);
+        // update light map, torch flicker, fogColor*, rendererUpdateCount(used in
+        // rendering rain & snow), spawn drop particles, etc.
+        er.updateRenderer();
+        er.updateFogColor(0);
+        er.updateLightmap(0);
 
         // draw sky & clear depth buffer to 1
         {
-            Vec3d skyColor = world.getSkyColor(player, 0);
-            GlStateManager.clearColor((float) skyColor.x, (float) skyColor.y, (float) skyColor.z, 0);
+            // updateFogColor has set gl's clear color
             GlStateManager.clearDepth(1);
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
+            // setup fog for rendering sky
+            er.setupFog(-1, 0);
 
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPushMatrix();
             GL11.glLoadIdentity();
-            Project.gluPerspective(this.player_fovy, aspect, 0.05F, zFar_base * 2);
+            Project.gluPerspective(this.player_fovy, aspect, 0.05F, er.farPlaneDistance * 2);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
 
             rg.renderSky(0, 2);
             GlStateManager.disableAlpha();
-            GlStateManager.disableFog();
 
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPopMatrix();
@@ -265,39 +271,42 @@ public final class VanillaUnit extends UIUnit {
         // build terrain
         {
             ICamera icamera = new Frustum();
-            icamera.setPosition(player.posX, player.posY, player.posZ);
+            icamera.setPosition(p.posX, p.posY, p.posZ);
 
-            rg.setupTerrain(player, 0, icamera, this.frame_count++, false);
+            rg.setupTerrain(p, 0, icamera, this.frame_count++, false);
             rg.updateChunks(Long.MAX_VALUE);
         }
+
+        // setup fog for normal rendering
+        er.setupFog(0, 0);
 
         // draw terrain
         {
             ITextureObject tex_blocks = bindAndGetTexture(mc.renderEngine, TextureMap.LOCATION_BLOCKS_TEXTURE);
-			GlStateManager.enableCull();
+            GlStateManager.enableCull();
             GlStateManager.enableDepth();
 
-			GlStateManager.disableBlend();
-			rg.renderBlockLayer(BlockRenderLayer.SOLID, 0, 2, player);
+            GlStateManager.disableBlend();
+            rg.renderBlockLayer(BlockRenderLayer.SOLID, 0, 2, p);
 
-			GlStateManager.enableBlend();
-			GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+            GlStateManager.enableBlend();
+            GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 
-			tex_blocks.setBlurMipmap(false, mc.gameSettings.mipmapLevels > 0);
-			rg.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, 0, 2, player);
+            tex_blocks.setBlurMipmap(false, mc.gameSettings.mipmapLevels > 0);
+            rg.renderBlockLayer(BlockRenderLayer.CUTOUT_MIPPED, 0, 2, p);
 
-			tex_blocks.restoreLastBlurMipmap();
-			tex_blocks.setBlurMipmap(false, false);
-			rg.renderBlockLayer(BlockRenderLayer.CUTOUT, 0, 2, player);
+            tex_blocks.restoreLastBlurMipmap();
+            tex_blocks.setBlurMipmap(false, false);
+            rg.renderBlockLayer(BlockRenderLayer.CUTOUT, 0, 2, p);
 
-			tex_blocks.restoreLastBlurMipmap();
-			rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, 0, 2, player);
+            tex_blocks.restoreLastBlurMipmap();
+            rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, 0, 2, p);
         }
     }
 
     private static ITextureObject bindAndGetTexture(TextureManager tm, ResourceLocation l) {
-		tm.bindTexture(l);
+        tm.bindTexture(l);
 
-		return tm.getTexture(l);
-	}
+        return tm.getTexture(l);
+    }
 }
