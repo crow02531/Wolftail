@@ -86,8 +86,7 @@ public abstract class UIUnit {
 	public final void render(@Nonnull Vector3f p0, @Nonnull Vector3f p1, @Nonnull Vector3f p2, @Nonnull Vector3f p3) {
 		this.check();
 
-		GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
-
+		int old_binding = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.object_tex);
 
 		Tessellator tess = Tessellator.getInstance();
@@ -99,7 +98,7 @@ public abstract class UIUnit {
 		buffer.pos(p3.x, p3.y, p3.z).tex(0.0D, 1.0D).endVertex();
 		tess.draw();
 
-		GL11.glPopAttrib();
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, old_binding);
 	}
 
 	public final void release() {

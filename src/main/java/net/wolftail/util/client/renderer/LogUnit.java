@@ -3,6 +3,7 @@ package net.wolftail.util.client.renderer;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -209,7 +210,8 @@ public final class LogUnit extends UIUnit {
 			StringBuilder buf = charBuf;
 			int l = buf.length();
 
-			ExtRendererFontRenderer fr = (ExtRendererFontRenderer) Minecraft.getMinecraft().fontRenderer;
+			FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+			ExtRendererFontRenderer fr_ext = (ExtRendererFontRenderer) fr;
 			float vw = param_width;
 			float vh = param_height;
 
@@ -227,10 +229,14 @@ public final class LogUnit extends UIUnit {
 			GL11.glLoadIdentity();
 
 			float scroll = this.scroll;
-			fr.wolftail_posX_set(0);
-			fr.wolftail_posY_set(-(scroll * FONT_HEIGHT));
+			fr.posX = 0;
+			fr.posY = -(scroll * FONT_HEIGHT);
 
 			// draw scroll
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
 			drawRect(vw - SCROLL_WIDTH, 0, vw, vh, 0xD8FFFFFF);
 			if (this.pMaxScroll() != 0)
 				drawRect(vw - SCROLL_WIDTH, (vh * scroll) / (float) this.cache_lineNum, vw,
@@ -238,7 +244,10 @@ public final class LogUnit extends UIUnit {
 			vw -= SCROLL_WIDTH;
 
 			// enable to support rendering unicode
+			GL11.glDisable(GL11.GL_BLEND);
 			GL11.glEnable(GL11.GL_ALPHA_TEST);
+			GL11.glAlphaFunc(GL11.GL_GREATER, 0.5F);
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
 
 			// draw content
 			Style style = new Style();
@@ -249,8 +258,8 @@ public final class LogUnit extends UIUnit {
 
 				switch (cp) {
 					case '\n':
-						fr.wolftail_posX_set(0);
-						fr.wolftail_posY_add(FONT_HEIGHT);
+						fr.posX = 0;
+						fr.posY += FONT_HEIGHT;
 
 						style.reset();
 						setColor(fr, style);
@@ -264,32 +273,32 @@ public final class LogUnit extends UIUnit {
 							break;
 						}
 					default:
-						if (fr.wolftail_posX_get() + fr.wolftail_widthOf(FONT_HEIGHT, cp) > vw) {
-							fr.wolftail_posX_set(0);
-							fr.wolftail_posY_add(FONT_HEIGHT);
+						if (fr.posX + fr_ext.wolftail_widthOf(FONT_HEIGHT, cp) > vw) {
+							fr.posX = 0;
+							fr.posY += FONT_HEIGHT;
 						}
 
-						if (fr.wolftail_posY_get() + FONT_HEIGHT < 0)
+						if (fr.posY + FONT_HEIGHT < 0)
 							break;
-						if (fr.wolftail_posY_get() > vh)
+						if (fr.posY > vh)
 							break L;
 
 						if (style.randomStyle)
-							cp = fr.wolftail_randomReplacement(cp);
+							cp = fr_ext.wolftail_randomReplacement(cp);
 
-						float width = fr.wolftail_renderCodepoint(FONT_HEIGHT, cp, style.italicStyle);
+						float width = fr_ext.wolftail_renderCodepoint(FONT_HEIGHT, cp, style.italicStyle);
 
 						if (style.boldStyle) {
-							fr.wolftail_posX_add(2);
-							fr.wolftail_renderCodepoint(FONT_HEIGHT, cp, style.italicStyle);
-							fr.wolftail_posX_add(-2);
+							fr.posX += 2;
+							fr_ext.wolftail_renderCodepoint(FONT_HEIGHT, cp, style.italicStyle);
+							fr.posX -= 2;
 
 							width += 2;
 						}
 
-						fr.wolftail_renderAttachment(width, style.strikethroughStyle, style.underlineStyle);
+						fr_ext.wolftail_renderAttachment(width, style.strikethroughStyle, style.underlineStyle);
 
-						fr.wolftail_posX_add(width);
+						fr.posX += width;
 				}
 			}
 
@@ -306,17 +315,14 @@ public final class LogUnit extends UIUnit {
 		return 'A' <= cp && cp <= 'Z' ? (char) (cp + ('a' - 'A')) : cp;
 	}
 
-	private static void setColor(ExtRendererFontRenderer fr, Style s) {
-		int color = fr.wolftail_codeToColor(s.colorCode);
+	private static void setColor(FontRenderer fr, Style s) {
+		int color = fr.colorCode[s.colorCode];
 
 		GL11.glColor4f((float) (color >> 16) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
 				(float) (color & 255) / 255.0F, 1.0F);
 	}
 
 	private static void drawRect(float left, float top, float right, float bottom, int color) {
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glColor4f((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
 				(float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
 
@@ -328,9 +334,6 @@ public final class LogUnit extends UIUnit {
 		buffer.pos(right, top, 0).endVertex();
 		buffer.pos(left, top, 0).endVertex();
 		tess.draw();
-
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
 	}
 
 	private static final class Style {

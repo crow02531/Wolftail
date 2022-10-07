@@ -3,7 +3,6 @@
   "compatibilityLevel": "JAVA_8",
   "package": "net.wolftail.internal.renderer.mixin",
   "client": [
-    "client.MixinFontRenderer",
-    "client.MixinEntityRenderer"
+    "client.MixinFontRenderer"
   ]
 }

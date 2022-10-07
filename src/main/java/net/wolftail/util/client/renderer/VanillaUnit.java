@@ -40,7 +40,6 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
-import net.wolftail.internal.renderer.ExtEntityRenderer;
 
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public final class VanillaUnit extends UIUnit {
@@ -86,6 +85,7 @@ public final class VanillaUnit extends UIUnit {
 
         Minecraft mc = Minecraft.getMinecraft();
 
+        // create world & player
         this.world = new WorldClient(null, new WorldSettings(0, null, false, false, WorldType.FLAT), 0, null, mc.mcProfiler);
         this.player = new EntityPlayerSP(mc, this.world,
                 new NetHandlerPlayClient(mc, null, null, mc.getSession().getProfile()), null, null);
@@ -93,6 +93,7 @@ public final class VanillaUnit extends UIUnit {
         this.player.height = 0;
         this.player.eyeHeight = 0;
 
+        // create render global
         this.render_global = new RenderGlobal(mc);
         World o_w = mc.getRenderManager().world;
         this.render_global.setWorldAndLoadRenderers(this.world);
@@ -125,9 +126,8 @@ public final class VanillaUnit extends UIUnit {
 
         for(int x = -1; x <= 1; ++x) {
             for(int z = -1; z <= 1; ++z) {
-                if(!cp.isChunkGeneratedAt(cx + x, cz + z)) {
+                if(!cp.isChunkGeneratedAt(cx + x, cz + z))
                     cp.loadChunk(cx + x, cz + z);
-                }
             }
         }
 
@@ -146,12 +146,19 @@ public final class VanillaUnit extends UIUnit {
 
     }
 
+    public void pClear() {
+        
+    }
+
     @Override
     void release0() {
         this.delete_rb();
 
         this.world = null;
         this.player = null;
+        this.render_global = null;
+        
+        System.gc();
     }
 
     @Override
@@ -165,6 +172,7 @@ public final class VanillaUnit extends UIUnit {
     void flush0() {
         Minecraft mc = Minecraft.getMinecraft();
 
+        // cache states
         boolean o_f = mc.gameSettings.fboEnable;
         WorldClient o_w = mc.world;
         EntityPlayerSP o_p = mc.player;
@@ -176,14 +184,17 @@ public final class VanillaUnit extends UIUnit {
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
         GL11.glPushMatrix();
 
+        // setup basic states
         mc.gameSettings.fboEnable = false;
         mc.world = this.world;
         mc.player = this.player;
         mc.setRenderViewEntity(this.player);
         mc.renderGlobal = this.render_global;
 
+        // flush
         this.bindAndExecute(this::flush0_ext);
 
+        // restore states
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glPopMatrix();
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
@@ -226,7 +237,8 @@ public final class VanillaUnit extends UIUnit {
         ActiveRenderInfo.updateRenderInfo(player, false);
 
         // update light map
-        ((ExtEntityRenderer) Minecraft.getMinecraft().entityRenderer).wolftail_forceUpdateLightmap(0);
+        mc.entityRenderer.lightmapUpdateNeeded = true;
+        mc.entityRenderer.updateLightmap(0);
 
         // draw sky & clear depth buffer to 1
         {
@@ -280,7 +292,6 @@ public final class VanillaUnit extends UIUnit {
 
 			tex_blocks.restoreLastBlurMipmap();
 			rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, 0, 2, player);
-            GlStateManager.disableCull();
         }
     }
 
