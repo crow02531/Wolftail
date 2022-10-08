@@ -41,25 +41,29 @@ import net.wolftail.api.lifecycle.SideWith;
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public abstract class VanillaClientHandler implements IClientHandler {
 
+    private VanillaUpdater updater;
+
     @Override
     public final void handleEnter(@Nonnull PlayContext context) {
         Minecraft mc = Minecraft.getMinecraft();
 
-        mc.world = new WorldClient(null, new WorldSettings(0, null, false, false, WorldType.FLAT), 0, null,
-                mc.mcProfiler);
+        WorldClient w = mc.world = new WorldClient(null, new WorldSettings(0, null, false, false, WorldType.FLAT), 0,
+                null, mc.mcProfiler);
 
-        mc.player = new EntityPlayerSP(mc, mc.world,
+        EntityPlayerSP p = mc.player = new EntityPlayerSP(mc, w,
                 new NetHandlerPlayClient(mc, null, null, mc.getSession().getProfile()), null, null);
-        mc.player.width = 0;
-        mc.player.height = 0;
-        mc.player.eyeHeight = 0;
-        mc.player.setLocationAndAngles(0, 0, 0, 0, 0);
+        p.width = 0;
+        p.height = 0;
+        p.eyeHeight = 0;
+        p.setLocationAndAngles(0, 0, 0, 0, 0);
 
-        mc.playerController = new PlayerControllerMP(mc, mc.player.connection);
+        mc.playerController = new PlayerControllerMP(mc, p.connection);
 
-        mc.setRenderViewEntity(mc.player);
-        mc.renderGlobal.setWorldAndLoadRenderers(mc.world);
-        mc.effectRenderer.clearEffects(mc.world);
+        mc.setRenderViewEntity(p);
+        mc.renderGlobal.setWorldAndLoadRenderers(w);
+        mc.effectRenderer.clearEffects(w);
+
+        this.updater = new VanillaUpdater(w, p);
 
         this.handleEnter0(context);
     }
@@ -196,9 +200,9 @@ public abstract class VanillaClientHandler implements IClientHandler {
         mc.effectRenderer.updateEffects();
         mc.getMusicTicker().update();
 
-        p.prevPosX = p.posX;
-        p.prevPosY = p.posY;
-        p.prevPosZ = p.posZ;
+        p.prevPosX = p.lastTickPosX = p.posX;
+        p.prevPosY = p.lastTickPosY = p.posY;
+        p.prevPosZ = p.lastTickPosZ = p.posZ;
         p.prevRotationYaw = p.rotationYaw;
         p.prevRotationPitch = p.rotationPitch;
         p.prevCameraYaw = p.cameraYaw;
@@ -220,6 +224,7 @@ public abstract class VanillaClientHandler implements IClientHandler {
         Minecraft mc = Minecraft.getMinecraft();
 
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(mc.world));
+        this.handleLeave0();
 
         mc.player = null;
         mc.world = null;
@@ -228,11 +233,15 @@ public abstract class VanillaClientHandler implements IClientHandler {
         mc.renderGlobal.setWorldAndLoadRenderers(null);
         mc.effectRenderer.clearEffects(null);
         TileEntityRendererDispatcher.instance.setWorld(null);
+        this.updater = null;
 
-        this.handleLeave0();
+        System.gc();
     }
 
-    
+    @Nonnull
+    protected final VanillaUpdater getUpdater() {
+        return this.updater;
+    }
 
     protected abstract void handleEnter0(@Nonnull PlayContext context);
 
