@@ -6,9 +6,6 @@ import io.netty.buffer.ByteBuf;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
-/**
- * All methods defined here can only be called directly by Wolftail system.
- */
 @SideWith(section = GameSection.GAME_PLAYING)
 public interface INetworkHandler {
 

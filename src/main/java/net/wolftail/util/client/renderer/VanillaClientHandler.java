@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -76,6 +75,9 @@ public abstract class VanillaClientHandler implements IClientHandler {
 
         float aspect = (float) mc.displayWidth / (float) mc.displayHeight;
         float fovy = mix(p.prevCameraPitch, p.cameraPitch, pt);
+        double x = mix(p.prevPosX, p.posX, pt);
+        double y = mix(p.prevPosY, p.posY, pt);
+        double z = mix(p.prevPosZ, p.posZ, pt);
 
         er.farPlaneDistance = mc.gameSettings.renderDistanceChunks * 16;
         mc.setRenderViewEntity(mc.player);
@@ -93,45 +95,51 @@ public abstract class VanillaClientHandler implements IClientHandler {
         // setup transform cache
         ClippingHelperImpl.getInstance();
         ActiveRenderInfo.updateRenderInfo(p, false);
-        ICamera icamera = new Frustum();
-        icamera.setPosition(mix(p.prevPosX, p.posX, pt), mix(p.prevPosY, p.posY, pt), mix(p.prevPosZ, p.posZ, pt));
+        Frustum icamera = new Frustum();
+        icamera.setPosition(x, y, z);
 
         // update light map etc.
         er.updateRenderer();
         er.updateFogColor(pt);
         er.updateLightmap(pt);
 
-        // draw sky & clear depth buffer to 1
+        // draw sky, clouds & clear depth buffer to 1
         {
             // updateFogColor has set gl's clear color
             GlStateManager.clearDepth(1);
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-
-            // setup fog for rendering sky
-            er.setupFog(-1, pt);
 
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPushMatrix();
             GL11.glLoadIdentity();
             Project.gluPerspective(fovy, aspect, 0.05F, er.farPlaneDistance * 2);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPushMatrix();
 
             // render sky
+            er.setupFog(-1, pt); // setup fog for rendering sky
             GlStateManager.disableCull();
             rg.renderSky(pt, 2);
             GlStateManager.disableAlpha();
 
             GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glLoadIdentity();
+            Project.gluPerspective(fovy, aspect, 0.05F, er.farPlaneDistance * 4);
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+
+            // render clouds
+            er.setupFog(0, pt); // setup fog for normal rendering
+            rg.renderClouds(pt, 2, x, y, z);
+
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPopMatrix();
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
         }
 
         // build terrain
         rg.setupTerrain(p, pt, icamera, er.frameCount++, false);
         rg.updateChunks(Long.MAX_VALUE);
-
-        // setup fog for normal rendering
-        er.setupFog(0, pt);
 
         // draw terrain
         {
@@ -202,6 +210,8 @@ public abstract class VanillaClientHandler implements IClientHandler {
         w.prevRainingStrength = w.rainingStrength;
         w.prevThunderingStrength = w.thunderingStrength;
 
+        mc.renderGlobal.updateClouds();
+
         this.handleTick0();
     }
 
@@ -221,6 +231,8 @@ public abstract class VanillaClientHandler implements IClientHandler {
 
         this.handleLeave0();
     }
+
+    
 
     protected abstract void handleEnter0(@Nonnull PlayContext context);
 

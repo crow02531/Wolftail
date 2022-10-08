@@ -5,8 +5,8 @@ import org.lwjgl.input.Keyboard;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
@@ -19,6 +19,8 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 	static final PigClientHandler INSTANCE = new PigClientHandler();
 
 	private PlayContext playContext;
+
+	EntityPig e;
 
 	private PigClientHandler() {
 	}
@@ -51,6 +53,10 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 		w.setBlockState(new BlockPos(0, 4, -2), Blocks.BOOKSHELF.getDefaultState());
 		w.setBlockState(new BlockPos(-1, 3, -2), Blocks.BOOKSHELF.getDefaultState());
 		w.setBlockState(new BlockPos(-6, 2, 3), Blocks.BREWING_STAND.getDefaultState());
+
+		e = new EntityPig(w);
+		e.setPositionAndRotation(1, 5, 0, 0, 0);
+		w.spawnEntity(e);
 	}
 
 	@Override
@@ -61,6 +67,9 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 	@Override
 	protected void handleTick0() {
 		Minecraft.getMinecraft().world.setWorldTime(System.currentTimeMillis() % 24000);
+
+		//e.rotationYawHead = 0;
+		//System.out.println(e.renderYawOffset);
 
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {

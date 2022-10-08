@@ -6,21 +6,18 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
 
-/**
- * All methods defined here can only be called directly by Wolftail system.
- */
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_SERVER)
 public interface IServerHandler {
 
 	/**
-	 * Called when a play context just setup.
+	 * Called directly by wolftail when a play context just setup.
 	 * 
 	 * @param context the new play context
 	 */
 	void handleEnter(@Nonnull PlayContext context);
 
 	/**
-	 * Called when a play context leave the game.
+	 * Called directly by wolftail when a play context leave the game.
 	 * 
 	 * @param context the leaving play context
 	 */
