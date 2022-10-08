@@ -43,6 +43,13 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 
 		ui.pSetState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
 		ui.pSetState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
+
+		GlStateManager.matrixMode(GL11.GL_PROJECTION);
+		GlStateManager.loadIdentity();
+		GlStateManager.ortho(0, 1, 1, 0, -1, 1);
+		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+		GlStateManager.loadIdentity();
+		GlStateManager.disableDepth();
 	}
 
 	@Override
@@ -53,14 +60,6 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 		ui.pCamera(-20, 14, 0, -80, 30, 30, 45);
 		ui.flush();
 
-		GlStateManager.matrixMode(GL11.GL_PROJECTION);
-		GlStateManager.loadIdentity();
-		GlStateManager.ortho(0, 1, 1, 0, -1, 1);
-		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-		GlStateManager.loadIdentity();
-
-		GlStateManager.disableBlend();
-		GlStateManager.disableDepth();
 		ui.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
 	}
 

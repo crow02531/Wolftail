@@ -119,7 +119,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	public abstract void shutdown();
 
 	@Shadow
-	public abstract void updateDisplay();
+	public abstract void updateFramebufferSize();
 
 	@Shadow
 	public abstract void displayGuiScreen(GuiScreen screen);
@@ -239,9 +239,15 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		profiler.endSection();
 		// ---------------------------------Render End---------------------------------
 
-		this.updateDisplay();
-		Thread.yield();
+		profiler.startSection("display_update");
+		Display.update();
+		this.displayWidth = Display.getWidth();
+		this.displayHeight = Display.getHeight();
+		if (lostContext)
+			this.updateFramebufferSize();
+		profiler.endSection();
 
+		Thread.yield();
 		this.checkGLError("Post render");
 
 		this.fpsCounter++; // call this every game loop

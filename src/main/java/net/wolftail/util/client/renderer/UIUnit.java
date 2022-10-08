@@ -29,11 +29,11 @@ public abstract class UIUnit {
 	private int object_fb; // remains unchanged during the unit's lifecycle
 
 	private void create_tex() {
-		GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
-
 		this.object_tex = GL11.glGenTextures();
 
+		int old_binding = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.object_tex);
+
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
@@ -41,7 +41,7 @@ public abstract class UIUnit {
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, this.param_width, this.param_height, 0, GL11.GL_RGBA,
 				GL11.GL_UNSIGNED_BYTE, (IntBuffer) null);
 
-		GL11.glPopAttrib();
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, old_binding);
 	}
 
 	private void delete_tex() {
@@ -61,8 +61,11 @@ public abstract class UIUnit {
 		int old_binding = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
 
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, this.object_fb);
-		r.run();
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, old_binding);
+		try {
+			r.run();
+		} finally {
+			GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, old_binding);
+		}
 	}
 
 	UIUnit(int pw, int ph) {

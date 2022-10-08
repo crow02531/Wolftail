@@ -6,6 +6,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.glu.Project;
 
+import com.google.common.base.Preconditions;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -40,9 +42,12 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
+import net.wolftail.internal.renderer.GlStateRestorer;
 
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public final class VanillaUnit extends UIUnit {
+
+    private static boolean working;
 
     private WorldClient world;
     private EntityPlayerSP player;
@@ -171,6 +176,7 @@ public final class VanillaUnit extends UIUnit {
 
     @Override
     void flush0() {
+        Preconditions.checkState(!working, "Nested vanilla unit unsupported!");
         Minecraft mc = Minecraft.getMinecraft();
 
         // cache states
@@ -179,35 +185,23 @@ public final class VanillaUnit extends UIUnit {
         EntityPlayerSP o_p = mc.player;
         Entity o_rv = mc.getRenderViewEntity();
         RenderGlobal o_rg = mc.renderGlobal;
-        GL11.glPushAttrib(GL11.GL_VIEWPORT_BIT | GL11.GL_TRANSFORM_BIT);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
+        GlStateRestorer.store();
 
-        // setup basic states
-        mc.gameSettings.fboEnable = false;
-        mc.world = this.world;
-        mc.player = this.player;
-        mc.setRenderViewEntity(this.player);
-        mc.renderGlobal = this.render_global;
+        try {
+            working = true;
+            this.bindAndExecute(this::flush0_ext);
+        } finally {
+            working = false;
 
-        // flush
-        this.bindAndExecute(this::flush0_ext);
-
-        // restore states
-        GlStateManager.disableFog();
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
-        GL11.glPopAttrib();
-        mc.gameSettings.fboEnable = o_f;
-        mc.world = o_w;
-        mc.player = o_p;
-        mc.setRenderViewEntity(o_rv);
-        mc.renderGlobal = o_rg;
-        TileEntityRendererDispatcher.instance.setWorld(null);
+            // restore states
+            GlStateRestorer.restore();
+            mc.gameSettings.fboEnable = o_f;
+            mc.world = o_w;
+            mc.player = o_p;
+            mc.setRenderViewEntity(o_rv);
+            mc.renderGlobal = o_rg;
+            TileEntityRendererDispatcher.instance.setWorld(null); // prevent leak
+        }
     }
 
     private void flush0_ext() {
@@ -215,8 +209,14 @@ public final class VanillaUnit extends UIUnit {
         EntityRenderer er = mc.entityRenderer;
         RenderGlobal rg = this.render_global;
         EntityPlayerSP p = this.player;
-
         float aspect = (float) this.param_width / (float) this.param_height;
+
+        // setup basic states
+        mc.gameSettings.fboEnable = false;
+        mc.world = this.world;
+        mc.player = p;
+        mc.setRenderViewEntity(p);
+        mc.renderGlobal = rg;
         er.farPlaneDistance = mc.gameSettings.renderDistanceChunks * 16;
 
         // set viewport
@@ -235,13 +235,13 @@ public final class VanillaUnit extends UIUnit {
             GL11.glRotatef(p.rotationYaw + 180, 0, 1, 0);
         }
 
-        // setup cache
+        // setup transform cache
         ClippingHelperImpl.getInstance();
         ActiveRenderInfo.updateRenderInfo(p, false);
 
-        // update light map, torch flicker, fogColor*, rendererUpdateCount(used in
-        // rendering rain & snow), spawn drop particles, etc.
-        er.updateRenderer();
+        // update light map, fogColor
+        er.fogColor1 = er.fogColor2 = 1;
+        er.lightmapUpdateNeeded = true;
         er.updateFogColor(0);
         er.updateLightmap(0);
 
@@ -260,6 +260,7 @@ public final class VanillaUnit extends UIUnit {
             Project.gluPerspective(this.player_fovy, aspect, 0.05F, er.farPlaneDistance * 2);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
 
+            // render sky
             rg.renderSky(0, 2);
             GlStateManager.disableAlpha();
 
@@ -273,6 +274,7 @@ public final class VanillaUnit extends UIUnit {
             ICamera icamera = new Frustum();
             icamera.setPosition(p.posX, p.posY, p.posZ);
 
+            // force rebuild all needed
             rg.setupTerrain(p, 0, icamera, this.frame_count++, false);
             rg.updateChunks(Long.MAX_VALUE);
         }
