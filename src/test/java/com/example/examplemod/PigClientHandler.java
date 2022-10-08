@@ -1,66 +1,77 @@
 package com.example.examplemod;
 
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Vector3f;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
-import net.wolftail.api.IClientHandler;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
-import net.wolftail.util.client.renderer.VanillaUnit;
+import net.wolftail.util.client.renderer.VanillaClientHandler;
 
-public final class PigClientHandler implements IClientHandler, INetworkHandler {
+public final class PigClientHandler extends VanillaClientHandler implements INetworkHandler {
 
 	static final PigClientHandler INSTANCE = new PigClientHandler();
 
 	private PlayContext playContext;
 
-	private VanillaUnit ui;
-
 	private PigClientHandler() {
 	}
 
 	@Override
-	public void handleEnter(PlayContext context) {
+	protected void handleEnter0(PlayContext context) {
 		this.playContext = context;
 		context.setHandler(this);
 
-		ui = new VanillaUnit(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+		Minecraft.getMinecraft().player.setLocationAndAngles(-4, 4, 0, -80, 0);
+		Minecraft.getMinecraft().player.cameraPitch = 45;
+		
+		WorldClient w = Minecraft.getMinecraft().world;
+
+		for (int x = 0; x < 4; ++x) {
+			for (int z = 0; z < 4; ++z) {
+				w.doPreChunk(x - 2, z - 2, true);
+			}
+		}
 
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-8, 0, -8, 8, 1, 8))
-			ui.pSetState(p, Blocks.BEDROCK.getDefaultState());
+			w.setBlockState(p, Blocks.BEDROCK.getDefaultState());
 
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-4, 2, -4, 4, 2, 4))
-			ui.pSetState(p, Blocks.GLASS.getDefaultState());
+			w.setBlockState(p, Blocks.GLASS.getDefaultState());
 
-		ui.pSetState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
-		ui.pSetState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
-
-		GlStateManager.matrixMode(GL11.GL_PROJECTION);
-		GlStateManager.loadIdentity();
-		GlStateManager.ortho(0, 1, 1, 0, -1, 1);
-		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-		GlStateManager.loadIdentity();
-		GlStateManager.disableDepth();
+		w.setBlockState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
+		w.setBlockState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
+		w.setBlockState(new BlockPos(0, 3, -2), Blocks.BOOKSHELF.getDefaultState());
+		w.setBlockState(new BlockPos(0, 4, -2), Blocks.BOOKSHELF.getDefaultState());
+		w.setBlockState(new BlockPos(-1, 3, -2), Blocks.BOOKSHELF.getDefaultState());
+		w.setBlockState(new BlockPos(-6, 2, 3), Blocks.BREWING_STAND.getDefaultState());
 	}
 
 	@Override
-	public void handleFrame() {
-		if (Display.wasResized())
-			ui.resize(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+	protected void handleFrame0() {
+		
+	}
 
-		ui.pCamera(-20, 14, 0, -80, 30, 30, 45);
-		ui.flush();
+	@Override
+	protected void handleTick0() {
+		Minecraft.getMinecraft().world.setWorldTime(System.currentTimeMillis() % 24000);
 
-		ui.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
+		while (Keyboard.next()) {
+			if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+				this.playContext.disconnect();
+			}
+		}
+	}
+
+	@Override
+	protected void handleLeave0() {
+		this.playContext = null;
 	}
 
 	@Override
@@ -68,24 +79,6 @@ public final class PigClientHandler implements IClientHandler, INetworkHandler {
 	}
 
 	@Override
-	public void handleLeave() {
-		this.playContext = null;
-
-		this.ui.release();
-	}
-
-	@Override
 	public void handle(ByteBuf buf) {
-	}
-
-	@Override
-	public void tick() {
-		ui.pTime((int) (System.currentTimeMillis() % 24000));
-
-		while (Keyboard.next()) {
-			if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
-				this.playContext.disconnect();
-			}
-		}
 	}
 }

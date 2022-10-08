@@ -8,6 +8,9 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
 
+/**
+ * All methods defined here can only be called directly by Wolftail system.
+ */
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public interface IClientHandler {
 	
@@ -22,6 +25,11 @@ public interface IClientHandler {
 	 * Called every game loop.
 	 */
 	void handleFrame();
+
+	/**
+	 * Called every client tick.
+	 */
+	void handleTick();
 	
 	/**
 	 * Called when receiving a chat from server.

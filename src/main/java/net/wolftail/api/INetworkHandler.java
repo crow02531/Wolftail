@@ -6,9 +6,12 @@ import io.netty.buffer.ByteBuf;
 import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.SideWith;
 
+/**
+ * All methods defined here can only be called directly by Wolftail system.
+ */
 @SideWith(section = GameSection.GAME_PLAYING)
 public interface INetworkHandler {
-	
+
 	/**
 	 * Process a packet. Called by netty thread. An exception will be thrown if
 	 * there are readable bytes after this method returns.
@@ -16,10 +19,4 @@ public interface INetworkHandler {
 	 * @param buf the data of the packet, pooled
 	 */
 	void handle(@Nonnull ByteBuf buf);
-	
-	/**
-	 * Called every (network) tick from either logic client or logic server.
-	 */
-	default void tick() {
-	}
 }

@@ -216,7 +216,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 				break;
 			}
 
-			this.renderEngine.tick();
+			context.playType().callClientTick();
 			this.mcSoundHandler.update();
 		}
 
@@ -243,8 +243,10 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		Display.update();
 		this.displayWidth = Display.getWidth();
 		this.displayHeight = Display.getHeight();
-		if (lostContext)
-			this.updateFramebufferSize();
+		if (lostContext) {
+			this.updateFramebufferSize(); // recreate the f**king framebuffer during last frame
+			GlStateManager.disableFog();
+		}
 		profiler.endSection();
 
 		Thread.yield();
