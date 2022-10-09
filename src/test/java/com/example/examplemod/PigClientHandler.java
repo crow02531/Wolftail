@@ -50,8 +50,10 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 		w.setBlockState(new BlockPos(1, 3, 1), Blocks.ENDER_CHEST.getDefaultState());
 		w.setBlockState(new BlockPos(0, 3, -2), Blocks.BOOKSHELF.getDefaultState());
 		w.setBlockState(new BlockPos(0, 4, -2), Blocks.BOOKSHELF.getDefaultState());
-		w.setBlockState(new BlockPos(-1, 3, -2), Blocks.BOOKSHELF.getDefaultState());
 		w.setBlockState(new BlockPos(-6, 2, 3), Blocks.BREWING_STAND.getDefaultState());
+		w.setBlockState(new BlockPos(-1, 3, -2), Blocks.STONE.getDefaultState());
+
+		w.sendBlockBreakProgress(0, new BlockPos(-1, 3, -2), 6);
 
 		e = new EntityPig(w);
 		e.setPositionAndRotation(1, 4.5, 0, 0, 0);

@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.texture.ITextureObject;
@@ -176,9 +177,14 @@ public abstract class VanillaClientHandler implements IClientHandler {
 
             tex_blocks.restoreLastBlurMipmap();
             rg.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, pt, 2, p);
+
+            tex_blocks.setBlurMipmap(false, false);
+            rg.drawBlockDamageTexture(Tessellator.getInstance(), Tessellator.getInstance().getBuffer(), p, pt);
+            tex_blocks.restoreLastBlurMipmap();
         }
 
         // draw entities
+        GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
         GlStateManager.disableCull();
         RenderHelper.enableStandardItemLighting();
         ForgeHooksClient.setRenderPass(0);
@@ -192,8 +198,10 @@ public abstract class VanillaClientHandler implements IClientHandler {
         er.enableLightmap();
         re.renderParticles(p, pt);
         re.renderLitParticles(p, pt);
-        er.disableLightmap();
         er.renderRainSnow(pt);
+
+        // send forge's event
+        ForgeHooksClient.dispatchRenderLast(rg, pt);
 
         mc.player = _old_p;
         mc.setRenderViewEntity(_old_v);
