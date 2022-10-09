@@ -12,8 +12,8 @@ public final class ImplUPT extends Impl<UniversalPlayerType> implements Universa
 
 	public final Introduction introduction;
 
-	private final IServerHandler handler_server;
-	private final IClientHandler handler_client;
+	public final IServerHandler handler_server;
+	public final IClientHandler handler_client;
 
 	public ImplUPT(IServerHandler s, IClientHandler c, Introduction i) {
 		this.handler_server = s;

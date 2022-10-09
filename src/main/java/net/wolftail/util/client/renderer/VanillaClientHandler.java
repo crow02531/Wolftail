@@ -24,9 +24,12 @@ import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -38,10 +41,15 @@ import net.wolftail.api.lifecycle.GameSection;
 import net.wolftail.api.lifecycle.LogicType;
 import net.wolftail.api.lifecycle.SideWith;
 
+/**
+ * A built-in {@link IClientHandler} supporting rendering normal game UI.
+ * Explicitly use {@link Minecraft#world}, {@link Minecraft#renderGlobal},
+ * {@link Minecraft#effectRenderer}, etc. to store scene.
+ */
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public abstract class VanillaClientHandler implements IClientHandler {
 
-    private VanillaUpdater updater;
+    private EntityPlayerSP viewer;
 
     @Override
     public final void handleEnter(@Nonnull PlayContext context) {
@@ -49,21 +57,18 @@ public abstract class VanillaClientHandler implements IClientHandler {
 
         WorldClient w = mc.world = new WorldClient(null, new WorldSettings(0, null, false, false, WorldType.FLAT), 0,
                 null, mc.mcProfiler);
+        mc.renderGlobal.setWorldAndLoadRenderers(w);
+        mc.effectRenderer.clearEffects(w);
 
-        EntityPlayerSP p = mc.player = new EntityPlayerSP(mc, w,
+        EntityPlayerSP p = this.viewer = new EntityPlayerSP(mc, w,
                 new NetHandlerPlayClient(mc, null, null, mc.getSession().getProfile()), null, null);
         p.width = 0;
         p.height = 0;
         p.eyeHeight = 0;
         p.setLocationAndAngles(0, 0, 0, 0, 0);
+        p.world = null;
 
-        mc.playerController = new PlayerControllerMP(mc, p.connection);
-
-        mc.setRenderViewEntity(p);
-        mc.renderGlobal.setWorldAndLoadRenderers(w);
-        mc.effectRenderer.clearEffects(w);
-
-        this.updater = new VanillaUpdater(w, p);
+        mc.playerController = new PlayerControllerMP(mc, null);
 
         this.handleEnter0(context);
     }
@@ -74,8 +79,11 @@ public abstract class VanillaClientHandler implements IClientHandler {
         EntityRenderer er = mc.entityRenderer;
         RenderGlobal rg = mc.renderGlobal;
         ParticleManager re = mc.effectRenderer;
-        EntityPlayerSP p = mc.player;
+        EntityPlayerSP p = this.viewer;
         float pt = mc.getRenderPartialTicks();
+
+        EntityPlayerSP _old_p = mc.player;
+        Entity _old_v = mc.getRenderViewEntity();
 
         float aspect = (float) mc.displayWidth / (float) mc.displayHeight;
         float fovy = mix(p.prevCameraPitch, p.cameraPitch, pt);
@@ -84,7 +92,8 @@ public abstract class VanillaClientHandler implements IClientHandler {
         double z = mix(p.prevPosZ, p.posZ, pt);
 
         er.farPlaneDistance = mc.gameSettings.renderDistanceChunks * 16;
-        mc.setRenderViewEntity(mc.player);
+        mc.setRenderViewEntity(mc.player = p);
+        p.world = mc.world;
 
         // setup root transform
         GL11.glMatrixMode(GL11.GL_PROJECTION);
@@ -186,6 +195,10 @@ public abstract class VanillaClientHandler implements IClientHandler {
         er.disableLightmap();
         er.renderRainSnow(pt);
 
+        mc.player = _old_p;
+        mc.setRenderViewEntity(_old_v);
+        p.world = null;
+
         // call custom frame
         this.handleFrame0();
     }
@@ -193,8 +206,15 @@ public abstract class VanillaClientHandler implements IClientHandler {
     @Override
     public final void handleTick() {
         Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayerSP p = mc.player;
+        EntityPlayerSP p = this.viewer;
         WorldClient w = mc.world;
+
+        EntityPlayerSP _old_p = mc.player;
+        Entity _old_v = mc.getRenderViewEntity();
+
+        mc.player = p;
+        mc.setRenderViewEntity(p);
+        p.world = w;
 
         mc.renderEngine.tick();
         mc.effectRenderer.updateEffects();
@@ -216,31 +236,66 @@ public abstract class VanillaClientHandler implements IClientHandler {
 
         mc.renderGlobal.updateClouds();
 
+        mc.player = _old_p;
+        mc.setRenderViewEntity(_old_v);
+        p.world = null;
+
         this.handleTick0();
     }
 
     @Override
-    public final void handleLeave() {
-        Minecraft mc = Minecraft.getMinecraft();
+    public final void handleChat(@Nonnull ChatType type, @Nonnull ITextComponent text) {
+        this.handleChat0(type, text);
+    }
 
-        MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(mc.world));
+    @Override
+    public final void handleLeave() {
         this.handleLeave0();
 
-        mc.player = null;
-        mc.world = null;
-        mc.playerController = null;
-        mc.setRenderViewEntity(null);
-        mc.renderGlobal.setWorldAndLoadRenderers(null);
-        mc.effectRenderer.clearEffects(null);
+        this.viewer = null;
+        setWorld(null);
+    }
+
+    /**
+     * Can only be called when the current playing type use
+     * {@link VanillaClientHandler}. Identical to
+     * {@code Minecraft.getMinecraft().world}.
+     */
+    @Nonnull
+    public static WorldClient getWorld() {
+        return Minecraft.getMinecraft().world;
+    }
+
+    /**
+     * Can only be called when the current playing type use
+     * {@link VanillaClientHandler}. Change the current world
+     * in use to {@code w}.
+     * 
+     * @param w the new world
+     */
+    public static void setWorld(@Nonnull WorldClient w) {
+        Minecraft mc = Minecraft.getMinecraft();
+
+        if (mc.world == w)
+            return;
+
+        MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(mc.world));
+        mc.world = w;
+        mc.renderGlobal.setWorldAndLoadRenderers(w);
+        mc.effectRenderer.clearEffects(w);
         TileEntityRendererDispatcher.instance.setWorld(null);
-        this.updater = null;
 
         System.gc();
     }
 
-    @Nonnull
-    protected final VanillaUpdater getUpdater() {
-        return this.updater;
+    protected final void setCamera(double x, double y, double z, float yaw, float pitch, float roll, float fovy) {
+        EntityPlayerSP p = this.viewer;
+
+        p.setPosition(x, y, z);
+        p.rotationYaw = yaw;
+        p.rotationPitch = pitch;
+        p.cameraYaw = roll;
+        p.cameraPitch = fovy;
     }
 
     protected abstract void handleEnter0(@Nonnull PlayContext context);
@@ -248,6 +303,8 @@ public abstract class VanillaClientHandler implements IClientHandler {
     protected abstract void handleFrame0();
 
     protected abstract void handleTick0();
+
+    protected abstract void handleChat0(@Nonnull ChatType type, @Nonnull ITextComponent text);
 
     protected abstract void handleLeave0();
 

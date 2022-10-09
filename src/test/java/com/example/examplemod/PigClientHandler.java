@@ -3,7 +3,7 @@ package com.example.examplemod;
 import org.lwjgl.input.Keyboard;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -12,7 +12,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
 import net.wolftail.util.client.renderer.VanillaClientHandler;
-import net.wolftail.util.client.renderer.VanillaUpdater;
 
 public final class PigClientHandler extends VanillaClientHandler implements INetworkHandler {
 
@@ -30,27 +29,33 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 		this.playContext = context;
 		context.setHandler(this);
 
-		VanillaUpdater u = this.getUpdater();
+		WorldClient w = getWorld();
 
-		u.setCamera(-4, 4, 0, -80, 0, 0, 45);
+		for (int x = 0; x < 4; ++x) {
+			for (int z = 0; z < 4; ++z) {
+				w.doPreChunk(x - 2, z - 2, true);
+			}
+		}
+
+		this.setCamera(-4, 4, 0, -80, 0, 0, 45);
 
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-8, 0, -8, 8, 1, 8))
-			u.setBlockState(p, Blocks.BEDROCK.getDefaultState());
+			w.setBlockState(p, Blocks.BEDROCK.getDefaultState());
 
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-4, 2, -4, 4, 2, 4))
-			u.setBlockState(p, Blocks.GLASS.getDefaultState());
+			w.setBlockState(p, Blocks.GLASS.getDefaultState());
 
-		u.setBlockState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
-		u.setBlockState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
-		u.setBlockState(new BlockPos(1, 3, 1), Blocks.ENDER_CHEST.getDefaultState());
-		u.setBlockState(new BlockPos(0, 3, -2), Blocks.BOOKSHELF.getDefaultState());
-		u.setBlockState(new BlockPos(0, 4, -2), Blocks.BOOKSHELF.getDefaultState());
-		u.setBlockState(new BlockPos(-1, 3, -2), Blocks.BOOKSHELF.getDefaultState());
-		u.setBlockState(new BlockPos(-6, 2, 3), Blocks.BREWING_STAND.getDefaultState());
+		w.setBlockState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
+		w.setBlockState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
+		w.setBlockState(new BlockPos(1, 3, 1), Blocks.ENDER_CHEST.getDefaultState());
+		w.setBlockState(new BlockPos(0, 3, -2), Blocks.BOOKSHELF.getDefaultState());
+		w.setBlockState(new BlockPos(0, 4, -2), Blocks.BOOKSHELF.getDefaultState());
+		w.setBlockState(new BlockPos(-1, 3, -2), Blocks.BOOKSHELF.getDefaultState());
+		w.setBlockState(new BlockPos(-6, 2, 3), Blocks.BREWING_STAND.getDefaultState());
 
-		e = new EntityPig(Minecraft.getMinecraft().world);
+		e = new EntityPig(w);
 		e.setPositionAndRotation(1, 4.5, 0, 0, 0);
-		Minecraft.getMinecraft().world.spawnEntity(e);
+		w.spawnEntity(e);
 	}
 
 	@Override
@@ -60,7 +65,7 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 	@Override
 	protected void handleTick0() {
-		this.getUpdater().setTime((int) (System.currentTimeMillis() % 24000));
+		getWorld().setWorldTime(System.currentTimeMillis() % 24000);
 
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
@@ -75,7 +80,7 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 	}
 
 	@Override
-	public void handleChat(ChatType type, ITextComponent text) {
+	protected void handleChat0(ChatType type, ITextComponent text) {
 	}
 
 	@Override
