@@ -6,6 +6,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.DimensionType;
 
+// TODO design a method for tracking entities
 public interface DiffVisitor {
 	
 	/**

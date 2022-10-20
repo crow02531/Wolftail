@@ -3,6 +3,7 @@ package net.wolftail.api;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
+// TODO implement this idea
 @Immutable
 public final class Introduction {
 	

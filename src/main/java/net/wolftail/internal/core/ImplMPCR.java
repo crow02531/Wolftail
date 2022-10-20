@@ -160,6 +160,7 @@ public final class ImplMPCR implements RootPlayContextManager {
 			type = RegistryHolder.getRegistry().getValue(new ResourceLocation(((NBTTagString) tag).getString()));
 		
 		if (type == null) {
+			// TODO better type-determine method
 			type = this.type2subs.values().asList().get(this.rnd.nextInt(this.type2subs.size())).type;
 			
 			data.setString(name, type.getRegistryName().toString());
