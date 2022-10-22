@@ -9,6 +9,7 @@ import net.wolftail.api.Introduction;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.api.lifecycle.PhysicalType;
 
+//TODO a thorough example
 @EventBusSubscriber
 @Mod(modid = ExampleMod.MODID, name = ExampleMod.NAME, version = ExampleMod.VERSION)
 public class ExampleMod {

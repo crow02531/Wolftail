@@ -87,5 +87,6 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 	@Override
 	public void handle(ByteBuf buf) {
+		buf.readerIndex(buf.writerIndex());
 	}
 }

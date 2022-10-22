@@ -243,10 +243,8 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		Display.update();
 		this.displayWidth = Display.getWidth();
 		this.displayHeight = Display.getHeight();
-		if (lostContext) {
+		if (lostContext)
 			this.updateFramebufferSize(); // recreate the f**king framebuffer during last frame
-			GlStateManager.disableFog();
-		}
 		profiler.endSection();
 
 		Thread.yield();

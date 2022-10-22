@@ -208,6 +208,7 @@ public abstract class VanillaClientHandler implements IClientHandler {
         p.world = null;
 
         // call custom frame
+        GlStateManager.disableFog();
         this.handleFrame0();
     }
 
