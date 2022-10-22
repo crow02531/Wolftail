@@ -1,6 +1,6 @@
 ![Wolftail Logo](logo.png)
 
-**Wolftail** is a minecraft lib mod specifically designed for developing race different hugely from the race steve. It currently contains three modules:
+**Wolftail** is a minecraft lib mod specifically designed for developing race different hugely from the race "steve". It currently contains three modules:
 1. (Core) Login the server as universal player
 2. (Renderer) Render normal game UI etc.
 3. (Tracker) Track data in server
