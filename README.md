@@ -11,6 +11,7 @@ There are still loads of things haven't done yet.
 1. Tracker can't track entities in server
 2. There should be a "race list" in main menu
 3. Race determine method
+4. Make an example mod
 
 ### How to contribute
 
