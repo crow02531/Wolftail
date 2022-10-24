@@ -84,7 +84,7 @@ public abstract class MixinWorldServer extends World implements ExtTrackerWorldS
 			
 			v.jzBegin();
 			v.jzBindWorld(this.provider.getDimensionType());
-			v.jzSetDaytime(this.worldInfo.getWorldTime());
+			v.jzSetDaytime((int) (this.worldInfo.getWorldTime() % 24000));
 			v.jzEnd();
 		});
 	}

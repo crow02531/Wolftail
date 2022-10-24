@@ -95,8 +95,9 @@ final class ComplementaryCheckVisitor implements DiffVisitor {
 	}
 	
 	@Override
-	public void jzSetDaytime(long daytime) {
+	public void jzSetDaytime(int daytime) {
 		checkState(bind_world);
+		checkArgument(0 <= daytime && daytime <= 24000);
 		
 		dw.jzSetDaytime(daytime);
 	}

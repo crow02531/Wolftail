@@ -66,9 +66,9 @@ public interface DiffVisitor {
 	/**
 	 * Set the daytime of target world. Must have bounden to a world before.
 	 * 
-	 * @param daytime the daytime
+	 * @param daytime the daytime, between 0 and 24000
 	 */
-	void jzSetDaytime(long daytime);
+	void jzSetDaytime(int daytime);
 	
 	/**
 	 * Set the weather of target world. Must have bounden to a world before.

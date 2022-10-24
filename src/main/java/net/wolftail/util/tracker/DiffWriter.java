@@ -107,9 +107,9 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	}
 	
 	@Override
-	public void jzSetDaytime(long daytime) {
+	public void jzSetDaytime(int daytime) {
 		buffer.writeByte(SET_DAYTIME);
-		buffer.writeLong(daytime);
+		buffer.writeShort(daytime);
 	}
 	
 	@Override

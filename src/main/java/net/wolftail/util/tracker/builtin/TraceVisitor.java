@@ -104,7 +104,7 @@ public final class TraceVisitor implements DiffVisitor {
 	}
 	
 	@Override
-	public void jzSetDaytime(long daytime) {
+	public void jzSetDaytime(int daytime) {
 		pw.print("Set the daytime to: ");
 		pw.println(daytime);
 		

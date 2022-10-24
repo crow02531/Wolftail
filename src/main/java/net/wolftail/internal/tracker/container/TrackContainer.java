@@ -133,7 +133,7 @@ public class TrackContainer<A> {
 		}
 		
 		@Override
-		public void jzSetDaytime(long daytime) {
+		public void jzSetDaytime(int daytime) {
 			this.visitors.forEach(v -> v.jzSetDaytime(daytime));
 		}
 		

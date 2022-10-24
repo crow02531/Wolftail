@@ -78,7 +78,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 				break;
 			case BAS_WORLD_DAYTIME:
 				visitor.jzBindWorld(DimensionType.getById(readVarInt(buf)));
-				visitor.jzSetDaytime(buf.readLong());
+				visitor.jzSetDaytime(buf.readShort());
 				
 				break;
 			case BAS_WORLD_WEATHER:
@@ -87,7 +87,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 				
 				break;
 			case SET_DAYTIME:
-				visitor.jzSetDaytime(buf.readLong());
+				visitor.jzSetDaytime(buf.readShort());
 				
 				break;
 			case SET_WEATHER:
