@@ -145,11 +145,7 @@ public final class ImplCD implements ContentDiff, Insncodes {
 	}
 	
 	private static void bind_chunk(ByteBuf buf, DiffVisitor v) {
-		int s0 = buf.readUnsignedShort();
-		int s1 = buf.readUnsignedShort();
-		int s2 = buf.readUnsignedShort();
-		
-		v.jzBindChunk(((s1 & 0x3F) << 16 | s0) - 1875000, ((s2 << 16 | s1) >> 6) - 1875000);
+		v.jzBindChunk(buf.readInt(), buf.readInt());
 	}
 	
 	private static void set_section(ByteBuf buf, DiffVisitor v) {

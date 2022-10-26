@@ -18,7 +18,11 @@ public final class TraceVisitor implements DiffVisitor {
 	private DiffVisitor dv;
 	
 	public TraceVisitor(@Nonnull PrintStream ps) {
-		this(new PrintWriter(ps, true), null);
+		this(ps, null);
+	}
+
+	public TraceVisitor(@Nonnull PrintStream ps, DiffVisitor dv) {
+		this(new PrintWriter(ps, true), dv);
 	}
 	
 	public TraceVisitor(@Nonnull PrintWriter pw, DiffVisitor dv) {

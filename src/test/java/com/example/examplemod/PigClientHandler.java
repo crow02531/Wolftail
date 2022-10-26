@@ -4,9 +4,9 @@ import org.lwjgl.input.Keyboard;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ChatType;
@@ -14,17 +14,17 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.DimensionType;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
+import net.wolftail.util.MoreBlockPos;
 import net.wolftail.util.client.renderer.VanillaClientHandler;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.DiffVisitor;
+import net.wolftail.util.tracker.builtin.TraceVisitor;
 
 public final class PigClientHandler extends VanillaClientHandler implements INetworkHandler, DiffVisitor {
 
 	static final PigClientHandler INSTANCE = new PigClientHandler();
 
 	private PlayContext playContext;
-
-	EntityPig e;
 
 	private PigClientHandler() {
 	}
@@ -34,6 +34,9 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 		this.playContext = context;
 		context.setHandler(this);
 
+		//this.setCamera(-4, 100, 0, 0, 0, 0, 45);
+		this.setCamera(-4, 4, 0, -80, 0, 0, 45);
+
 		WorldClient w = getWorld();
 
 		for (int x = 0; x < 4; ++x) {
@@ -41,8 +44,6 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 				w.doPreChunk(x - 2, z - 2, true);
 			}
 		}
-
-		this.setCamera(-4, 4, 0, -80, 0, 0, 45);
 
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-8, 0, -8, 8, 1, 8))
 			w.setBlockState(p, Blocks.BEDROCK.getDefaultState());
@@ -55,19 +56,17 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 		w.setBlockState(new BlockPos(1, 3, 1), Blocks.ENDER_CHEST.getDefaultState());
 		w.setBlockState(new BlockPos(0, 3, -2), Blocks.BOOKSHELF.getDefaultState());
 		w.setBlockState(new BlockPos(0, 4, -2), Blocks.BOOKSHELF.getDefaultState());
-		w.setBlockState(new BlockPos(-6, 2, 3), Blocks.BREWING_STAND.getDefaultState());
 		w.setBlockState(new BlockPos(-1, 3, -2), Blocks.STONE.getDefaultState());
 
-		w.sendBlockBreakProgress(0, new BlockPos(-1, 3, -2), 6);
+		//w.sendBlockBreakProgress(0, new BlockPos(-1, 3, -2), 6);
 
-		e = new EntityPig(w);
-		e.setPositionAndRotation(1, 4.5, 0, 0, 0);
-		w.spawnEntity(e);
+		// e = new EntityPig(w);
+		// e.setPositionAndRotation(1, 4.5, 0, 0, 0);
+		// w.spawnEntity(e);*/
 	}
 
 	@Override
 	protected void handleFrame0() {
-
 	}
 
 	@Override
@@ -90,11 +89,16 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 	@Override
 	public void handle(ByteBuf buf) {
-		ContentDiff.apply(buf, this);
+		ByteBuf copied = buf.readBytes(buf.readableBytes());
+
+		Minecraft.getMinecraft().addScheduledTask(() -> {
+			ContentDiff.apply(copied, new TraceVisitor(System.out, this));
+			copied.release();
+		});
 	}
 
 	private int chunkX, chunkZ;
-	private BlockPos localPos;
+	private BlockPos blockPos;
 
 	@Override
 	public void jzBegin() {
@@ -115,13 +119,17 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 		ChunkProviderClient cp = getWorld().getChunkProvider();
 
-		if(!cp.isChunkGeneratedAt(chunkX, chunkZ))
-			cp.loadChunk(chunkX, chunkZ);
+		for (int x = -1; x <= 1; ++x) {
+			for (int z = -1; z <= 1; ++z) {
+				if (!cp.isChunkGeneratedAt(chunkX + x, chunkZ + z))
+					cp.loadChunk(chunkX + x, chunkZ + z);
+			}
+		}
 	}
 
 	@Override
 	public void jzBindBlock(short index) {
-		this.localPos = new BlockPos(index >> 12 & 0xF, index & 0xFF, index >> 8 & 0xF);
+		this.blockPos = MoreBlockPos.toPos(chunkX, chunkZ, index);
 	}
 
 	@Override
@@ -151,16 +159,13 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 	@Override
 	public void jzSetSection(int index, ByteBuf buf) {
-
 	}
 
 	@Override
 	public void jzSetState(IBlockState state) {
-
 	}
 
 	@Override
 	public void jzSetTileEntity(ByteBuf buf) {
-
 	}
 }

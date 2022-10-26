@@ -24,10 +24,9 @@ import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.profiler.Snooper;
@@ -69,6 +68,9 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 
 	@Shadow
 	public boolean isGamePaused;
+
+	@Shadow
+	public Framebuffer framebufferMc;
 
 	@Final
 	@Shadow
@@ -119,7 +121,7 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 	public abstract void shutdown();
 
 	@Shadow
-	public abstract void updateFramebufferSize();
+	public abstract void updateDisplay();
 
 	@Shadow
 	public abstract void displayGuiScreen(GuiScreen screen);
@@ -228,25 +230,19 @@ public abstract class MixinMinecraft implements ExtCoreMinecraft {
 		// --------------------------------Render Start--------------------------------
 		profiler.startSection("render");
 
-		// directly draw to the default framebuffer
-		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, 0);
-		GlStateManager.viewport(0, 0, this.displayWidth, this.displayHeight);
+		this.framebufferMc.bindFramebuffer(true);
 
 		// do frame
 		if (!lostContext)
 			context.playType().callClientFrame();
 
+		this.framebufferMc.unbindFramebuffer();
+		this.framebufferMc.framebufferRender(this.displayWidth, this.displayHeight);
+
 		profiler.endSection();
 		// ---------------------------------Render End---------------------------------
 
-		profiler.startSection("display_update");
-		Display.update();
-		this.displayWidth = Display.getWidth();
-		this.displayHeight = Display.getHeight();
-		if (lostContext)
-			this.updateFramebufferSize(); // recreate the f**king framebuffer during last frame
-		profiler.endSection();
-
+		this.updateDisplay();
 		Thread.yield();
 		this.checkGLError("Post render");
 

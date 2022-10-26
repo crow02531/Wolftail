@@ -13,8 +13,10 @@ import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.IServerHandler;
 import net.wolftail.api.PlayContext;
 import net.wolftail.util.MoreServers;
+import net.wolftail.util.tracker.DiffVisitor;
 import net.wolftail.util.tracker.DiffWriter;
 import net.wolftail.util.tracker.Timing;
+import net.wolftail.util.tracker.builtin.OrderBlockState;
 import net.wolftail.util.tracker.builtin.OrderDaytime;
 import net.wolftail.util.tracker.builtin.OrderWeather;
 
@@ -56,15 +58,18 @@ public final class PigServerHandler implements IServerHandler {
 		final PlayContext context;
 
 		final ByteBuf receiver;
-		final DiffWriter acceptor;
+		final DiffVisitor acceptor;
 
 		PigServerNetHandler(PlayContext c) {
 			this.context = c;
-			(acceptor = new DiffWriter()).setOutput(receiver = c.alloc().buffer());
+			DiffWriter dw = new DiffWriter();
+			dw.setOutput(receiver = c.alloc().buffer());
+			acceptor = dw;
 
 			MinecraftServer ms = MoreServers.serverInstance();
 			new OrderDaytime(DimensionType.OVERWORLD).track(ms, acceptor, Timing.of(10));
 			new OrderWeather(DimensionType.OVERWORLD).track(ms, acceptor, Timing.EVERY_TICK);
+			new OrderBlockState(DimensionType.OVERWORLD, 0, 0).track(ms, acceptor, Timing.EVERY_TICK);
 		}
 
 		@Override
@@ -72,14 +77,18 @@ public final class PigServerHandler implements IServerHandler {
 		}
 
 		public void update() {
-			context.send(receiver.copy());
-			receiver.clear();
+			if (receiver.isReadable()) {
+				context.send(receiver.copy());
+				receiver.clear();
+			}
 		}
 
 		public void quit() {
 			MinecraftServer ms = MoreServers.serverInstance();
 			new OrderDaytime(DimensionType.OVERWORLD).untrack(ms, acceptor);
 			new OrderWeather(DimensionType.OVERWORLD).untrack(ms, acceptor);
+			new OrderBlockState(DimensionType.OVERWORLD, 0, 0).untrack(ms, acceptor);
+			receiver.release();
 		}
 	}
 }

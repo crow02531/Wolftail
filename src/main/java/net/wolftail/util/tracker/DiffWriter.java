@@ -151,12 +151,8 @@ public final class DiffWriter implements DiffVisitor, Insncodes {
 	}
 	
 	private static void write_chunkpos(int x, int z, ByteBuf dst) {
-		x += 1875000;
-		z += 1875000;
-		
-		dst.writeShort(x);
-		dst.writeShort(z & 0x3FF | x >> 16);
-		dst.writeShort(z >> 10);
+		dst.writeInt(x);
+		dst.writeInt(z);
 	}
 	
 	@SuppressWarnings("deprecation")
