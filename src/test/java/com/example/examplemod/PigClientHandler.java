@@ -41,17 +41,17 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 		for (int x = 0; x < 4; ++x) {
 			for (int z = 0; z < 4; ++z) {
-				w.doPreChunk(x - 2, z - 2, true);
+				//w.doPreChunk(x - 2, z - 2, true);
 			}
 		}
 
-		for (BlockPos p : BlockPos.getAllInBoxMutable(-8, 0, -8, 8, 1, 8))
+		/*for (BlockPos p : BlockPos.getAllInBoxMutable(-8, 0, -8, 8, 1, 8))
 			w.setBlockState(p, Blocks.BEDROCK.getDefaultState());
 
 		for (BlockPos p : BlockPos.getAllInBoxMutable(-4, 2, -4, 4, 2, 4))
 			w.setBlockState(p, Blocks.GLASS.getDefaultState());
 
-		w.setBlockState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
+		/*w.setBlockState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
 		w.setBlockState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
 		w.setBlockState(new BlockPos(1, 3, 1), Blocks.ENDER_CHEST.getDefaultState());
 		w.setBlockState(new BlockPos(0, 3, -2), Blocks.BOOKSHELF.getDefaultState());
