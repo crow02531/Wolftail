@@ -12,9 +12,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
 import net.wolftail.util.MoreBlockPos;
+import net.wolftail.util.MoreByteBufs;
 import net.wolftail.util.client.renderer.VanillaClientHandler;
 import net.wolftail.util.tracker.ContentDiff;
 import net.wolftail.util.tracker.DiffVisitor;
@@ -34,39 +36,12 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 		this.playContext = context;
 		context.setHandler(this);
 
-		//this.setCamera(-4, 100, 0, 0, 0, 0, 45);
-		this.setCamera(-4, 4, 0, -80, 0, 0, 45);
-
-		WorldClient w = getWorld();
-
-		for (int x = 0; x < 4; ++x) {
-			for (int z = 0; z < 4; ++z) {
-				//w.doPreChunk(x - 2, z - 2, true);
-			}
-		}
-
-		/*for (BlockPos p : BlockPos.getAllInBoxMutable(-8, 0, -8, 8, 1, 8))
-			w.setBlockState(p, Blocks.BEDROCK.getDefaultState());
-
-		for (BlockPos p : BlockPos.getAllInBoxMutable(-4, 2, -4, 4, 2, 4))
-			w.setBlockState(p, Blocks.GLASS.getDefaultState());
-
-		/*w.setBlockState(new BlockPos(0, 3, 0), Blocks.ENCHANTING_TABLE.getDefaultState());
-		w.setBlockState(new BlockPos(0, 3, 2), Blocks.TORCH.getDefaultState());
-		w.setBlockState(new BlockPos(1, 3, 1), Blocks.ENDER_CHEST.getDefaultState());
-		w.setBlockState(new BlockPos(0, 3, -2), Blocks.BOOKSHELF.getDefaultState());
-		w.setBlockState(new BlockPos(0, 4, -2), Blocks.BOOKSHELF.getDefaultState());
-		w.setBlockState(new BlockPos(-1, 3, -2), Blocks.STONE.getDefaultState());
-
-		//w.sendBlockBreakProgress(0, new BlockPos(-1, 3, -2), 6);
-
-		// e = new EntityPig(w);
-		// e.setPositionAndRotation(1, 4.5, 0, 0, 0);
-		// w.spawnEntity(e);*/
+		this.setCamera(10, 40, -20, 0, 40, 0, 45);
 	}
 
 	@Override
 	protected void handleFrame0() {
+		this.setCamera(10, 20, -20, 0, 40, 0, 45);
 	}
 
 	@Override
@@ -89,11 +64,11 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 	@Override
 	public void handle(ByteBuf buf) {
-		ByteBuf copied = buf.readBytes(buf.readableBytes());
+		buf.retain();
 
 		Minecraft.getMinecraft().addScheduledTask(() -> {
-			ContentDiff.apply(copied, new TraceVisitor(System.out, this));
-			copied.release();
+			ContentDiff.apply(buf, new TraceVisitor(System.out, this));
+			buf.release();
 		});
 	}
 
@@ -159,10 +134,25 @@ public final class PigClientHandler extends VanillaClientHandler implements INet
 
 	@Override
 	public void jzSetSection(int index, ByteBuf buf) {
+		WorldClient w = getWorld();
+		ExtendedBlockStorage s = buf == null ? null : new ExtendedBlockStorage(index, true);
+
+		if (buf != null)
+			s.getData().read(MoreByteBufs.wrap(buf));
+
+		for (int x = 0; x < 16; ++x) {
+			for (int y = 0; y < 16; ++y) {
+				for (int z = 0; z < 16; ++z) {
+					w.setBlockState(new BlockPos(x + chunkX * 16, y + index * 16, z + chunkZ * 16),
+							s == null ? Blocks.AIR.getDefaultState() : s.get(x, y, z));
+				}
+			}
+		}
 	}
 
 	@Override
 	public void jzSetState(IBlockState state) {
+		getWorld().setBlockState(blockPos, state);
 	}
 
 	@Override

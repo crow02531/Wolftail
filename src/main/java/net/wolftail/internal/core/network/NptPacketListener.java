@@ -26,10 +26,6 @@ public abstract class NptPacketListener implements INetHandler {
 
 	void handlePayload(ByteBuf buf) {
 		this.handler.handle(buf);
-
-		if (buf.isReadable())
-			throw new RuntimeException(
-					"Payload was larger than I expected, found " + buf.readableBytes() + " bytes extra");
 	}
 
 	static void throw0() {

@@ -35,12 +35,12 @@ public final class MoreBlockPos {
 	
 	@Nonnull
 	public static BlockPos toPos(int chunkX, int chunkZ, short index) {
-		return new BlockPos(chunkX << 4 + index >> 12 & 0xF, index & 0xFF, chunkZ << 4 + index >> 8 & 0xF);
+		return new BlockPos((chunkX << 4) + (index >> 12 & 0xF), index & 0xFF, (chunkZ << 4) + (index >> 8 & 0xF));
 	}
 	
 	@Nonnull
 	public static <T extends MutableBlockPos> T toPos(int chunkX, int chunkZ, short index, @Nonnull T dst) {
-		dst.setPos(chunkX << 4 + index >> 12 & 0xF, index & 0xFF, chunkZ << 4 + index >> 8 & 0xF);
+		dst.setPos((chunkX << 4) + (index >> 12 & 0xF), index & 0xFF, (chunkZ << 4) + (index >> 8 & 0xF));
 		
 		return dst;
 	}

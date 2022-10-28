@@ -241,6 +241,8 @@ public abstract class MixinChunk implements ExtTrackerChunk {
 						v.jzSetState(this.getBlockState(s >> 12 & 15, s & 255, s >> 8 & 15));
 					}
 
+					set.clear();
+
 					v.jzEnd();
 				}
 			}

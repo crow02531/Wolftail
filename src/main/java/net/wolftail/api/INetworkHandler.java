@@ -10,8 +10,8 @@ import net.wolftail.api.lifecycle.SideWith;
 public interface INetworkHandler {
 
 	/**
-	 * Process a packet. Called by netty thread. An exception will be thrown if
-	 * there are readable bytes after this method returns.
+	 * Process a packet. Called by netty thread. You can keep
+	 * the ref to {@code buf} as long as you want.
 	 * 
 	 * @param buf the data of the packet, pooled
 	 */

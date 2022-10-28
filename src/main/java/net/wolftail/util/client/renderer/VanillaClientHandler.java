@@ -25,7 +25,6 @@ import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
@@ -45,12 +44,11 @@ import net.wolftail.api.lifecycle.SideWith;
 /**
  * A built-in {@link IClientHandler} supporting rendering normal game UI.
  * Explicitly use {@link Minecraft#world}, {@link Minecraft#renderGlobal},
- * {@link Minecraft#effectRenderer}, etc. to store scene.
+ * {@link Minecraft#effectRenderer}, {@link Minecraft#player} etc. to store
+ * scene.
  */
 @SideWith(section = GameSection.GAME_PLAYING, thread = LogicType.LOGIC_CLIENT)
 public abstract class VanillaClientHandler implements IClientHandler {
-
-    private EntityPlayerSP viewer;
 
     @Override
     public final void handleEnter(@Nonnull PlayContext context) {
@@ -61,13 +59,14 @@ public abstract class VanillaClientHandler implements IClientHandler {
         mc.renderGlobal.setWorldAndLoadRenderers(w);
         mc.effectRenderer.clearEffects(w);
 
-        EntityPlayerSP p = this.viewer = new EntityPlayerSP(mc, w,
+        EntityPlayerSP p = mc.player = new EntityPlayerSP(mc, w,
                 new NetHandlerPlayClient(mc, null, null, mc.getSession().getProfile()), null, null);
         p.width = 0;
         p.height = 0;
         p.eyeHeight = 0;
         p.setLocationAndAngles(0, 0, 0, 0, 0);
         p.world = null;
+        mc.setRenderViewEntity(p);
 
         mc.playerController = new PlayerControllerMP(mc, null);
 
@@ -80,11 +79,9 @@ public abstract class VanillaClientHandler implements IClientHandler {
         EntityRenderer er = mc.entityRenderer;
         RenderGlobal rg = mc.renderGlobal;
         ParticleManager re = mc.effectRenderer;
-        EntityPlayerSP p = this.viewer;
+        EntityPlayerSP p = mc.player;
         float pt = mc.getRenderPartialTicks();
-
-        EntityPlayerSP _old_p = mc.player;
-        Entity _old_v = mc.getRenderViewEntity();
+        long nanoTime = System.nanoTime();
 
         float aspect = (float) mc.displayWidth / (float) mc.displayHeight;
         float fovy = mix(p.prevCameraPitch, p.cameraPitch, pt);
@@ -93,7 +90,6 @@ public abstract class VanillaClientHandler implements IClientHandler {
         double z = mix(p.prevPosZ, p.posZ, pt);
 
         er.farPlaneDistance = mc.gameSettings.renderDistanceChunks * 16;
-        mc.setRenderViewEntity(mc.player = p);
         p.world = mc.world;
 
         // setup root transform
@@ -152,8 +148,14 @@ public abstract class VanillaClientHandler implements IClientHandler {
         }
 
         // build terrain
-        rg.setupTerrain(p, pt, icamera, er.frameCount++, false);
-        rg.updateChunks(Long.MAX_VALUE);
+        {
+            int j = Math.max(60, Math.min(Minecraft.getDebugFPS(), mc.gameSettings.limitFramerate));
+            long k = System.nanoTime() - nanoTime;
+            long l = Math.max((long) (1000000000 / j / 4) - k, 0L);
+
+            rg.setupTerrain(p, pt, icamera, er.frameCount++, false);
+            rg.updateChunks(System.nanoTime() + l);
+        }
 
         // draw terrain
         {
@@ -203,27 +205,20 @@ public abstract class VanillaClientHandler implements IClientHandler {
         // send forge's event
         ForgeHooksClient.dispatchRenderLast(rg, pt);
 
-        mc.player = _old_p;
-        mc.setRenderViewEntity(_old_v);
         p.world = null;
 
         // call custom frame
         this.handleFrame0();
+        er.disableLightmap();
         GlStateManager.disableFog();
-        RenderHelper.enableStandardItemLighting();
     }
 
     @Override
     public final void handleTick() {
         Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayerSP p = this.viewer;
+        EntityPlayerSP p = mc.player;
         WorldClient w = mc.world;
 
-        EntityPlayerSP _old_p = mc.player;
-        Entity _old_v = mc.getRenderViewEntity();
-
-        mc.player = p;
-        mc.setRenderViewEntity(p);
         p.world = w;
 
         mc.renderEngine.tick();
@@ -246,8 +241,6 @@ public abstract class VanillaClientHandler implements IClientHandler {
 
         mc.renderGlobal.updateClouds();
 
-        mc.player = _old_p;
-        mc.setRenderViewEntity(_old_v);
         p.world = null;
 
         this.handleTick0();
@@ -262,7 +255,8 @@ public abstract class VanillaClientHandler implements IClientHandler {
     public final void handleLeave() {
         this.handleLeave0();
 
-        this.viewer = null;
+        Minecraft.getMinecraft().player = null;
+        Minecraft.getMinecraft().setRenderViewEntity(null);
         setWorld(null);
     }
 
@@ -299,7 +293,7 @@ public abstract class VanillaClientHandler implements IClientHandler {
     }
 
     protected final void setCamera(double x, double y, double z, float yaw, float pitch, float roll, float fovy) {
-        EntityPlayerSP p = this.viewer;
+        EntityPlayerSP p = Minecraft.getMinecraft().player;
 
         p.setPosition(x, y, z);
         p.rotationYaw = yaw;
